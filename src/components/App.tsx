@@ -91,14 +91,17 @@ export function App({ data }: Props) {
 
   const unassignedAthletes = useMemo(() => {
     if (!selectedRace) return [];
-    return activeAthletes.filter(a => {
+    const eligible = activeAthletes.filter(a => {
       if (seatedIds.has(a.id)) return false;
-      // Apply gender policy
       if (!isEligibleForGender(a, selectedRace)) return false;
-      // Apply age policy
       if (!isEligibleForAgeCategory(a, selectedRace.ageCategory, appConfig)) return false;
       return true;
     });
+    // In non-BCP races, sort BCP athletes to the end
+    if (selectedRace.ageCategory !== 'BCP') {
+      eligible.sort((a, b) => (a.isBCP ? 1 : 0) - (b.isBCP ? 1 : 0));
+    }
+    return eligible;
   }, [activeAthletes, selectedRace, seatedIds, appConfig]);
 
   const handleAddRace = (name: string, boatType: 'standard' | 'small', distance: string, genderCategory?: import('../types').GenderCategory, ageCategory?: import('../types').AgeCategory) => {
