@@ -24,6 +24,7 @@ interface Props {
   unassignedAthletes: Athlete[];
   showWeights: boolean;
   onLayoutChange: (layout: BoatLayoutType) => void;
+  readOnly?: boolean;
 }
 
 function parseSeatId(id: string): { type: string; index?: number } {
@@ -84,7 +85,7 @@ function UnseatZone({ id, side }: { id: string; side: 'left' | 'right' }) {
 
 export function BoatLayout({
   race, layout, athleteMap, benchFactors, unassignedAthletes,
-  showWeights, onLayoutChange,
+  showWeights, onLayoutChange, readOnly = false,
 }: Props) {
   const [activeItem, setActiveItem] = useState<{ seatId: string; athleteId: number | null } | null>(null);
   const [poolSeatId, setPoolSeatId] = useState<string | null>(null);
@@ -92,7 +93,7 @@ export function BoatLayout({
 
   const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 5 } });
   const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } });
-  const sensors = useSensors(mouseSensor, touchSensor);
+  const sensors = useSensors(...(readOnly ? [] : [mouseSensor, touchSensor]));
 
   const stats = calcWeightStats(layout, athleteMap, benchFactors);
 
@@ -152,6 +153,7 @@ export function BoatLayout({
   };
 
   const handleSeatTap = (seatId: string) => {
+    if (readOnly) return;
     const athlete = getAthleteFromSeat(layout, seatId);
     if (athlete === null) {
       // Empty seat: open pool

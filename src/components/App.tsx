@@ -301,6 +301,7 @@ export function App() {
             unassignedAthletes={unassignedAthletes}
             showWeights={showWeights}
             onLayoutChange={canEdit ? handleLayoutChange : () => {}}
+            readOnly={!canEdit}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Select a race</div>

@@ -190,34 +190,38 @@ export function HamburgerMenu({
 
           <hr className="my-2" />
 
-          {/* Global actions */}
-          <button
-            onClick={() => { onExport(); onClose(); }}
-            className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm text-blue-700 font-medium"
-          >
-            Export to Excel
-          </button>
+          {/* Global actions - admin only */}
+          {userRole === 'admin' && (
+            <>
+              <button
+                onClick={() => { onExport(); onClose(); }}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm text-blue-700 font-medium"
+              >
+                Export to Excel
+              </button>
 
-          <button
-            onClick={onImport}
-            className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm text-blue-700 font-medium"
-          >
-            Import from Excel
-          </button>
+              <button
+                onClick={onImport}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm text-blue-700 font-medium"
+              >
+                Import from Excel
+              </button>
 
-          <button
-            onClick={() => {
-              if (confirm('Reset ALL layouts to original?')) {
-                onResetAll();
-                onClose();
-              }
-            }}
-            className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 text-sm text-red-600"
-          >
-            Reset All
-          </button>
+              <button
+                onClick={() => {
+                  if (confirm('Reset ALL layouts to original?')) {
+                    onResetAll();
+                    onClose();
+                  }
+                }}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 text-sm text-red-600"
+              >
+                Reset All
+              </button>
 
-          <hr className="my-2" />
+              <hr className="my-2" />
+            </>
+          )}
 
           {userRole === 'admin' && (
             <button
