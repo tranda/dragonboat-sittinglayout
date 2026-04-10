@@ -237,7 +237,7 @@ export function App({ data }: Props) {
             unassignedAthletes={unassignedAthletes}
             showWeights={showWeights}
             onLayoutChange={(l) => updateLayout(selectedRaceId, l)}
-            onRemoveAthlete={handleRemoveAthlete}
+
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Select a race</div>

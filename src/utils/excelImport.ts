@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import type { Athlete, Race, BoatLayout } from '../types';
+import type { Athlete, Race, BoatLayout, GenderCategory, AgeCategory } from '../types';
 
 export interface ImportResult {
   athletes: Athlete[];
@@ -33,7 +33,7 @@ function parseWorkbook(wb: XLSX.WorkBook): ImportResult {
   // Parse Paddlers sheet
   const paddlersSheet = wb.Sheets['Paddlers'];
   if (paddlersSheet) {
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(paddlersSheet, { header: 1 }) as unknown[][];
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(paddlersSheet, { header: 1 }) as unknown as unknown[][];
 
     // Row 0 = headers with race names starting from column 13 (N)
     const headerRow = rows[0] as string[];
@@ -42,9 +42,7 @@ function parseWorkbook(wb: XLSX.WorkBook): ImportResult {
       if (headerRow[col]) raceCols[col] = String(headerRow[col]);
     }
 
-    // Women in women-only races
-    const womenRaces = Object.values(raceCols).filter(n => n.includes('Women'));
-    const openRaces = Object.values(raceCols).filter(n => n.toLowerCase().includes('open'));
+    // (race cols used for assignment parsing below)
 
     // Parse athletes starting from row 3
     for (let r = 3; r < rows.length; r++) {
@@ -94,7 +92,7 @@ function parseWorkbook(wb: XLSX.WorkBook): ImportResult {
     if (skipSheets.includes(sheetName)) continue;
 
     const ws = wb.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { header: 1 }) as unknown[][];
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { header: 1 }) as unknown as unknown[][];
     if (!rows || rows.length < 10) continue;
 
     // Determine boat type
@@ -109,12 +107,28 @@ function parseWorkbook(wb: XLSX.WorkBook): ImportResult {
       if (sheetName.includes(d)) { distance = d; break; }
     }
 
+    // Derive gender and age category from sheet name
+    let genderCategory: GenderCategory = 'Open';
+    if (sheetName.includes('Women')) genderCategory = 'Women';
+    else if (sheetName.includes('Mixed')) genderCategory = 'Mixed';
+
+    let ageCategory: AgeCategory = 'Premier';
+    if (sheetName.includes('Senior A')) ageCategory = 'Senior A';
+    else if (sheetName.includes('Senior B')) ageCategory = 'Senior B';
+    else if (sheetName.includes('Senior C')) ageCategory = 'Senior C';
+    else if (sheetName.includes('Senior D')) ageCategory = 'Senior D';
+    else if (sheetName.includes('18U')) ageCategory = '18U';
+    else if (sheetName.includes('24U')) ageCategory = '24U';
+    else if (sheetName.includes('BCP')) ageCategory = 'BCP';
+
     races.push({
       id: raceId,
       name: sheetName,
       boatType,
       numRows,
       distance,
+      genderCategory,
+      ageCategory,
       category: sheetName.replace(distance, '').trim(),
     });
 

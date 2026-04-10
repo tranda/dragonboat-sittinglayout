@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -24,7 +24,6 @@ interface Props {
   unassignedAthletes: Athlete[];
   showWeights: boolean;
   onLayoutChange: (layout: BoatLayoutType) => void;
-  onRemoveAthlete: (id: number) => void;
 }
 
 function parseSeatId(id: string): { type: string; index?: number } {
@@ -85,7 +84,7 @@ function UnseatZone({ id, side }: { id: string; side: 'left' | 'right' }) {
 
 export function BoatLayout({
   race, layout, athleteMap, benchFactors, unassignedAthletes,
-  showWeights, onLayoutChange, onRemoveAthlete,
+  showWeights, onLayoutChange,
 }: Props) {
   const [activeItem, setActiveItem] = useState<{ seatId: string; athleteId: number | null } | null>(null);
   const [poolSeatId, setPoolSeatId] = useState<string | null>(null);
