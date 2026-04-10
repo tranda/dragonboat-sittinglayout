@@ -12,8 +12,13 @@ export function AthletePoolModal({ athletes, onSelect, onClose, title }: Props) 
   const [genderTab, setGenderTab] = useState<'F' | 'M'>('F');
   const [search, setSearch] = useState('');
 
-  const women = athletes.filter(a => a.gender === 'F').sort((a, b) => a.name.localeCompare(b.name));
-  const men = athletes.filter(a => a.gender === 'M').sort((a, b) => a.name.localeCompare(b.name));
+  // Sort: non-BCP first, then BCP, alphabetical within each group
+  const sortAthletes = (list: Athlete[]) => list.sort((a, b) => {
+    if (a.isBCP !== b.isBCP) return a.isBCP ? 1 : -1;
+    return a.name.localeCompare(b.name);
+  });
+  const women = sortAthletes(athletes.filter(a => a.gender === 'F'));
+  const men = sortAthletes(athletes.filter(a => a.gender === 'M'));
   const list = genderTab === 'F' ? women : men;
   const filtered = search
     ? list.filter(a => a.name.toLowerCase().includes(search.toLowerCase()))
