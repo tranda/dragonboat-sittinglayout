@@ -28,12 +28,12 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) 
   }
 
   const genderBg = athlete?.gender === 'F'
-    ? 'bg-pink-50 border-pink-300'
+    ? 'bg-pink-100 border-pink-400 shadow-sm'
     : athlete?.gender === 'M'
-    ? 'bg-blue-50 border-blue-300'
-    : 'bg-gray-50 border-gray-200';
+    ? 'bg-blue-100 border-blue-400 shadow-sm'
+    : 'bg-gray-100 border-gray-300 shadow-sm';
 
-  const emptyStyle = 'bg-gray-100/50 border-gray-200 border-dashed';
+  const emptyStyle = 'bg-white border-gray-300 border-dashed';
 
   return (
     <div
@@ -44,17 +44,17 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) 
         e.stopPropagation();
         onTap?.();
       }}
-      className={`rounded border flex items-center justify-center overflow-hidden transition-all px-1 ${
+      className={`rounded-lg border-2 flex items-center justify-center overflow-hidden transition-all px-1 ${
         isDragging ? 'opacity-20' : ''
       } ${isOver ? 'ring-2 ring-blue-400' : ''} ${athlete ? genderBg : emptyStyle}`}
     >
       {athlete ? (
-        <span className="text-[13px] font-medium leading-tight text-center line-clamp-2 break-words">
+        <span className="text-[13px] font-bold leading-tight text-center line-clamp-2 break-words text-gray-800">
           {athlete.name}
-          {showWeight && athlete.weight ? <span className="text-gray-400 font-normal text-[10px] ml-0.5">{athlete.weight}</span> : null}
+          {showWeight && athlete.weight ? <span className="text-gray-500 font-normal text-[10px] ml-0.5">{athlete.weight}</span> : null}
         </span>
       ) : (
-        <span className="text-[11px] text-gray-300">+</span>
+        <span className="text-[13px] text-gray-400 font-bold">+</span>
       )}
     </div>
   );

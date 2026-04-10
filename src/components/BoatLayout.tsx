@@ -189,11 +189,11 @@ export function BoatLayout({
       )}
 
       {/* Compact balance bar */}
-      <div className="flex items-center justify-between text-[10px] mb-1 px-1">
-        <span className="text-gray-500">{stats.totalWeight}kg</span>
-        <span className={lrColor}>L/R: {stats.leftRightDiff > 0 ? '+' : ''}{stats.leftRightDiff}</span>
-        <span className={tdColor}>F/R: {stats.topDownDiff > 0 ? '+' : ''}{stats.topDownDiff}</span>
-        <span className="text-gray-400">L:{stats.leftWeight} R:{stats.rightWeight}</span>
+      <div className="flex items-center justify-between text-[11px] mb-1 px-1 font-semibold">
+        <span className="text-gray-700">{stats.totalWeight}kg</span>
+        <span className={`${lrColor} font-bold`}>L/R: {stats.leftRightDiff > 0 ? '+' : ''}{stats.leftRightDiff}</span>
+        <span className={`${tdColor} font-bold`}>F/R: {stats.topDownDiff > 0 ? '+' : ''}{stats.topDownDiff}</span>
+        <span className="text-gray-500">L:{stats.leftWeight} R:{stats.rightWeight}</span>
       </div>
 
       {/* Boat grid — unified, fits viewport */}
