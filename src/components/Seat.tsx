@@ -33,7 +33,7 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) 
     ? 'bg-blue-100 border-blue-400 shadow-sm'
     : 'bg-gray-100 border-gray-300 shadow-sm';
 
-  const emptyStyle = 'bg-white border-gray-300 border-dashed';
+  const emptyStyle = 'bg-gray-50 border-gray-400 border-dashed';
 
   return (
     <div
