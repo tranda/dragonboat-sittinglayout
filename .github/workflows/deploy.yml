@@ -1,39 +1,48 @@
-name: Deploy to GitHub Pages
+name: Deploy to dragonboat-api
 
 on:
   push:
     branches: [main]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
-
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Checkout dragonboat-api
+        uses: actions/checkout@v4
+        with:
+          repository: tranda/dragonboat-api
+          token: ${{ secrets.API_REPO_TOKEN }}
+          path: api-repo
+
+      - name: Copy build to api-repo/public
+        run: |
+          rm -rf api-repo/public/assets
+          cp -r dist/assets api-repo/public/
+          cp dist/index.html api-repo/public/
+          cp dist/favicon.svg api-repo/public/
+          cp dist/icons.svg api-repo/public/
+
+      - name: Commit and push
+        run: |
+          cd api-repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add public/
+          git diff --staged --quiet && echo "No changes" && exit 0
+          git commit -m "Update frontend build"
+          git push
