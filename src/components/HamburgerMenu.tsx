@@ -18,12 +18,14 @@ interface Props {
   onManageAthletes: () => void;
   onImport: () => void;
   onSettings: () => void;
+  onLogout?: () => void;
+  userRole?: string;
 }
 
 export function HamburgerMenu({
   isOpen, onClose, showWeights, onToggleWeights,
   onExport, onResetCurrent, onResetAll,
-  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport, onSettings,
+  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport, onSettings, onLogout, userRole: _userRole,
 }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBoatType, setNewBoatType] = useState<'standard' | 'small'>('standard');
@@ -221,6 +223,18 @@ export function HamburgerMenu({
           >
             Settings
           </button>
+
+          {onLogout && (
+            <>
+              <hr className="my-2" />
+              <button
+                onClick={onLogout}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-500"
+              >
+                Log Out
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>

@@ -19,7 +19,32 @@
       "Bash(gh config:*)",
       "Bash(gh api:*)",
       "Bash(gh run:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "WebSearch",
+      "WebFetch(domain:www.mcloud.rs)",
+      "Read(//Users/zorantrandafilovic/Documents/GitHub/**)",
+      "Bash(composer create-project:*)",
+      "Bash(php -v)",
+      "Bash(brew list:*)",
+      "Bash(composer -V)",
+      "Bash(composer require:*)",
+      "Bash(php artisan:*)",
+      "Bash(TOKEN=\"1|UMkmoO3A6EBtm5bfY22A0qaaZzxps898As7OAa4ee32a46bb\" curl -s http://localhost:8080/api/init -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(pkill -f \"artisan serve\")",
+      "Bash(composer config:*)",
+      "Bash(rm database/migrations/2014_10_12_000000_create_users_table.php)",
+      "Bash(mkdir -p app/Http/Controllers/Api app/Http/Middleware app/Models)",
+      "Bash(touch database/database.sqlite)",
+      "Bash(sed -i '' 's/DB_CONNECTION=mysql/DB_CONNECTION=sqlite/' .env)",
+      "Bash(sed -i '' 's/DB_DATABASE=.*/DB_DATABASE=database\\\\/database.sqlite/' .env)",
+      "Bash(sed -i '' '/DB_HOST/d' .env)",
+      "Bash(sed -i '' '/DB_PORT/d' .env)",
+      "Bash(curl -s -X POST http://localhost:8080/api/login -H \"Content-Type: application/json\" -H \"Accept: application/json\" -d '{\"\"email\"\":\"\"admin@dragonboat.com\"\",\"\"password\"\":\"\"password123\"\"}')",
+      "Bash(TOKEN=\"1|WdWjd0Es8InHyrCsqgPsUhh3E3r4ApOi0SyN9USb5e897f84\" __NEW_LINE_030bd3cde2a00ccd__ echo \"=== INIT ===\" curl -s http://localhost:8080/api/init -H \"Authorization: Bearer $TOKEN\" -H \"Accept: application/json\")",
+      "Bash(curl -s -X POST http://localhost:8081/api/login -H \"Content-Type: application/json\" -H \"Accept: application/json\" -d '{\"\"email\"\":\"\"admin@dragonboat.com\"\",\"\"password\"\":\"\"password123\"\"}')",
+      "Bash(TOKEN=\"4|NBEkR89Ln1fxYQtlWARZtaHGjAcxoQ38ZDTmOJZL138ebc76\" __NEW_LINE_1dabe48b4f739998__ echo \"=== INIT ===\" curl -s http://localhost:8081/api/init -H \"Authorization: Bearer $TOKEN\" -H \"Accept: application/json\")",
+      "Bash(rm composer.lock)",
+      "Bash(composer update:*)"
     ]
   }
 }

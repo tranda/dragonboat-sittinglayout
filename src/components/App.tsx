@@ -1,82 +1,112 @@
-import { useState, useMemo, useCallback } from 'react';
-import type { AppData, Athlete } from '../types';
-import { useLayoutState } from '../hooks/useLayoutState';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import type { Athlete, Race, BoatLayout as BoatLayoutType, AppConfig } from '../types';
 import { RaceSelector } from './RaceSelector';
 import { BoatLayout } from './BoatLayout';
 import { HamburgerMenu } from './HamburgerMenu';
 import { AthleteManager } from './AthleteManager';
 import { ImportDialog } from './ImportDialog';
 import { ConfigPanel } from './ConfigPanel';
+import { LoginScreen } from './LoginScreen';
 import { exportToExcel } from '../utils/excelExport';
 import { importFromExcel } from '../utils/excelImport';
-import { loadConfig, saveConfig, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
-import type { AppConfig } from '../types';
+import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
+import * as api from '../utils/api';
 
-interface Props {
-  data: AppData;
-}
+export function App() {
+  const [loading, setLoading] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
+  const [user, setUser] = useState<api.ApiUser | null>(null);
 
-export function App({ data }: Props) {
-  const {
-    races, layouts,
-    updateLayout, resetLayout, resetAll,
-    addRace, removeRace, duplicateRace, renameRace,
-  } = useLayoutState(data);
+  // Data state
+  const [athletes, setAthletes] = useState<Athlete[]>([]);
+  const [races, setRaces] = useState<Race[]>([]);
+  const [layouts, setLayouts] = useState<Record<string, BoatLayoutType>>({});
+  const [benchFactors, setBenchFactors] = useState<Record<string, number[]>>({ standard: [], small: [] });
+  const [appConfig, setAppConfig] = useState<AppConfig>(DEFAULT_CONFIG);
 
-  const [selectedRaceId, setSelectedRaceId] = useState(races[0]?.id ?? '');
+  // UI state
+  const [selectedRaceId, setSelectedRaceId] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [showWeights, setShowWeights] = useState(false);
   const [showAthleteManager, setShowAthleteManager] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
-  const [appConfig, setAppConfig] = useState<AppConfig>(loadConfig);
-  const [athleteOverrides, setAthleteOverrides] = useState<Record<number, Partial<Athlete>>>(() => {
+
+  // Role checks
+  const canEdit = user?.role === 'admin' || user?.role === 'coach';
+
+  // Load all data from API
+  const loadData = useCallback(async () => {
     try {
-      const saved = localStorage.getItem('dragonboat-athlete-overrides');
-      return saved ? JSON.parse(saved) : {};
-    } catch { return {}; }
-  });
+      setLoading(true);
+      const data = await api.fetchInit();
+      setUser(data.user);
 
-  // Track removed athletes
-  const [removedAthleteIds, setRemovedAthleteIds] = useState<Set<number>>(() => {
-    try {
-      const saved = localStorage.getItem('dragonboat-removed');
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch { return new Set(); }
-  });
+      // Map API athletes to frontend format
+      const mappedAthletes: Athlete[] = data.athletes.map(a => ({
+        id: a.id,
+        name: a.name,
+        weight: a.weight,
+        gender: a.gender,
+        yearOfBirth: a.yearOfBirth ?? undefined,
+        isBCP: a.isBCP ?? false,
+        isRemoved: a.isRemoved ?? false,
+        raceAssignments: a.raceAssignments || [],
+      })) as Athlete[];
+      setAthletes(mappedAthletes);
 
-  const saveRemoved = useCallback((ids: Set<number>) => {
-    setRemovedAthleteIds(ids);
-    localStorage.setItem('dragonboat-removed', JSON.stringify([...ids]));
-  }, []);
+      const mappedRaces: Race[] = data.races.map(r => ({
+        id: r.id,
+        name: r.name,
+        boatType: r.boatType as 'standard' | 'small',
+        numRows: r.numRows,
+        distance: r.distance,
+        genderCategory: r.genderCategory as 'Open' | 'Women' | 'Mixed',
+        ageCategory: r.ageCategory as Race['ageCategory'],
+        category: r.category,
+      }));
+      setRaces(mappedRaces);
+      setLayouts(data.layouts);
+      setBenchFactors(data.benchFactors);
 
-  // Custom added athletes
-  const [customAthletes, setCustomAthletes] = useState<Athlete[]>(() => {
-    try {
-      const saved = localStorage.getItem('dragonboat-custom-athletes');
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
+      if (data.config) {
+        setAppConfig({
+          competitionYear: data.config.competitionYear,
+          ageCategoryRules: data.config.ageCategoryRules as AppConfig['ageCategoryRules'],
+          genderPolicy: data.config.genderPolicy as AppConfig['genderPolicy'],
+        });
+      }
 
-  const allAthletes = useMemo(() => {
-    const merged = [...data.athletes, ...customAthletes];
-    // Apply overrides
-    return merged.map(a => athleteOverrides[a.id] ? { ...a, ...athleteOverrides[a.id] } : a);
-  }, [data.athletes, customAthletes, athleteOverrides]);
+      if (mappedRaces.length > 0 && !selectedRaceId) {
+        setSelectedRaceId(mappedRaces[0].id);
+      }
+    } catch {
+      // Token expired or invalid
+      api.logout();
+      setLoggedIn(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedRaceId]);
+
+  useEffect(() => {
+    if (loggedIn) loadData();
+    else setLoading(false);
+  }, [loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Athlete helpers
+  const activeAthletes = useMemo(() => athletes.filter(a => !(a as unknown as Record<string, boolean>).isRemoved), [athletes]);
+  const removedIds = useMemo(() => new Set(athletes.filter(a => (a as unknown as Record<string, boolean>).isRemoved).map(a => a.id)), [athletes]);
 
   const athleteMap = useMemo(() => {
     const map = new Map<number, Athlete>();
-    allAthletes.forEach(a => map.set(a.id, a));
+    athletes.forEach(a => map.set(a.id, a));
     return map;
-  }, [allAthletes]);
-
-  const activeAthletes = useMemo(() => {
-    return allAthletes.filter(a => !removedAthleteIds.has(a.id));
-  }, [allAthletes, removedAthleteIds]);
+  }, [athletes]);
 
   const selectedRace = races.find(r => r.id === selectedRaceId);
   const layout = layouts[selectedRaceId];
-  const benchFactors = selectedRace ? data.benchFactors[selectedRace.boatType] : data.benchFactors.standard;
+  const currentBenchFactors = selectedRace ? (benchFactors[selectedRace.boatType] || []) : [];
 
   const seatedIds = useMemo(() => {
     if (!layout) return new Set<number>();
@@ -97,115 +127,141 @@ export function App({ data }: Props) {
       if (!isEligibleForAgeCategory(a, selectedRace.ageCategory, appConfig)) return false;
       return true;
     });
-    // In non-BCP races, sort BCP athletes to the end
     if (selectedRace.ageCategory !== 'BCP') {
       eligible.sort((a, b) => (a.isBCP ? 1 : 0) - (b.isBCP ? 1 : 0));
     }
     return eligible;
   }, [activeAthletes, selectedRace, seatedIds, appConfig]);
 
-  const handleAddRace = (name: string, boatType: 'standard' | 'small', distance: string, genderCategory?: import('../types').GenderCategory, ageCategory?: import('../types').AgeCategory) => {
-    const id = addRace(name, boatType, distance, genderCategory, ageCategory);
-    if (id) setSelectedRaceId(id);
+  // --- Handlers ---
+
+  const handleLayoutChange = useCallback((newLayout: BoatLayoutType) => {
+    setLayouts(prev => ({ ...prev, [selectedRaceId]: newLayout }));
+    api.saveLayout(selectedRaceId, newLayout).catch(console.error);
+  }, [selectedRaceId]);
+
+  const handleAddRace = async (name: string, boatType: 'standard' | 'small', distance: string, genderCategory?: string, ageCategory?: string) => {
+    const id = name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') + '_' + Date.now();
+    const numRows = boatType === 'standard' ? 10 : 5;
+    try {
+      await api.createRace({ id, name, boat_type: boatType, num_rows: numRows, distance, gender_category: genderCategory || 'Open', age_category: ageCategory || 'Senior B', category: name });
+      await loadData();
+      setSelectedRaceId(id);
+    } catch (err) { alert('Failed to add race: ' + (err instanceof Error ? err.message : '')); }
   };
 
-  const handleRemoveRace = () => {
-    const nextRace = races.find(r => r.id !== selectedRaceId);
-    removeRace(selectedRaceId);
-    if (nextRace) setSelectedRaceId(nextRace.id);
+  const handleRemoveRace = async () => {
+    try {
+      await api.deleteRace(selectedRaceId);
+      const next = races.find(r => r.id !== selectedRaceId);
+      await loadData();
+      if (next) setSelectedRaceId(next.id);
+    } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   };
 
-  const handleDuplicate = () => {
-    if (!selectedRace) return;
-    const newId = duplicateRace(selectedRaceId, selectedRace.name + ' (copy)');
-    if (newId) setSelectedRaceId(newId);
+  const handleDuplicate = async () => {
+    try {
+      await api.duplicateRace(selectedRaceId);
+      await loadData();
+    } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   };
 
-  const handleRemoveAthlete = useCallback((id: number) => {
-    const next = new Set(removedAthleteIds);
-    next.add(id);
-    saveRemoved(next);
-  }, [removedAthleteIds, saveRemoved]);
+  const handleRenameRace = async (name: string) => {
+    try {
+      await api.updateRace(selectedRaceId, { name });
+      await loadData();
+    } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
+  };
 
-  const handleRestoreAthlete = useCallback((id: number) => {
-    const next = new Set(removedAthleteIds);
-    next.delete(id);
-    saveRemoved(next);
-  }, [removedAthleteIds, saveRemoved]);
+  const handleRemoveAthlete = useCallback(async (id: number) => {
+    try {
+      await api.removeAthlete(id);
+      setAthletes(prev => prev.map(a => a.id === id ? { ...a, isRemoved: true } as unknown as Athlete : a));
+    } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
+  }, []);
 
-  const handleEditAthlete = useCallback((id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP'>>) => {
-    const next = { ...athleteOverrides, [id]: { ...athleteOverrides[id], ...updates } };
-    setAthleteOverrides(next);
-    localStorage.setItem('dragonboat-athlete-overrides', JSON.stringify(next));
-    // Also update custom athletes if it's a custom one
-    const customIdx = customAthletes.findIndex(a => a.id === id);
-    if (customIdx >= 0) {
-      const updated = [...customAthletes];
-      updated[customIdx] = { ...updated[customIdx], ...updates };
-      setCustomAthletes(updated);
-      localStorage.setItem('dragonboat-custom-athletes', JSON.stringify(updated));
-    }
-  }, [athleteOverrides, customAthletes]);
+  const handleRestoreAthlete = useCallback(async (id: number) => {
+    try {
+      await api.restoreAthlete(id);
+      setAthletes(prev => prev.map(a => a.id === id ? { ...a, isRemoved: false } as unknown as Athlete : a));
+    } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
+  }, []);
 
-  const handleAddAthlete = useCallback((name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean) => {
-    const maxId = allAthletes.reduce((max, a) => Math.max(max, a.id), 0);
-    const newAthlete: Athlete = { id: maxId + 1, name, weight, gender, yearOfBirth, isBCP, raceAssignments: [] };
-    const updated = [...customAthletes, newAthlete];
-    setCustomAthletes(updated);
-    localStorage.setItem('dragonboat-custom-athletes', JSON.stringify(updated));
-  }, [allAthletes, customAthletes]);
+  const handleEditAthlete = useCallback(async (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP'>>) => {
+    try {
+      await api.updateAthlete(id, {
+        name: updates.name, weight: updates.weight, gender: updates.gender,
+        year_of_birth: updates.yearOfBirth, is_bcp: updates.isBCP,
+      });
+      setAthletes(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
+    } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
+  }, []);
+
+  const handleAddAthlete = useCallback(async (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean) => {
+    try {
+      const created = await api.createAthlete({ name, weight, gender, year_of_birth: yearOfBirth, is_bcp: isBCP });
+      setAthletes(prev => [...prev, { id: created.id, name, weight, gender, yearOfBirth, isBCP, raceAssignments: [] }]);
+    } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
+  }, []);
+
+  const handleSaveConfig = useCallback(async (config: AppConfig) => {
+    setAppConfig(config);
+    try {
+      await api.saveConfigApi({
+        competitionYear: config.competitionYear,
+        genderPolicy: config.genderPolicy,
+        ageCategoryRules: config.ageCategoryRules,
+      });
+    } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
+  }, []);
 
   const handleExport = () => exportToExcel(races, layouts, athleteMap);
 
   const handleImport = useCallback(async (file: File, mode: 'athletes' | 'full') => {
     try {
       const result = await importFromExcel(file);
-
       if (mode === 'athletes') {
-        // Only update athlete data — match by name, update existing, add new
-        const overrides = { ...athleteOverrides };
-        const newCustom = [...customAthletes];
-
         for (const imported of result.athletes) {
-          // Find existing athlete by name
-          const existing = allAthletes.find(a => a.name === imported.name);
+          const existing = athletes.find(a => a.name === imported.name);
           if (existing) {
-            // Update via overrides
-            overrides[existing.id] = {
-              ...overrides[existing.id],
+            await api.updateAthlete(existing.id, {
               weight: imported.weight || existing.weight,
               gender: imported.gender,
-              yearOfBirth: imported.yearOfBirth,
-            };
+              year_of_birth: imported.yearOfBirth,
+            });
           } else {
-            // Add as new custom athlete
-            const maxId = [...allAthletes, ...newCustom].reduce((max, a) => Math.max(max, a.id), 0);
-            newCustom.push({ ...imported, id: maxId + 1 });
+            await api.createAthlete({
+              name: imported.name, weight: imported.weight, gender: imported.gender,
+              year_of_birth: imported.yearOfBirth,
+            });
           }
         }
-
-        setAthleteOverrides(overrides);
-        localStorage.setItem('dragonboat-athlete-overrides', JSON.stringify(overrides));
-        setCustomAthletes(newCustom);
-        localStorage.setItem('dragonboat-custom-athletes', JSON.stringify(newCustom));
-      } else {
-        // Full import — replace everything
-        localStorage.removeItem('dragonboat-layouts');
-        localStorage.removeItem('dragonboat-races');
-        localStorage.removeItem('dragonboat-removed');
-        localStorage.removeItem('dragonboat-athlete-overrides');
-        localStorage.removeItem('dragonboat-custom-athletes');
-        // Reload with new data would be complex, so we store and reload
-        localStorage.setItem('dragonboat-imported', JSON.stringify(result));
-        window.location.reload();
       }
-
       setShowImport(false);
-      alert(`Imported ${result.athletes.length} athletes` + (mode === 'full' ? ` and ${result.races.length} races` : ''));
-    } catch (err) {
-      alert('Import failed: ' + (err instanceof Error ? err.message : 'Unknown error'));
-    }
-  }, [allAthletes, athleteOverrides, customAthletes]);
+      await loadData();
+      alert(`Imported ${result.athletes.length} athletes`);
+    } catch (err) { alert('Import failed: ' + (err instanceof Error ? err.message : '')); }
+  }, [athletes, loadData]);
+
+  const handleLogout = () => {
+    api.logout();
+    setLoggedIn(false);
+    setUser(null);
+  };
+
+  // --- Render ---
+
+  if (!loggedIn) {
+    return <LoginScreen onLogin={() => setLoggedIn(true)} />;
+  }
+
+  if (loading) {
+    return (
+      <div className="h-dvh flex items-center justify-center bg-slate-100">
+        <div className="text-gray-400 text-sm">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-dvh flex flex-col bg-slate-100 overflow-hidden max-w-lg mx-auto">
@@ -214,14 +270,17 @@ export function App({ data }: Props) {
         <h1 className="text-sm font-bold text-gray-800 leading-tight">
           Dragon Boat <span className="text-gray-400 font-normal text-xs">Munich 2026</span>
         </h1>
-        <button
-          onClick={() => setMenuOpen(true)}
-          className="w-8 h-8 flex flex-col items-center justify-center gap-[3px] rounded-lg hover:bg-gray-200"
-        >
-          <div className="w-4 h-0.5 bg-gray-600 rounded" />
-          <div className="w-4 h-0.5 bg-gray-600 rounded" />
-          <div className="w-4 h-0.5 bg-gray-600 rounded" />
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-gray-400">{user?.name} ({user?.role})</span>
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="w-8 h-8 flex flex-col items-center justify-center gap-[3px] rounded-lg hover:bg-gray-200"
+          >
+            <div className="w-4 h-0.5 bg-gray-600 rounded" />
+            <div className="w-4 h-0.5 bg-gray-600 rounded" />
+            <div className="w-4 h-0.5 bg-gray-600 rounded" />
+          </button>
+        </div>
       </div>
 
       {/* Race tabs */}
@@ -229,18 +288,17 @@ export function App({ data }: Props) {
         <RaceSelector races={races} selectedRaceId={selectedRaceId} onSelect={setSelectedRaceId} />
       </div>
 
-      {/* Boat layout — fills remaining space */}
+      {/* Boat layout */}
       <div className="flex-1 px-2 pb-1 min-h-0 flex flex-col">
         {selectedRace && layout ? (
           <BoatLayout
             race={selectedRace}
             layout={layout}
             athleteMap={athleteMap}
-            benchFactors={benchFactors}
+            benchFactors={currentBenchFactors}
             unassignedAthletes={unassignedAthletes}
             showWeights={showWeights}
-            onLayoutChange={(l) => updateLayout(selectedRaceId, l)}
-
+            onLayoutChange={canEdit ? handleLayoutChange : () => {}}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Select a race</div>
@@ -254,28 +312,30 @@ export function App({ data }: Props) {
         showWeights={showWeights}
         onToggleWeights={() => setShowWeights(!showWeights)}
         onExport={handleExport}
-        onResetCurrent={() => resetLayout(selectedRaceId)}
-        onResetAll={resetAll}
+        onResetCurrent={() => {}}
+        onResetAll={() => {}}
         selectedRace={selectedRace}
-        onAddRace={handleAddRace}
-        onRemoveRace={handleRemoveRace}
-        onDuplicateRace={handleDuplicate}
-        onRenameRace={(name) => renameRace(selectedRaceId, name)}
+        onAddRace={canEdit ? handleAddRace : () => {}}
+        onRemoveRace={canEdit ? handleRemoveRace : () => {}}
+        onDuplicateRace={canEdit ? handleDuplicate : () => {}}
+        onRenameRace={canEdit ? handleRenameRace : () => {}}
         onManageAthletes={() => { setMenuOpen(false); setShowAthleteManager(true); }}
-        onImport={() => { setMenuOpen(false); setShowImport(true); }}
+        onImport={canEdit ? () => { setMenuOpen(false); setShowImport(true); } : () => {}}
         onSettings={() => { setMenuOpen(false); setShowConfig(true); }}
+        onLogout={() => { handleLogout(); setMenuOpen(false); }}
+        userRole={user?.role}
       />
 
-      {/* Athlete manager screen */}
+      {/* Athlete manager */}
       {showAthleteManager && (
         <AthleteManager
           config={appConfig}
-          athletes={allAthletes}
-          removedIds={removedAthleteIds}
-          onRemove={handleRemoveAthlete}
-          onRestore={handleRestoreAthlete}
-          onAdd={handleAddAthlete}
-          onEdit={handleEditAthlete}
+          athletes={athletes}
+          removedIds={removedIds}
+          onRemove={canEdit ? handleRemoveAthlete : async () => {}}
+          onRestore={canEdit ? handleRestoreAthlete : async () => {}}
+          onAdd={canEdit ? handleAddAthlete : async () => {}}
+          onEdit={canEdit ? handleEditAthlete : async () => {}}
           onClose={() => setShowAthleteManager(false)}
         />
       )}
@@ -284,17 +344,14 @@ export function App({ data }: Props) {
       {showConfig && (
         <ConfigPanel
           config={appConfig}
-          onSave={(c) => { setAppConfig(c); saveConfig(c); }}
+          onSave={canEdit ? handleSaveConfig : () => {}}
           onClose={() => setShowConfig(false)}
         />
       )}
 
       {/* Import dialog */}
-      {showImport && (
-        <ImportDialog
-          onImport={handleImport}
-          onClose={() => setShowImport(false)}
-        />
+      {showImport && canEdit && (
+        <ImportDialog onImport={handleImport} onClose={() => setShowImport(false)} />
       )}
     </div>
   );
