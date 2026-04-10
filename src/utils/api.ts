@@ -1,6 +1,4 @@
-const API_BASE = import.meta.env.DEV
-  ? '/api'  // proxied in dev
-  : 'https://dbcrews.motion.rs/api';
+const API_BASE = '/api';
 
 let authToken: string | null = localStorage.getItem('dragonboat-token');
 

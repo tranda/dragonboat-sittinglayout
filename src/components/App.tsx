@@ -7,6 +7,7 @@ import { AthleteManager } from './AthleteManager';
 import { ImportDialog } from './ImportDialog';
 import { ConfigPanel } from './ConfigPanel';
 import { LoginScreen } from './LoginScreen';
+import { UserManager } from './UserManager';
 import { exportToExcel } from '../utils/excelExport';
 import { importFromExcel } from '../utils/excelImport';
 import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
@@ -31,6 +32,7 @@ export function App() {
   const [showAthleteManager, setShowAthleteManager] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
+  const [showUsers, setShowUsers] = useState(false);
 
   // Role checks
   const canEdit = user?.role === 'admin' || user?.role === 'coach';
@@ -322,6 +324,7 @@ export function App() {
         onManageAthletes={() => { setMenuOpen(false); setShowAthleteManager(true); }}
         onImport={canEdit ? () => { setMenuOpen(false); setShowImport(true); } : () => {}}
         onSettings={() => { setMenuOpen(false); setShowConfig(true); }}
+        onManageUsers={user?.role === 'admin' ? () => { setMenuOpen(false); setShowUsers(true); } : undefined}
         onLogout={() => { handleLogout(); setMenuOpen(false); }}
         userRole={user?.role}
       />
@@ -347,6 +350,11 @@ export function App() {
           onSave={canEdit ? handleSaveConfig : () => {}}
           onClose={() => setShowConfig(false)}
         />
+      )}
+
+      {/* User manager */}
+      {showUsers && (
+        <UserManager onClose={() => setShowUsers(false)} />
       )}
 
       {/* Import dialog */}
