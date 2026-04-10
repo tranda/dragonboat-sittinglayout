@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import type { Athlete } from '../types';
+import type { Athlete, AppConfig } from '../types';
+import { getAthleteAgeCategory } from '../utils/policies';
 
 interface Props {
+  config: AppConfig;
   athletes: Athlete[];
   removedIds: Set<number>;
   onRemove: (id: number) => void;
@@ -36,7 +38,7 @@ function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F'
   );
 }
 
-export function AthleteManager({ athletes, removedIds, onRemove, onRestore, onAdd, onEdit, onClose }: Props) {
+export function AthleteManager({ config, athletes, removedIds, onRemove, onRestore, onAdd, onEdit, onClose }: Props) {
   const [tab, setTab] = useState<'active' | 'removed'>('active');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -155,9 +157,9 @@ export function AthleteManager({ athletes, removedIds, onRemove, onRestore, onAd
               <div className="text-sm font-medium truncate">{a.name}</div>
               <div className="text-xs text-gray-400">
                 {a.weight ? `${a.weight} kg` : 'no weight'} · {a.gender === 'F' ? 'W' : 'M'}
-                {a.yearOfBirth ? ` · ${a.yearOfBirth}` : ''}
-                {a.isBCP ? ' · BCP' : ''}
-                {a.category ? ` · ${a.category}` : ''}
+                {a.yearOfBirth ? ` · b.${a.yearOfBirth}` : ''}
+                {(() => { const cat = getAthleteAgeCategory(a, config); return cat ? ` · ${cat}` : ''; })()}
+                {a.isBCP ? <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold">BCP</span> : null}
               </div>
             </div>
             {tab === 'active' ? (

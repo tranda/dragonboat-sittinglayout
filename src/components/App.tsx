@@ -269,6 +269,7 @@ export function App({ data }: Props) {
       {/* Athlete manager screen */}
       {showAthleteManager && (
         <AthleteManager
+          config={appConfig}
           athletes={allAthletes}
           removedIds={removedAthleteIds}
           onRemove={handleRemoveAthlete}
