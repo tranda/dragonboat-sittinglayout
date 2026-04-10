@@ -54,7 +54,7 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) 
           {showWeight && athlete.weight ? <span className="text-gray-500 font-normal text-[10px] ml-0.5">{athlete.weight}</span> : null}
         </span>
       ) : (
-        <span className="text-[13px] text-gray-400 font-bold">+</span>
+        <span className="text-[20px] text-gray-400 font-light leading-none">+</span>
       )}
     </div>
   );
