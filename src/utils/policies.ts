@@ -42,15 +42,14 @@ export function getAthleteAge(athlete: Athlete, competitionYear: number): number
 
 /** Determine which age category an athlete qualifies for */
 export function getAthleteAgeCategory(athlete: Athlete, config: AppConfig): AgeCategory | null {
+  // BCP is manually set, not calculated from age
+  if (athlete.isBCP) return 'BCP';
+
   const age = getAthleteAge(athlete, config.competitionYear);
   if (age === null) return null;
 
-  // Check from most restrictive to least
-  // Youth: must be under max age
   if (age <= 18) return '18U';
   if (age <= 24) return '24U';
-
-  // Seniors: qualify based on min age (higher category = older)
   if (age >= 70) return 'Senior D';
   if (age >= 60) return 'Senior C';
   if (age >= 50) return 'Senior B';
@@ -61,6 +60,10 @@ export function getAthleteAgeCategory(athlete: Athlete, config: AppConfig): AgeC
 
 /** Check if an athlete is eligible for a race's age category */
 export function isEligibleForAgeCategory(athlete: Athlete, raceAgeCategory: AgeCategory, config: AppConfig): boolean {
+  // BCP race: only BCP-designated athletes
+  if (raceAgeCategory === 'BCP') return !!athlete.isBCP;
+
+  // BCP athletes can also race in other categories based on age
   const age = getAthleteAge(athlete, config.competitionYear);
   if (age === null) return true; // unknown age = allow (no restriction)
 

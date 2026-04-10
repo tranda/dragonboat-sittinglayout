@@ -130,7 +130,7 @@ export function App({ data }: Props) {
     saveRemoved(next);
   }, [removedAthleteIds, saveRemoved]);
 
-  const handleEditAthlete = useCallback((id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth'>>) => {
+  const handleEditAthlete = useCallback((id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP'>>) => {
     const next = { ...athleteOverrides, [id]: { ...athleteOverrides[id], ...updates } };
     setAthleteOverrides(next);
     localStorage.setItem('dragonboat-athlete-overrides', JSON.stringify(next));
@@ -144,9 +144,9 @@ export function App({ data }: Props) {
     }
   }, [athleteOverrides, customAthletes]);
 
-  const handleAddAthlete = useCallback((name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number) => {
+  const handleAddAthlete = useCallback((name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean) => {
     const maxId = allAthletes.reduce((max, a) => Math.max(max, a.id), 0);
-    const newAthlete: Athlete = { id: maxId + 1, name, weight, gender, yearOfBirth, raceAssignments: [] };
+    const newAthlete: Athlete = { id: maxId + 1, name, weight, gender, yearOfBirth, isBCP, raceAssignments: [] };
     const updated = [...customAthletes, newAthlete];
     setCustomAthletes(updated);
     localStorage.setItem('dragonboat-custom-athletes', JSON.stringify(updated));

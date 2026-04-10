@@ -4,6 +4,7 @@ export interface Athlete {
   weight: number;
   gender: 'M' | 'F';
   yearOfBirth?: number;
+  isBCP?: boolean; // manually set — Breast Cancer Paddler designation
   category?: string; // calculated from yearOfBirth + gender via policy (TBD)
   raceAssignments: string[];
 }

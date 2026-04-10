@@ -6,8 +6,8 @@ interface Props {
   removedIds: Set<number>;
   onRemove: (id: number) => void;
   onRestore: (id: number) => void;
-  onAdd: (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number) => void;
-  onEdit: (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth'>>) => void;
+  onAdd: (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean) => void;
+  onEdit: (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP'>>) => void;
   onClose: () => void;
 }
 
@@ -44,6 +44,7 @@ export function AthleteManager({ athletes, removedIds, onRemove, onRestore, onAd
   const [newWeight, setNewWeight] = useState('');
   const [newGender, setNewGender] = useState<'F' | 'M'>('F');
   const [newYearOfBirth, setNewYearOfBirth] = useState('');
+  const [newIsBCP, setNewIsBCP] = useState(false);
   const [search, setSearch] = useState('');
 
   const active = athletes
@@ -62,7 +63,7 @@ export function AthleteManager({ athletes, removedIds, onRemove, onRestore, onAd
     const name = newName.trim();
     if (!name) return;
     const yob = parseInt(newYearOfBirth) || undefined;
-    onAdd(name, parseFloat(newWeight) || 0, newGender, yob);
+    onAdd(name, parseFloat(newWeight) || 0, newGender, yob, newIsBCP || undefined);
     clearForm();
   };
 
@@ -72,6 +73,7 @@ export function AthleteManager({ athletes, removedIds, onRemove, onRestore, onAd
     setNewWeight(a.weight ? String(a.weight) : '');
     setNewGender(a.gender);
     setNewYearOfBirth(a.yearOfBirth ? String(a.yearOfBirth) : '');
+    setNewIsBCP(!!a.isBCP);
     setShowAddForm(false);
   };
 
@@ -84,6 +86,7 @@ export function AthleteManager({ athletes, removedIds, onRemove, onRestore, onAd
       weight: parseFloat(newWeight) || 0,
       gender: newGender,
       yearOfBirth: parseInt(newYearOfBirth) || undefined,
+      isBCP: newIsBCP || undefined,
     });
     clearForm();
   };
@@ -95,6 +98,7 @@ export function AthleteManager({ athletes, removedIds, onRemove, onRestore, onAd
     setNewWeight('');
     setNewGender('F');
     setNewYearOfBirth('');
+    setNewIsBCP(false);
   };
 
   const isEditing = editingId !== null;
@@ -152,6 +156,7 @@ export function AthleteManager({ athletes, removedIds, onRemove, onRestore, onAd
               <div className="text-xs text-gray-400">
                 {a.weight ? `${a.weight} kg` : 'no weight'} · {a.gender === 'F' ? 'W' : 'M'}
                 {a.yearOfBirth ? ` · ${a.yearOfBirth}` : ''}
+                {a.isBCP ? ' · BCP' : ''}
                 {a.category ? ` · ${a.category}` : ''}
               </div>
             </div>
@@ -210,6 +215,16 @@ export function AthleteManager({ athletes, removedIds, onRemove, onRestore, onAd
                 className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400"
               />
             </div>
+            <button
+              type="button"
+              onClick={() => setNewIsBCP(!newIsBCP)}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border-2 text-sm ${
+                newIsBCP ? 'bg-purple-100 border-purple-400 text-purple-700 font-semibold' : 'bg-gray-50 border-gray-200 text-gray-400'
+              }`}
+            >
+              <span>BCP (Breast Cancer Paddler)</span>
+              <span>{newIsBCP ? 'Yes' : 'No'}</span>
+            </button>
             <div className="flex gap-2">
               <button
                 onClick={isEditing ? handleSaveEdit : handleAdd}
