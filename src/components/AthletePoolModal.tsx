@@ -87,8 +87,13 @@ export function AthletePoolModal({ athletes, onSelect, onClose, title }: Props) 
                     a.gender === 'F' ? 'bg-pink-50 hover:bg-pink-100' : 'bg-blue-50 hover:bg-blue-100'
                   }`}
                 >
-                  <span className="font-medium">{a.name}</span>
-                  <span className="text-gray-400 text-xs">{a.weight || '?'} kg</span>
+                  <span className="font-medium flex items-center min-w-0">
+                    <span className="truncate">{a.name}</span>
+                    {a.isBCP && (
+                      <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold flex-shrink-0">BCP</span>
+                    )}
+                  </span>
+                  <span className="text-gray-400 text-xs flex-shrink-0 ml-2">{a.weight || '?'} kg</span>
                 </button>
               ))}
             </div>

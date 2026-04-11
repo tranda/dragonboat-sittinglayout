@@ -147,9 +147,17 @@ export function ReportPanel({ athletes, races, layouts, onClose }: Props) {
           {/* Athlete list */}
           <div className="divide-y">
             {rows.map(({ athlete, counts }) => (
-              <div key={athlete.id} className="flex items-center gap-1 px-4 py-2 hover:bg-gray-50">
+              <div
+                key={athlete.id}
+                className={`flex items-center gap-1 px-4 py-2 ${athlete.gender === 'F' ? 'bg-pink-50' : 'bg-blue-50'}`}
+              >
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-gray-800 truncate">{athlete.name}</div>
+                  <div className="text-sm text-gray-800 truncate flex items-center">
+                    <span className="truncate">{athlete.name}</span>
+                    {athlete.isBCP && (
+                      <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold flex-shrink-0">BCP</span>
+                    )}
+                  </div>
                   <div className="text-[10px] text-gray-400">
                     {athlete.gender} · {athlete.weight}kg{athlete.yearOfBirth ? ` · ${athlete.yearOfBirth}` : ''}
                   </div>
