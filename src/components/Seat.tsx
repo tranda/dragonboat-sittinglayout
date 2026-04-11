@@ -44,7 +44,7 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) 
         e.stopPropagation();
         onTap?.();
       }}
-      className={`rounded-lg border-2 flex items-center justify-center overflow-hidden transition-all px-1 ${
+      className={`rounded-lg border flex items-center justify-center overflow-hidden transition-all px-1 ${
         isDragging ? 'opacity-20' : ''
       } ${isOver ? 'ring-2 ring-blue-400' : ''} ${athlete ? genderBg : emptyStyle}`}
     >
