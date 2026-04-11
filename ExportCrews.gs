@@ -34,11 +34,24 @@ function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu('Crews')
     .addItem('Log in', 'loginToApi')
-    .addItem('Export to API', 'exportCrewsToApi')
+    .addItem('Export to API (merge)', 'exportCrewsMerge')
+    .addItem('Export to API (overwrite)', 'exportCrewsOverwrite')
     .addItem('Preview JSON (log only)', 'previewCrewsJson')
     .addSeparator()
     .addItem('Clear saved token', 'clearSavedToken')
     .addToUi();
+}
+
+function exportCrewsMerge() { exportCrewsToApi('merge'); }
+function exportCrewsOverwrite() {
+  const ui = SpreadsheetApp.getUi();
+  const resp = ui.alert(
+    'Overwrite import?',
+    'This will DELETE all existing races and layouts on the server, then recreate them from the spreadsheet. Manual race ordering and any races added via the UI will be lost. Continue?',
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (resp !== ui.Button.OK) return;
+  exportCrewsToApi('overwrite');
 }
 
 /**
@@ -116,7 +129,7 @@ function getApiToken_() {
   return PropertiesService.getScriptProperties().getProperty(TOKEN_PROPERTY) || '';
 }
 
-function exportCrewsToApi() {
+function exportCrewsToApi(mode) {
   const ui = SpreadsheetApp.getUi();
 
   const token = getApiToken_();
@@ -132,6 +145,8 @@ function exportCrewsToApi() {
     ui.alert('Failed to build payload: ' + e.message);
     throw e;
   }
+
+  payload.mode = mode || 'merge';
 
   const resp = UrlFetchApp.fetch(API_BASE + IMPORT_ENDPOINT, {
     method: 'post',
@@ -150,7 +165,7 @@ function exportCrewsToApi() {
   Logger.log(body);
 
   if (code >= 200 && code < 300) {
-    ui.alert('Export OK (' + code + ').\n' +
+    ui.alert('Export OK (' + code + ', ' + payload.mode + ').\n' +
              payload.athletes.length + ' athletes, ' +
              payload.races.length + ' races sent.');
   } else {
@@ -197,6 +212,8 @@ function buildPayload_() {
     if (!name || name === 'empty') continue;
 
     const weight = cell_(ps, row, 3);
+    const yearRaw = cell_(ps, row, 4);
+    const yearOfBirth = (typeof yearRaw === 'number' && yearRaw > 1900) ? yearRaw : null;
 
     const assignments = [];
     Object.keys(raceCols).forEach(function (colStr) {
@@ -220,6 +237,7 @@ function buildPayload_() {
       name: String(name).trim(),
       weight: weight ? Number(weight) : 0,
       gender: gender,
+      yearOfBirth: yearOfBirth,
       raceAssignments: assignments,
     });
   }
