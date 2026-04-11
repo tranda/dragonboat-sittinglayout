@@ -272,11 +272,14 @@ export function App() {
   return (
     <div className="h-dvh flex flex-col bg-slate-100 overflow-hidden max-w-lg mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 pt-2 pb-1 flex-shrink-0">
-        <h1 className="text-sm font-bold text-gray-800 leading-tight">
-          Dragon Boat <span className="text-gray-400 font-normal text-xs">Munich 2026</span>
-        </h1>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2 px-3 pt-2 pb-1 flex-shrink-0">
+        <div className="min-w-0 flex-1">
+          <div className="text-[10px] text-gray-400 leading-tight">Dragon Boat · Munich 2026</div>
+          <div className="text-sm font-bold text-gray-800 leading-tight truncate">
+            {selectedRace?.name ?? 'No race selected'}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-[10px] text-gray-400">{user?.name} ({user?.role})</span>
           <button
             onClick={() => setMenuOpen(true)}
