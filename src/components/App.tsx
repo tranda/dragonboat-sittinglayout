@@ -8,6 +8,7 @@ import { ImportDialog } from './ImportDialog';
 import { ConfigPanel } from './ConfigPanel';
 import { LoginScreen } from './LoginScreen';
 import { UserManager } from './UserManager';
+import { RaceReorderModal } from './RaceReorderModal';
 import { exportToExcel } from '../utils/excelExport';
 import { importFromExcel } from '../utils/excelImport';
 import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
@@ -33,6 +34,7 @@ export function App() {
   const [showImport, setShowImport] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
+  const [showReorderRaces, setShowReorderRaces] = useState(false);
 
   // Role checks
   const canEdit = user?.role === 'admin' || user?.role === 'coach';
@@ -325,6 +327,7 @@ export function App() {
         onManageAthletes={() => { setMenuOpen(false); setShowAthleteManager(true); }}
         onImport={canEdit ? () => { setMenuOpen(false); setShowImport(true); } : () => {}}
         onSettings={() => { setMenuOpen(false); setShowConfig(true); }}
+        onReorderRaces={canEdit ? () => { setMenuOpen(false); setShowReorderRaces(true); } : undefined}
         onManageUsers={user?.role === 'admin' ? () => { setMenuOpen(false); setShowUsers(true); } : undefined}
         onLogout={() => { handleLogout(); setMenuOpen(false); }}
         userRole={user?.role}
@@ -356,6 +359,20 @@ export function App() {
       {/* User manager */}
       {showUsers && (
         <UserManager onClose={() => setShowUsers(false)} />
+      )}
+
+      {/* Reorder races modal */}
+      {showReorderRaces && (
+        <RaceReorderModal
+          races={races}
+          onClose={() => setShowReorderRaces(false)}
+          onSaved={(ids) => {
+            setRaces(prev => {
+              const map = new Map(prev.map(r => [r.id, r] as const));
+              return ids.map(id => map.get(id)!).filter(Boolean);
+            });
+          }}
+        />
       )}
 
       {/* Import dialog */}

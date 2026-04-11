@@ -77,6 +77,9 @@ export function deleteRace(id: string) {
 export function duplicateRace(id: string) {
   return request('POST', `/races/${id}/duplicate`);
 }
+export function reorderRaces(ids: string[]) {
+  return request('POST', '/races/reorder', { ids });
+}
 
 // Layouts
 export function saveLayout(raceId: string, layout: { drummer: number | null; helm: number | null; left: (number | null)[]; right: (number | null)[]; reserves: number[] }) {
