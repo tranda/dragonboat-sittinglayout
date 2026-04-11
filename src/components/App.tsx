@@ -370,6 +370,7 @@ export function App() {
           athletes={athletes}
           races={races}
           layouts={layouts}
+          config={appConfig}
           onClose={() => setShowReport(false)}
         />
       )}
