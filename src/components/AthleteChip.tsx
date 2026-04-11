@@ -24,6 +24,7 @@ export function AthleteChip({ athlete, seatId, showWeight }: Props) {
       } ${genderColor}`}
     >
       {athlete.name}
+      {athlete.isBCP && <span className="ml-1 px-1 bg-purple-100 text-purple-700 rounded text-[8px] font-semibold">BCP</span>}
       {showWeight && <span className="opacity-50 ml-0.5">{athlete.weight || '?'}</span>}
     </div>
   );
