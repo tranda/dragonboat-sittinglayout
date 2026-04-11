@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import type { Athlete, Race, BoatLayout, GenderCategory, AgeCategory } from '../types';
+import type { Athlete, Race, BoatLayout, GenderCategory } from '../types';
 
 interface Props {
   athletes: Athlete[];
@@ -10,9 +10,6 @@ interface Props {
 
 type BoatFilter = 'all' | 'standard' | 'small';
 type GenderFilter = 'all' | GenderCategory;
-type AgeFilter = 'all' | AgeCategory;
-
-const AGE_CATS: AgeCategory[] = ['18U', '24U', 'Premier', 'Senior A', 'Senior B', 'Senior C', 'Senior D', 'BCP'];
 
 interface RoleCounts {
   paddle: number;
@@ -24,14 +21,20 @@ interface RoleCounts {
 export function ReportPanel({ athletes, races, layouts, onClose }: Props) {
   const [boatFilter, setBoatFilter] = useState<BoatFilter>('all');
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
-  const [ageFilter, setAgeFilter] = useState<AgeFilter>('all');
+  const [ageFilter, setAgeFilter] = useState<string>('all');
   const [distanceFilter, setDistanceFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(true);
 
-  // Unique distances from races
+  // Unique values derived from actual races (so filters match what's in the data)
   const distances = useMemo(() => {
     const set = new Set<string>();
     races.forEach(r => { if (r.distance) set.add(r.distance); });
+    return Array.from(set).sort();
+  }, [races]);
+
+  const ageCategories = useMemo(() => {
+    const set = new Set<string>();
+    races.forEach(r => { if (r.ageCategory) set.add(r.ageCategory); });
     return Array.from(set).sort();
   }, [races]);
 
@@ -117,9 +120,9 @@ export function ReportPanel({ athletes, races, layouts, onClose }: Props) {
                   <option value="Women">Women</option>
                   <option value="Mixed">Mixed</option>
                 </select>
-                <select value={ageFilter} onChange={e => setAgeFilter(e.target.value as AgeFilter)} className="px-2 py-1.5 text-xs border rounded-lg bg-white">
+                <select value={ageFilter} onChange={e => setAgeFilter(e.target.value)} className="px-2 py-1.5 text-xs border rounded-lg bg-white">
                   <option value="all">All ages</option>
-                  {AGE_CATS.map(a => <option key={a} value={a}>{a}</option>)}
+                  {ageCategories.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
                 <select value={distanceFilter} onChange={e => setDistanceFilter(e.target.value)} className="px-2 py-1.5 text-xs border rounded-lg bg-white">
                   <option value="all">All distances</option>
