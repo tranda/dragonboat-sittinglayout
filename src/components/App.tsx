@@ -163,7 +163,7 @@ export function App() {
       await api.createRace({ id, name, boat_type: boatType, num_rows: numRows, distance, gender_category: genderCategory || 'Open', age_category: ageCategory || 'Senior B', category: name });
       await loadData();
       setSelectedRaceId(id);
-    } catch (err) { alert('Failed to add race: ' + (err instanceof Error ? err.message : '')); }
+    } catch (err) { alert('Failed to add crew:' + (err instanceof Error ? err.message : '')); }
   };
 
   const handleRemoveRace = async () => {
@@ -307,7 +307,7 @@ export function App() {
         <div className="min-w-0 flex-1">
           <div className="text-[10px] text-gray-400 leading-tight">Dragon Boat · Munich 2026</div>
           <div className="text-sm font-bold text-gray-800 leading-tight truncate">
-            {view === 'dashboard' ? 'Crews Dashboard' : (selectedRace?.name ?? 'No race selected')}
+            {view === 'dashboard' ? 'Crews Dashboard' : (selectedRace?.name ?? 'No crew selected')}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -351,7 +351,7 @@ export function App() {
                 readOnly={!canEdit}
               />
             ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Select a race</div>
+              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Select a crew</div>
             )}
           </div>
         </>

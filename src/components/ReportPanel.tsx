@@ -104,7 +104,7 @@ export function ReportPanel({ athletes, races, layouts, config, onClose }: Props
             onClick={() => setShowFilters(!showFilters)}
             className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-gray-500 hover:bg-gray-50 border-b"
           >
-            <span>Filters ({filteredRaces.length} of {races.length} races)</span>
+            <span>Filters ({filteredRaces.length} of {races.length} crews)</span>
             <span className="text-gray-400">{showFilters ? '▴' : '▾'}</span>
           </button>
 

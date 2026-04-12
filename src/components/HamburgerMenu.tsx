@@ -113,7 +113,7 @@ export function HamburgerMenu({
           <hr className="my-2" />
 
           {/* Race management */}
-          <div className="text-xs font-semibold text-gray-400 uppercase px-3 pt-2">Current Race</div>
+          <div className="text-xs font-semibold text-gray-400 uppercase px-3 pt-2">Current Crew</div>
           {selectedRace && (
             <div className="text-xs text-gray-500 px-3 pb-1">{selectedRace.name}</div>
           )}
@@ -122,7 +122,7 @@ export function HamburgerMenu({
             onClick={() => { setShowRename(true); setRenameName(selectedRace?.name ?? ''); }}
             className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm"
           >
-            Rename Race
+            Rename Crew
           </button>
 
           {showRename && (
@@ -144,7 +144,7 @@ export function HamburgerMenu({
             onClick={() => { onDuplicateRace(); onClose(); }}
             className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm"
           >
-            Duplicate Race
+            Duplicate Crew
           </button>
 
           {onCompareCrew && (
@@ -172,7 +172,7 @@ export function HamburgerMenu({
             }}
             className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 text-sm text-red-600"
           >
-            Remove Race
+            Remove Crew
           </button>
 
           <hr className="my-2" />
@@ -191,7 +191,7 @@ export function HamburgerMenu({
             onClick={() => setShowAddForm(!showAddForm)}
             className="w-full text-left px-3 py-2 rounded-lg hover:bg-green-50 text-sm text-green-700 font-medium"
           >
-            + Add New Race
+            + Add New Crew
           </button>
 
           {showAddForm && (

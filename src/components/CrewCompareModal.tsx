@@ -157,7 +157,7 @@ export function CrewCompareModal({ currentRace, currentLayout, races, layouts, a
             disabled={!compareLayout}
             className="flex-1 py-2 text-sm bg-blue-600 text-white rounded-lg disabled:opacity-50"
           >
-            Copy crew to current race
+            Copy to current crew
           </button>
           <button onClick={onClose} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg">
             Close
