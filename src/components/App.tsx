@@ -127,6 +127,7 @@ export function App() {
     setActiveCompetitionId(compId);
     setSelectedRaceId('');
     setView('dashboard');
+    setLoading(true);
     loadData();
   }, [loadData]);
 
@@ -349,7 +350,7 @@ export function App() {
           </div>
           {view === 'layout' && selectedRace && layout && (
             <button
-              onClick={async () => { const t = await getPdfToken(); window.open(`/api/crew-sheet?ids=${selectedRace.id}&token=${t}`, '_blank'); }}
+              onClick={async () => { const t = await getPdfToken(); window.open(`/api/crew-sheet?ids=${encodeURIComponent(selectedRace.id)}&token=${t}`, '_blank'); }}
               className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-200 text-gray-400 flex-shrink-0"
               title="Download PDF"
             >

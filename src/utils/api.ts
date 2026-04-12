@@ -50,9 +50,13 @@ export async function login(email: string, password: string) {
 }
 
 export function logout() {
-  request('POST', '/logout').catch(() => {});
+  request('POST', '/logout').catch(() => {
+    // Server-side token cleanup failed — local cleanup still proceeds
+  });
   authToken = null;
   localStorage.removeItem('dragonboat-token');
+  localStorage.removeItem('dragonboat-competition');
+  activeCompetitionId = null;
 }
 
 export function getToken() { return authToken; }

@@ -26,7 +26,7 @@ export function PdfExportModal({ races, onClose }: Props) {
     setGenerating(true);
     try {
       const token = await getPdfToken();
-      const ids = Array.from(selected).join(',');
+      const ids = Array.from(selected).map(encodeURIComponent).join(',');
       window.open(`/api/crew-sheet?ids=${ids}&token=${token}`, '_blank');
     } catch (err) {
       alert('Failed: ' + (err instanceof Error ? err.message : ''));
