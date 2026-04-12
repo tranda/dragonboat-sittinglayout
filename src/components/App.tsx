@@ -11,6 +11,7 @@ import { UserManager } from './UserManager';
 import { RaceReorderModal } from './RaceReorderModal';
 import { ReportPanel } from './ReportPanel';
 import { CrewCompareModal } from './CrewCompareModal';
+import { DashboardPanel } from './DashboardPanel';
 import { exportToExcel } from '../utils/excelExport';
 import { importFromExcel } from '../utils/excelImport';
 import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
@@ -39,6 +40,7 @@ export function App() {
   const [showReorderRaces, setShowReorderRaces] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
 
   // Role checks
   const canEdit = user?.role === 'admin' || user?.role === 'coach';
@@ -348,6 +350,7 @@ export function App() {
         onCompareCrew={canEdit && selectedRace ? () => { setMenuOpen(false); setShowCompare(true); } : undefined}
         onReorderRaces={canEdit ? () => { setMenuOpen(false); setShowReorderRaces(true); } : undefined}
         onShowReport={canEdit ? () => { setMenuOpen(false); setShowReport(true); } : undefined}
+        onShowDashboard={canEdit ? () => { setMenuOpen(false); setShowDashboard(true); } : undefined}
         onManageUsers={user?.role === 'admin' ? () => { setMenuOpen(false); setShowUsers(true); } : undefined}
         onLogout={() => { handleLogout(); setMenuOpen(false); }}
         userRole={user?.role}
@@ -379,6 +382,17 @@ export function App() {
       {/* User manager */}
       {showUsers && (
         <UserManager onClose={() => setShowUsers(false)} />
+      )}
+
+      {/* Dashboard */}
+      {showDashboard && (
+        <DashboardPanel
+          races={races}
+          layouts={layouts}
+          athleteMap={athleteMap}
+          onSelectRace={(id) => { setSelectedRaceId(id); setShowDashboard(false); }}
+          onClose={() => setShowDashboard(false)}
+        />
       )}
 
       {/* Crew compare */}

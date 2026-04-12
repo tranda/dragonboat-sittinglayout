@@ -21,6 +21,7 @@ interface Props {
   onCompareCrew?: () => void;
   onReorderRaces?: () => void;
   onShowReport?: () => void;
+  onShowDashboard?: () => void;
   onManageUsers?: () => void;
   onLogout?: () => void;
   userRole?: string;
@@ -29,7 +30,7 @@ interface Props {
 export function HamburgerMenu({
   isOpen, onClose, showWeights, onToggleWeights,
   onExport, onResetCurrent, onResetAll,
-  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onManageUsers, onLogout, userRole,
+  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onManageUsers, onLogout, userRole,
 }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBoatType, setNewBoatType] = useState<'standard' | 'small'>('standard');
@@ -95,6 +96,15 @@ export function HamburgerMenu({
               className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm font-medium"
             >
               Report
+            </button>
+          )}
+
+          {onShowDashboard && (
+            <button
+              onClick={() => { onShowDashboard(); onClose(); }}
+              className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm font-medium"
+            >
+              Race Day Dashboard
             </button>
           )}
 
