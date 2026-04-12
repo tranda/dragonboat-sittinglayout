@@ -258,9 +258,12 @@ export function BoatLayout({
           const ri = pi * 2 + 1;
           const leftId = reserves[li] ?? null;
           const rightId = ri < reserveCount ? (reserves[ri] ?? null) : undefined;
+          const helmNum = race.numRows * 2 + 2;
+          const leftResNum = helmNum + li + 1;
+          const rightResNum = helmNum + ri + 1;
           return (
             <div key={`res-${pi}`} className="contents">
-              <div />
+              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{leftResNum}</span></div>
               <Seat
                 seatId={`reserve-${li}`}
                 athlete={leftId ? athleteMap.get(leftId) ?? null : null}
@@ -280,7 +283,11 @@ export function BoatLayout({
               ) : (
                 <div className="bg-green-50/20" />
               )}
-              <div />
+              {rightId !== undefined ? (
+                <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{rightResNum}</span></div>
+              ) : (
+                <div />
+              )}
             </div>
           );
         })}
