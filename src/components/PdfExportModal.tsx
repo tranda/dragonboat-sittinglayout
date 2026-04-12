@@ -19,14 +19,13 @@ function CrewSheetPage({ race, layout, athleteMap }: {
     if (id === null) return '';
     return athleteMap.get(id)?.name ?? '?';
   };
-  const getWeight = (id: number | null) => {
-    if (id === null) return '';
-    const w = athleteMap.get(id)?.weight;
-    return w ? `${w}` : '';
-  };
-
   const paddlersFilled = layout.left.filter(Boolean).length + layout.right.filter(Boolean).length;
   const totalPaddlers = race.numRows * 2;
+
+  const th = { border: '1px solid #ccc', padding: '5px 10px', background: '#f0f0f0', textAlign: 'left' as const, color: '#555' };
+  const td = { border: '1px solid #ccc', padding: '5px 10px' };
+  const seatTd = { ...td, textAlign: 'center' as const, color: '#999', fontSize: '11px', width: '40px' };
+  const nameTd = { ...td, fontWeight: 500 };
 
   return (
     <div style={{ width: '794px', padding: '40px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#222', background: 'white' }}>
@@ -37,32 +36,28 @@ function CrewSheetPage({ race, layout, athleteMap }: {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
         <thead>
           <tr>
-            <th style={{ border: '1px solid #ccc', padding: '5px 10px', background: '#f0f0f0', width: '40px', textAlign: 'center', color: '#555' }}>Seat</th>
-            <th style={{ border: '1px solid #ccc', padding: '5px 10px', background: '#f0f0f0', textAlign: 'left', color: '#555' }}>Left</th>
-            <th style={{ border: '1px solid #ccc', padding: '5px 10px', background: '#f0f0f0', width: '50px', textAlign: 'right', color: '#555' }}>kg</th>
-            <th style={{ border: '1px solid #ccc', padding: '5px 10px', background: '#f0f0f0', textAlign: 'left', color: '#555' }}>Right</th>
-            <th style={{ border: '1px solid #ccc', padding: '5px 10px', background: '#f0f0f0', width: '50px', textAlign: 'right', color: '#555' }}>kg</th>
+            <th style={{ ...th, width: '40px', textAlign: 'center' }}>Seat</th>
+            <th style={th}>Left</th>
+            <th style={th}>Right</th>
           </tr>
         </thead>
         <tbody>
           <tr style={{ background: '#fff8eb' }}>
-            <td style={{ border: '1px solid #ccc', padding: '5px 10px', textAlign: 'center', color: '#999', fontSize: '11px' }}>DR</td>
-            <td style={{ border: '1px solid #ccc', padding: '5px 10px', fontWeight: 500 }} colSpan={2}>{getName(layout.drummer)}</td>
-            <td style={{ border: '1px solid #ccc', padding: '5px 10px' }} colSpan={2}></td>
+            <td style={seatTd}>DR</td>
+            <td style={nameTd}>{getName(layout.drummer)}</td>
+            <td style={td}></td>
           </tr>
           {Array.from({ length: race.numRows }).map((_, i) => (
             <tr key={i}>
-              <td style={{ border: '1px solid #ccc', padding: '5px 10px', textAlign: 'center', color: '#999', fontSize: '11px' }}>{i + 2}</td>
-              <td style={{ border: '1px solid #ccc', padding: '5px 10px', fontWeight: 500 }}>{getName(layout.left[i])}</td>
-              <td style={{ border: '1px solid #ccc', padding: '5px 10px', textAlign: 'right', color: '#999' }}>{getWeight(layout.left[i])}</td>
-              <td style={{ border: '1px solid #ccc', padding: '5px 10px', fontWeight: 500 }}>{getName(layout.right[i])}</td>
-              <td style={{ border: '1px solid #ccc', padding: '5px 10px', textAlign: 'right', color: '#999' }}>{getWeight(layout.right[i])}</td>
+              <td style={seatTd}>{i + 2}</td>
+              <td style={nameTd}>{getName(layout.left[i])}</td>
+              <td style={nameTd}>{getName(layout.right[i])}</td>
             </tr>
           ))}
           <tr style={{ background: '#fff8eb' }}>
-            <td style={{ border: '1px solid #ccc', padding: '5px 10px', textAlign: 'center', color: '#999', fontSize: '11px' }}>HM</td>
-            <td style={{ border: '1px solid #ccc', padding: '5px 10px' }} colSpan={2}></td>
-            <td style={{ border: '1px solid #ccc', padding: '5px 10px', fontWeight: 500 }} colSpan={2}>{getName(layout.helm)}</td>
+            <td style={seatTd}>HM</td>
+            <td style={td}></td>
+            <td style={nameTd}>{getName(layout.helm)}</td>
           </tr>
         </tbody>
       </table>
