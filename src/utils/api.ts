@@ -5,19 +5,30 @@ let activeCompetitionId: number | null = (() => {
   try { return JSON.parse(localStorage.getItem('dragonboat-competition') ?? 'null'); }
   catch { return null; }
 })();
+let activeTeamId: number | null = (() => {
+  try { return JSON.parse(localStorage.getItem('dragonboat-team') ?? 'null'); }
+  catch { return null; }
+})();
 
 export function setCompetitionId(id: number | null) {
   activeCompetitionId = id;
   if (id) localStorage.setItem('dragonboat-competition', JSON.stringify(id));
   else localStorage.removeItem('dragonboat-competition');
 }
-
 export function getCompetitionId() { return activeCompetitionId; }
+
+export function setTeamId(id: number | null) {
+  activeTeamId = id;
+  if (id) localStorage.setItem('dragonboat-team', JSON.stringify(id));
+  else localStorage.removeItem('dragonboat-team');
+}
+export function getTeamId() { return activeTeamId; }
 
 function headers(json = false): Record<string, string> {
   const h: Record<string, string> = { Accept: 'application/json' };
   if (authToken) h['Authorization'] = `Bearer ${authToken}`;
   if (activeCompetitionId) h['X-Competition-Id'] = String(activeCompetitionId);
+  if (activeTeamId) h['X-Team-Id'] = String(activeTeamId);
   if (json) h['Content-Type'] = 'application/json';
   return h;
 }
@@ -56,7 +67,9 @@ export function logout() {
   authToken = null;
   localStorage.removeItem('dragonboat-token');
   localStorage.removeItem('dragonboat-competition');
+  localStorage.removeItem('dragonboat-team');
   activeCompetitionId = null;
+  activeTeamId = null;
 }
 
 export function getToken() { return authToken; }
@@ -256,6 +269,8 @@ export interface ApiInitData {
   };
   benchFactors: Record<string, number[]>;
   user: ApiUser;
+  teams: { id: number; name: string }[];
   competitions: ApiCompetition[];
+  activeTeamId: number | null;
   activeCompetitionId: number | null;
 }

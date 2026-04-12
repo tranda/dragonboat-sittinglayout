@@ -26,7 +26,9 @@ export function App() {
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
   const [user, setUser] = useState<api.ApiUser | null>(null);
 
-  // Competition state
+  // Team + Competition state
+  const [userTeams, setUserTeams] = useState<{ id: number; name: string }[]>([]);
+  const [activeTeamId, setActiveTeamId] = useState<number | null>(api.getTeamId());
   const [competitions, setCompetitions] = useState<api.ApiCompetition[]>([]);
   const [activeCompetitionId, setActiveCompetitionId] = useState<number | null>(api.getCompetitionId());
 
@@ -62,7 +64,12 @@ export function App() {
       setLoading(true);
       const data = await api.fetchInit();
       setUser(data.user);
+      setUserTeams(data.teams ?? []);
       setCompetitions(data.competitions ?? []);
+      if (data.activeTeamId) {
+        setActiveTeamId(data.activeTeamId);
+        api.setTeamId(data.activeTeamId);
+      }
       if (data.activeCompetitionId) {
         setActiveCompetitionId(data.activeCompetitionId);
         api.setCompetitionId(data.activeCompetitionId);
@@ -121,6 +128,17 @@ export function App() {
     if (loggedIn) loadData();
     else setLoading(false);
   }, [loggedIn, loadData]);
+
+  const handleSwitchTeam = useCallback((teamId: number) => {
+    api.setTeamId(teamId);
+    setActiveTeamId(teamId);
+    api.setCompetitionId(null);
+    setActiveCompetitionId(null);
+    setSelectedRaceId('');
+    setView('dashboard');
+    setLoading(true);
+    loadData();
+  }, [loadData]);
 
   const handleSwitchCompetition = useCallback((compId: number) => {
     api.setCompetitionId(compId);
@@ -329,21 +347,31 @@ export function App() {
         </button>
         <div className="min-w-0 flex-1 flex items-center gap-1">
           <div className="min-w-0">
-            <div className="text-[10px] text-[var(--text-muted)] leading-tight">
-            {competitions.length > 1 ? (
-              <select
-                value={activeCompetitionId ?? ''}
-                onChange={e => handleSwitchCompetition(Number(e.target.value))}
-                className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer -ml-0.5"
-              >
-                {competitions.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}{user?.team?.name ? ` · ${user.team.name}` : ''}</option>
-                ))}
-              </select>
-            ) : (
-              <span>{competitions[0]?.name ?? 'Dragon Boat'}{user?.team?.name ? ` · ${user.team.name}` : ''}</span>
-            )}
-          </div>
+            <div className="text-[10px] text-[var(--text-muted)] leading-tight flex items-center gap-1">
+              {userTeams.length > 1 ? (
+                <select
+                  value={activeTeamId ?? ''}
+                  onChange={e => handleSwitchTeam(Number(e.target.value))}
+                  className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer"
+                >
+                  {userTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              ) : (
+                <span>{userTeams[0]?.name ?? ''}</span>
+              )}
+              {(userTeams.length > 0 && competitions.length > 0) && <span>·</span>}
+              {competitions.length > 1 ? (
+                <select
+                  value={activeCompetitionId ?? ''}
+                  onChange={e => handleSwitchCompetition(Number(e.target.value))}
+                  className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer"
+                >
+                  {competitions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              ) : (
+                <span>{competitions[0]?.name ?? ''}</span>
+              )}
+            </div>
             <div className="text-sm font-bold text-[var(--text-primary)] leading-tight truncate">
               {view === 'dashboard' ? 'Crews Dashboard' : (selectedRace?.name ?? 'No crew selected')}
             </div>
