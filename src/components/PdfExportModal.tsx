@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Race } from '../types';
-import { getToken } from '../utils/api';
+import { getPdfToken } from '../utils/api';
 
 interface Props {
   races: Race[];
@@ -9,6 +9,7 @@ interface Props {
 
 export function PdfExportModal({ races, onClose }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set(races.map(r => r.id)));
+  const [generating, setGenerating] = useState(false);
 
   const toggleRace = (id: string) => {
     setSelected(prev => {
@@ -21,9 +22,17 @@ export function PdfExportModal({ races, onClose }: Props) {
   const selectAll = () => setSelected(new Set(races.map(r => r.id)));
   const selectNone = () => setSelected(new Set());
 
-  const handleOpen = () => {
-    const ids = Array.from(selected).join(',');
-    window.open(`/api/crew-sheet?ids=${ids}&token=${getToken()}`, '_blank');
+  const handleOpen = async () => {
+    setGenerating(true);
+    try {
+      const token = await getPdfToken();
+      const ids = Array.from(selected).join(',');
+      window.open(`/api/crew-sheet?ids=${ids}&token=${token}`, '_blank');
+    } catch (err) {
+      alert('Failed: ' + (err instanceof Error ? err.message : ''));
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -66,10 +75,10 @@ export function PdfExportModal({ races, onClose }: Props) {
         <div className="flex gap-2 p-4 border-t">
           <button
             onClick={handleOpen}
-            disabled={selected.size === 0}
+            disabled={selected.size === 0 || generating}
             className="flex-1 py-2 text-sm bg-blue-600 text-white rounded-lg disabled:opacity-50"
           >
-            Open Crew Sheets ({selected.size})
+            {generating ? 'Opening...' : `Open Crew Sheets (${selected.size})`}
           </button>
           <button onClick={onClose} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg">
             Cancel

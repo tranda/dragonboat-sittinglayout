@@ -1,7 +1,10 @@
 const API_BASE = '/api';
 
 let authToken: string | null = localStorage.getItem('dragonboat-token');
-let activeCompetitionId: number | null = JSON.parse(localStorage.getItem('dragonboat-competition') ?? 'null');
+let activeCompetitionId: number | null = (() => {
+  try { return JSON.parse(localStorage.getItem('dragonboat-competition') ?? 'null'); }
+  catch { return null; }
+})();
 
 export function setCompetitionId(id: number | null) {
   activeCompetitionId = id;
@@ -116,6 +119,12 @@ export function updateUser(id: number, data: Record<string, unknown>) {
 }
 export function deleteUser(id: number) {
   return request('DELETE', `/users/${id}`);
+}
+
+// PDF token
+export async function getPdfToken(): Promise<string> {
+  const data = await request<{ token: string }>('POST', '/pdf-token');
+  return data.token;
 }
 
 // Competitions

@@ -16,7 +16,7 @@ import { ActivityLogPanel } from './ActivityLogPanel';
 import { PdfExportModal } from './PdfExportModal';
 import { CompetitionManager } from './CompetitionManager';
 import { exportToExcel } from '../utils/excelExport';
-import { getToken } from '../utils/api';
+import { getPdfToken } from '../utils/api';
 import { importFromExcel } from '../utils/excelImport';
 import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
 import * as api from '../utils/api';
@@ -347,7 +347,7 @@ export function App() {
           </div>
           {view === 'layout' && selectedRace && layout && (
             <button
-              onClick={() => window.open(`/api/crew-sheet?ids=${selectedRace.id}&token=${getToken()}`, '_blank')}
+              onClick={async () => { const t = await getPdfToken(); window.open(`/api/crew-sheet?ids=${selectedRace.id}&token=${t}`, '_blank'); }}
               className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-200 text-gray-400 flex-shrink-0"
               title="Download PDF"
             >
