@@ -126,8 +126,8 @@ export function PdfExportModal({ races, layouts, athleteMap, onClose }: Props) {
         </div>
 
         <div className="px-4 py-2 border-b flex items-center gap-2">
-          <button onClick={selectAll} className="text-xs text-blue-600 hover:underline">Select All</button>
-          <button onClick={selectNone} className="text-xs text-blue-600 hover:underline">Select None</button>
+          <button onClick={selectAll} className="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100">All</button>
+          <button onClick={selectNone} className="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100">None</button>
           <span className="text-xs text-gray-400 ml-auto">{selected.size} of {races.length} selected</span>
         </div>
 
