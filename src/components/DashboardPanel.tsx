@@ -24,7 +24,7 @@ export function DashboardPanel({ races, layouts, athleteMap, onSelectRace, onClo
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[90dvh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-bold text-gray-800">Race Day Dashboard</h2>
+          <h2 className="text-lg font-bold text-gray-800">Races Dashboard</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl px-1">&times;</button>
         </div>
 
