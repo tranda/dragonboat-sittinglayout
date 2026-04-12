@@ -29,18 +29,15 @@ export async function downloadCrewPdf(
     const totalPaddlers = race.numRows * 2;
 
     let rows = '';
-    const nameWithNum = (id: number | null, num: number) => {
-      const n = getName(id);
-      return n ? `<span style="color:#999;font-weight:normal;font-size:10px">${num}</span> ${n}` : '';
-    };
-    rows += `<tr style="background:#fff8eb"><td class="seat">DR</td><td class="name">${nameWithNum(layout.drummer, 1)}</td><td></td></tr>`;
+    const numTd = `style="border:1px solid #ccc;padding:5px 4px;text-align:center;color:#999;font-size:10px;width:24px"`;
+    rows += `<tr style="background:#fff8eb"><td class="seat">DR</td><td ${numTd}>1</td><td class="name">${getName(layout.drummer)}</td><td ${numTd}></td><td></td></tr>`;
     for (let i = 0; i < race.numRows; i++) {
       const leftNum = i + 2;
       const rightNum = race.numRows + i + 2;
-      rows += `<tr><td class="seat">${i + 1}</td><td class="name">${nameWithNum(layout.left[i], leftNum)}</td><td class="name">${nameWithNum(layout.right[i], rightNum)}</td></tr>`;
+      rows += `<tr><td class="seat">${i + 1}</td><td ${numTd}>${leftNum}</td><td class="name">${getName(layout.left[i])}</td><td ${numTd}>${rightNum}</td><td class="name">${getName(layout.right[i])}</td></tr>`;
     }
     const helmNum = race.numRows * 2 + 2;
-    rows += `<tr style="background:#fff8eb"><td class="seat">HM</td><td></td><td class="name">${nameWithNum(layout.helm, helmNum)}</td></tr>`;
+    rows += `<tr style="background:#fff8eb"><td class="seat">HM</td><td ${numTd}></td><td></td><td ${numTd}>${helmNum}</td><td class="name">${getName(layout.helm)}</td></tr>`;
 
     const reserves = layout.reserves.length > 0
       ? `<p style="margin-top:10px;font-size:13px"><b>Reserves:</b> ${layout.reserves.map(id => getName(id)).filter(Boolean).join(', ')}</p>`
@@ -57,8 +54,10 @@ export async function downloadCrewPdf(
       <p style="font-size:12px;color:#888;margin-bottom:16px">${race.boatType === 'standard' ? 'Standard (20)' : 'Small (10)'} · ${race.distance} · ${paddlersFilled}/${totalPaddlers} paddlers</p>
       <table style="width:100%;border-collapse:collapse;font-size:13px">
         <thead><tr>
-          <th style="border:1px solid #ccc;padding:5px 10px;background:#f0f0f0;width:40px;text-align:center;color:#555">Seat</th>
+          <th style="border:1px solid #ccc;padding:5px 10px;background:#f0f0f0;width:30px;text-align:center;color:#555"></th>
+          <th style="border:1px solid #ccc;padding:5px 4px;background:#f0f0f0;width:24px;text-align:center;color:#555">#</th>
           <th style="border:1px solid #ccc;padding:5px 10px;background:#f0f0f0;text-align:left;color:#555">Left</th>
+          <th style="border:1px solid #ccc;padding:5px 4px;background:#f0f0f0;width:24px;text-align:center;color:#555">#</th>
           <th style="border:1px solid #ccc;padding:5px 10px;background:#f0f0f0;text-align:left;color:#555">Right</th>
         </tr></thead>
         <tbody>${rows}</tbody>
