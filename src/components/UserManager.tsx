@@ -12,12 +12,15 @@ interface UserRow {
   role: string;
   athlete_id: number | null;
   is_active: boolean;
+  team: string | null;
+  team_id?: number | null;
 }
 
 const ROLES = ['admin', 'coach', 'athlete'] as const;
 
 export function UserManager({ onClose }: Props) {
   const [users, setUsers] = useState<UserRow[]>([]);
+  const [teams, setTeams] = useState<api.ApiTeam[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -27,19 +30,22 @@ export function UserManager({ onClose }: Props) {
   const [addEmail, setAddEmail] = useState('');
   const [addPassword, setAddPassword] = useState('');
   const [addRole, setAddRole] = useState<string>('coach');
+  const [addTeamId, setAddTeamId] = useState<string>('');
 
   // Edit form
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPassword, setEditPassword] = useState('');
   const [editRole, setEditRole] = useState<string>('coach');
+  const [editTeamId, setEditTeamId] = useState<string>('');
 
   const load = useCallback(async () => {
     try {
-      const data = await api.fetchUsers();
-      setUsers(data);
+      const [userData, teamData] = await Promise.all([api.fetchUsers(), api.fetchTeams()]);
+      setUsers(userData as unknown as UserRow[]);
+      setTeams(teamData);
     } catch (err) {
-      alert('Failed to load users: ' + (err instanceof Error ? err.message : ''));
+      alert('Failed to load: ' + (err instanceof Error ? err.message : ''));
     } finally {
       setLoading(false);
     }
@@ -50,9 +56,9 @@ export function UserManager({ onClose }: Props) {
   const handleAdd = async () => {
     if (!addName.trim() || !addEmail.trim() || !addPassword.trim()) return;
     try {
-      await api.createUser({ name: addName.trim(), email: addEmail.trim(), password: addPassword, role: addRole });
+      await api.createUser({ name: addName.trim(), email: addEmail.trim(), password: addPassword, role: addRole, team_id: addTeamId ? Number(addTeamId) : null });
       setShowAdd(false);
-      setAddName(''); setAddEmail(''); setAddPassword(''); setAddRole('coach');
+      setAddName(''); setAddEmail(''); setAddPassword(''); setAddRole('coach'); setAddTeamId('');
       await load();
     } catch (err) {
       alert('Failed: ' + (err instanceof Error ? err.message : ''));
@@ -65,12 +71,13 @@ export function UserManager({ onClose }: Props) {
     setEditEmail(u.email);
     setEditRole(u.role);
     setEditPassword('');
+    setEditTeamId(u.team_id ? String(u.team_id) : '');
   };
 
   const handleEdit = async () => {
     if (!editId || !editName.trim() || !editEmail.trim()) return;
     try {
-      const data: Record<string, unknown> = { name: editName.trim(), email: editEmail.trim(), role: editRole };
+      const data: Record<string, unknown> = { name: editName.trim(), email: editEmail.trim(), role: editRole, team_id: editTeamId ? Number(editTeamId) : null };
       if (editPassword.trim()) data.password = editPassword.trim();
       await api.updateUser(editId, data);
       setEditId(null);
@@ -139,13 +146,23 @@ export function UserManager({ onClose }: Props) {
                         type="password"
                         className="w-full px-2 py-1.5 text-sm border rounded-lg"
                       />
-                      <select
-                        value={editRole}
-                        onChange={e => setEditRole(e.target.value)}
-                        className="w-full px-2 py-1.5 text-sm border rounded-lg"
-                      >
-                        {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                      </select>
+                      <div className="flex gap-2">
+                        <select
+                          value={editRole}
+                          onChange={e => setEditRole(e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border rounded-lg"
+                        >
+                          {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                        <select
+                          value={editTeamId}
+                          onChange={e => setEditTeamId(e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-sm border rounded-lg"
+                        >
+                          <option value="">No team</option>
+                          {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                      </div>
                       <div className="flex gap-2">
                         <button onClick={handleEdit} className="flex-1 py-1.5 text-xs bg-blue-600 text-white rounded-lg">Save</button>
                         <button onClick={() => setEditId(null)} className="px-3 py-1.5 text-xs bg-gray-100 rounded-lg">Cancel</button>
@@ -155,7 +172,7 @@ export function UserManager({ onClose }: Props) {
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-sm font-medium text-gray-800">{u.name}</div>
-                        <div className="text-xs text-gray-500">{u.email}</div>
+                        <div className="text-xs text-gray-500">{u.email}{u.team ? ` · ${u.team}` : ''}</div>
                         <span className={`inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
                           u.role === 'admin' ? 'bg-red-100 text-red-700' :
                           u.role === 'coach' ? 'bg-blue-100 text-blue-700' :
@@ -208,13 +225,23 @@ export function UserManager({ onClose }: Props) {
                     type="password"
                     className="w-full px-2 py-1.5 text-sm border rounded-lg"
                   />
-                  <select
-                    value={addRole}
-                    onChange={e => setAddRole(e.target.value)}
-                    className="w-full px-2 py-1.5 text-sm border rounded-lg"
-                  >
-                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
+                  <div className="flex gap-2">
+                    <select
+                      value={addRole}
+                      onChange={e => setAddRole(e.target.value)}
+                      className="flex-1 px-2 py-1.5 text-sm border rounded-lg"
+                    >
+                      {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                    <select
+                      value={addTeamId}
+                      onChange={e => setAddTeamId(e.target.value)}
+                      className="flex-1 px-2 py-1.5 text-sm border rounded-lg"
+                    >
+                      <option value="">No team</option>
+                      {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    </select>
+                  </div>
                   <div className="flex gap-2">
                     <button onClick={handleAdd} className="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg">Add User</button>
                     <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs bg-gray-100 rounded-lg">Cancel</button>
