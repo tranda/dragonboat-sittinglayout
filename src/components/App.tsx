@@ -305,27 +305,29 @@ export function App() {
             <polyline points="9 22 9 12 15 12 15 22" />
           </svg>
         </button>
-        <div className="min-w-0 flex-1">
-          <div className="text-[10px] text-gray-400 leading-tight">Dragon Boat · Munich 2026</div>
-          <div className="text-sm font-bold text-gray-800 leading-tight truncate">
-            {view === 'dashboard' ? 'Crews Dashboard' : (selectedRace?.name ?? 'No crew selected')}
+        <div className="min-w-0 flex-1 flex items-center gap-1">
+          <div className="min-w-0">
+            <div className="text-[10px] text-gray-400 leading-tight">Dragon Boat · Munich 2026</div>
+            <div className="text-sm font-bold text-gray-800 leading-tight truncate">
+              {view === 'dashboard' ? 'Crews Dashboard' : (selectedRace?.name ?? 'No crew selected')}
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <span className="text-[10px] text-gray-400">{user?.name}</span>
           {view === 'layout' && selectedRace && layout && (
             <button
               onClick={() => downloadCrewPdf([selectedRace], layouts, athleteMap, `${selectedRace.name}.pdf`)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 text-gray-500"
+              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-200 text-gray-400 flex-shrink-0"
               title="Download PDF"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
             </button>
           )}
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <span className="text-[10px] text-gray-400">{user?.name}</span>
           <button
             onClick={() => setMenuOpen(true)}
             className="w-8 h-8 flex flex-col items-center justify-center gap-[3px] rounded-lg hover:bg-gray-200"
