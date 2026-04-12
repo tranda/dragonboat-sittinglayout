@@ -25,6 +25,10 @@ export function App() {
   const [loggedIn, setLoggedIn] = useState(api.isLoggedIn());
   const [user, setUser] = useState<api.ApiUser | null>(null);
 
+  // Competition state
+  const [competitions, setCompetitions] = useState<api.ApiCompetition[]>([]);
+  const [activeCompetitionId, setActiveCompetitionId] = useState<number | null>(api.getCompetitionId());
+
   // Data state
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
@@ -56,6 +60,11 @@ export function App() {
       setLoading(true);
       const data = await api.fetchInit();
       setUser(data.user);
+      setCompetitions(data.competitions ?? []);
+      if (data.activeCompetitionId) {
+        setActiveCompetitionId(data.activeCompetitionId);
+        api.setCompetitionId(data.activeCompetitionId);
+      }
 
       // Map API athletes to frontend format
       const mappedAthletes: Athlete[] = data.athletes.map(a => ({
@@ -110,6 +119,14 @@ export function App() {
     if (loggedIn) loadData();
     else setLoading(false);
   }, [loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSwitchCompetition = useCallback((compId: number) => {
+    api.setCompetitionId(compId);
+    setActiveCompetitionId(compId);
+    setSelectedRaceId('');
+    setView('dashboard');
+    loadData();
+  }, [loadData]);
 
   // Athlete helpers
   const activeAthletes = useMemo(() => athletes.filter(a => !(a as unknown as Record<string, boolean>).isRemoved), [athletes]);
@@ -307,7 +324,21 @@ export function App() {
         </button>
         <div className="min-w-0 flex-1 flex items-center gap-1">
           <div className="min-w-0">
-            <div className="text-[10px] text-gray-400 leading-tight">Dragon Boat · Munich 2026</div>
+            <div className="text-[10px] text-gray-400 leading-tight">
+            {competitions.length > 1 ? (
+              <select
+                value={activeCompetitionId ?? ''}
+                onChange={e => handleSwitchCompetition(Number(e.target.value))}
+                className="bg-transparent text-[10px] text-gray-400 outline-none cursor-pointer -ml-0.5"
+              >
+                {competitions.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}{user?.team?.name ? ` · ${user.team.name}` : ''}</option>
+                ))}
+              </select>
+            ) : (
+              <span>{competitions[0]?.name ?? 'Dragon Boat'}{user?.team?.name ? ` · ${user.team.name}` : ''}</span>
+            )}
+          </div>
             <div className="text-sm font-bold text-gray-800 leading-tight truncate">
               {view === 'dashboard' ? 'Crews Dashboard' : (selectedRace?.name ?? 'No crew selected')}
             </div>

@@ -1,10 +1,20 @@
 const API_BASE = '/api';
 
 let authToken: string | null = localStorage.getItem('dragonboat-token');
+let activeCompetitionId: number | null = JSON.parse(localStorage.getItem('dragonboat-competition') ?? 'null');
+
+export function setCompetitionId(id: number | null) {
+  activeCompetitionId = id;
+  if (id) localStorage.setItem('dragonboat-competition', JSON.stringify(id));
+  else localStorage.removeItem('dragonboat-competition');
+}
+
+export function getCompetitionId() { return activeCompetitionId; }
 
 function headers(json = false): Record<string, string> {
   const h: Record<string, string> = { Accept: 'application/json' };
   if (authToken) h['Authorization'] = `Bearer ${authToken}`;
+  if (activeCompetitionId) h['X-Competition-Id'] = String(activeCompetitionId);
   if (json) h['Content-Type'] = 'application/json';
   return h;
 }
@@ -131,6 +141,15 @@ export interface ApiUser {
   role: string;
   athlete_id: number | null;
   is_active: boolean;
+  team?: { id: number; name: string } | null;
+}
+
+export interface ApiCompetition {
+  id: number;
+  name: string;
+  year: number;
+  location: string | null;
+  isActive: boolean;
 }
 
 export interface ApiAthlete {
@@ -172,4 +191,6 @@ export interface ApiInitData {
   };
   benchFactors: Record<string, number[]>;
   user: ApiUser;
+  competitions: ApiCompetition[];
+  activeCompetitionId: number | null;
 }
