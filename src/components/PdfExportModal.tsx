@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import type { Athlete, Race, BoatLayout } from '../types';
 
 interface Props {
@@ -10,9 +8,7 @@ interface Props {
   onClose: () => void;
 }
 
-function generatePdf(races: Race[], layouts: Record<string, BoatLayout>, athleteMap: Map<number, Athlete>) {
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
+function generateHtml(races: Race[], layouts: Record<string, BoatLayout>, athleteMap: Map<number, Athlete>): string {
   const getName = (id: number | null) => {
     if (id === null) return '';
     return athleteMap.get(id)?.name ?? '?';
@@ -23,90 +19,82 @@ function generatePdf(races: Race[], layouts: Record<string, BoatLayout>, athlete
     return w ? `${w}` : '';
   };
 
-  races.forEach((race, raceIdx) => {
-    if (raceIdx > 0) doc.addPage();
+  const pages = races.map(race => {
     const layout = layouts[race.id];
-    if (!layout) return;
+    if (!layout) return '';
 
     const paddlersFilled = layout.left.filter(Boolean).length + layout.right.filter(Boolean).length;
     const totalPaddlers = race.numRows * 2;
 
-    // Title
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text(race.name, 14, 20);
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100);
-    doc.text(
-      `${race.boatType === 'standard' ? 'Standard (20)' : 'Small (10)'}  ·  ${race.distance}  ·  ${paddlersFilled}/${totalPaddlers} paddlers`,
-      14, 27
-    );
-    doc.setTextColor(0);
-
-    // Build table data
-    const rows: (string | number)[][] = [];
+    let rows = '';
 
     // Drummer
-    rows.push(['DR', getName(layout.drummer), '', '', '']);
+    rows += `<tr style="background:#fff8eb"><td class="seat">DR</td><td colspan="2">${getName(layout.drummer)}</td><td colspan="2"></td></tr>`;
 
     // Paddlers
     for (let i = 0; i < race.numRows; i++) {
-      rows.push([
-        String(i + 2),
-        getName(layout.left[i]),
-        getWeight(layout.left[i]),
-        getName(layout.right[i]),
-        getWeight(layout.right[i]),
-      ]);
+      rows += `<tr>
+        <td class="seat">${i + 2}</td>
+        <td class="name">${getName(layout.left[i])}</td>
+        <td class="kg">${getWeight(layout.left[i])}</td>
+        <td class="name">${getName(layout.right[i])}</td>
+        <td class="kg">${getWeight(layout.right[i])}</td>
+      </tr>`;
     }
 
     // Helm
-    rows.push(['HM', '', '', getName(layout.helm), '']);
+    rows += `<tr style="background:#fff8eb"><td class="seat">HM</td><td colspan="2"></td><td colspan="2">${getName(layout.helm)}</td></tr>`;
 
-    autoTable(doc, {
-      startY: 32,
-      head: [['Seat', 'Left', 'kg', 'Right', 'kg']],
-      body: rows,
-      styles: { fontSize: 9, cellPadding: 2 },
-      headStyles: { fillColor: [230, 230, 230], textColor: [50, 50, 50], fontStyle: 'bold' },
-      columnStyles: {
-        0: { cellWidth: 12, halign: 'center', textColor: [150, 150, 150] },
-        2: { cellWidth: 14, halign: 'right', textColor: [150, 150, 150] },
-        4: { cellWidth: 14, halign: 'right', textColor: [150, 150, 150] },
-      },
-      didParseCell: (data) => {
-        if (data.section === 'body') {
-          const raw = data.row.raw as string[] | undefined;
-          if (raw && (raw[0] === 'DR' || raw[0] === 'HM')) {
-            data.cell.styles.fillColor = [255, 248, 235];
-          }
-        }
-      },
-    });
+    const reserves = layout.reserves.length > 0
+      ? `<p style="margin-top:8px"><b>Reserves:</b> ${layout.reserves.map(id => getName(id)).filter(Boolean).join(', ')}</p>`
+      : '';
 
-    // Reserves
-    if (layout.reserves.length > 0) {
-      const finalY = ((doc as unknown as Record<string, Record<string, number>>).lastAutoTable?.finalY) ?? 200;
-      const reserveNames = layout.reserves.map(id => getName(id)).filter(Boolean).join(', ');
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Reserves: ', 14, finalY + 8);
-      doc.setFont('helvetica', 'normal');
-      doc.text(reserveNames, 14 + doc.getTextWidth('Reserves: '), finalY + 8);
-    }
-  });
+    return `
+      <div class="page">
+        <h2>${race.name}</h2>
+        <p class="sub">${race.boatType === 'standard' ? 'Standard (20)' : 'Small (10)'} · ${race.distance} · ${paddlersFilled}/${totalPaddlers} paddlers</p>
+        <table>
+          <thead><tr><th style="width:30px">Seat</th><th>Left</th><th style="width:40px">kg</th><th>Right</th><th style="width:40px">kg</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        ${reserves}
+      </div>`;
+  }).join('');
 
-  // Open in new tab
-  const blob = doc.output('blob');
-  const url = URL.createObjectURL(blob);
-  window.open(url, '_blank');
+  return `<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>Crew Sheets</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #222; }
+  .page { padding: 20mm 15mm; page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  h2 { font-size: 18px; margin-bottom: 4px; }
+  .sub { font-size: 11px; color: #888; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; white-space: nowrap; letter-spacing: normal; }
+  th { background: #f0f0f0; font-weight: 600; color: #555; }
+  .seat { text-align: center; color: #999; font-size: 10px; width: 30px; }
+  .name { font-weight: 500; white-space: nowrap; }
+  .kg { text-align: right; color: #999; width: 40px; }
+  p { font-size: 12px; }
+  @media print {
+    .no-print { display: none !important; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head><body>
+<div class="no-print" style="padding:12px 20px;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;background:#f8f8f8">
+  <span style="font-size:13px;color:#666">Use your browser's Print (Ctrl+P / Cmd+P) to save as PDF or print.</span>
+  <button onclick="window.print()" style="padding:6px 16px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer">Print</button>
+</div>
+${pages}
+</body></html>`;
 }
 
 export function PdfExportModal({ races, layouts, athleteMap, onClose }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set(races.map(r => r.id)));
-  const [generating, setGenerating] = useState(false);
 
   const toggleRace = (id: string) => {
     setSelected(prev => {
@@ -120,12 +108,13 @@ export function PdfExportModal({ races, layouts, athleteMap, onClose }: Props) {
   const selectNone = () => setSelected(new Set());
 
   const handleGenerate = () => {
-    setGenerating(true);
     const selectedRaces = races.filter(r => selected.has(r.id));
-    setTimeout(() => {
-      generatePdf(selectedRaces, layouts, athleteMap);
-      setGenerating(false);
-    }, 50);
+    const html = generateHtml(selectedRaces, layouts, athleteMap);
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    }
   };
 
   return (
@@ -168,10 +157,10 @@ export function PdfExportModal({ races, layouts, athleteMap, onClose }: Props) {
         <div className="flex gap-2 p-4 border-t">
           <button
             onClick={handleGenerate}
-            disabled={selected.size === 0 || generating}
+            disabled={selected.size === 0}
             className="flex-1 py-2 text-sm bg-blue-600 text-white rounded-lg disabled:opacity-50"
           >
-            {generating ? 'Generating...' : `Generate PDF (${selected.size})`}
+            Open Crew Sheets ({selected.size})
           </button>
           <button onClick={onClose} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg">
             Cancel
