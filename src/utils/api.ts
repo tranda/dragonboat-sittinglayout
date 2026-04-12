@@ -108,6 +108,21 @@ export function deleteUser(id: number) {
   return request('DELETE', `/users/${id}`);
 }
 
+// Activity log
+export function fetchActivityLog(limit = 50) {
+  return request<ActivityLogEntry[]>('GET', `/activity-log?limit=${limit}`);
+}
+
+export interface ActivityLogEntry {
+  id: number;
+  user_name: string | null;
+  action: string;
+  entity_type: string;
+  entity_name: string | null;
+  details: string | null;
+  created_at: string;
+}
+
 // Types
 export interface ApiUser {
   id: number;

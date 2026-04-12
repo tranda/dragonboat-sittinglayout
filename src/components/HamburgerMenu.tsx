@@ -22,6 +22,7 @@ interface Props {
   onReorderRaces?: () => void;
   onShowReport?: () => void;
   onShowDashboard?: () => void;
+  onActivityLog?: () => void;
   onManageUsers?: () => void;
   onLogout?: () => void;
   userRole?: string;
@@ -30,7 +31,7 @@ interface Props {
 export function HamburgerMenu({
   isOpen, onClose, showWeights, onToggleWeights,
   onExport, onResetCurrent, onResetAll,
-  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onManageUsers, onLogout, userRole,
+  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onActivityLog, onManageUsers, onLogout, userRole,
 }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBoatType, setNewBoatType] = useState<'standard' | 'small'>('standard');
@@ -278,6 +279,15 @@ export function HamburgerMenu({
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-600"
             >
               Manage Users
+            </button>
+          )}
+
+          {userRole === 'admin' && onActivityLog && (
+            <button
+              onClick={() => { onActivityLog(); onClose(); }}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm text-gray-600"
+            >
+              Activity Log
             </button>
           )}
           </>)}

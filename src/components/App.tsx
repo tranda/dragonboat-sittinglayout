@@ -12,6 +12,7 @@ import { RaceReorderModal } from './RaceReorderModal';
 import { ReportPanel } from './ReportPanel';
 import { CrewCompareModal } from './CrewCompareModal';
 import { DashboardPanel } from './DashboardPanel';
+import { ActivityLogPanel } from './ActivityLogPanel';
 import { exportToExcel } from '../utils/excelExport';
 import { importFromExcel } from '../utils/excelImport';
 import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
@@ -41,6 +42,7 @@ export function App() {
   const [showReport, setShowReport] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showActivityLog, setShowActivityLog] = useState(false);
 
   // Role checks
   const canEdit = user?.role === 'admin' || user?.role === 'coach';
@@ -351,6 +353,7 @@ export function App() {
         onReorderRaces={canEdit ? () => { setMenuOpen(false); setShowReorderRaces(true); } : undefined}
         onShowReport={canEdit ? () => { setMenuOpen(false); setShowReport(true); } : undefined}
         onShowDashboard={canEdit ? () => { setMenuOpen(false); setShowDashboard(true); } : undefined}
+        onActivityLog={user?.role === 'admin' ? () => { setMenuOpen(false); setShowActivityLog(true); } : undefined}
         onManageUsers={user?.role === 'admin' ? () => { setMenuOpen(false); setShowUsers(true); } : undefined}
         onLogout={() => { handleLogout(); setMenuOpen(false); }}
         userRole={user?.role}
@@ -382,6 +385,11 @@ export function App() {
       {/* User manager */}
       {showUsers && (
         <UserManager onClose={() => setShowUsers(false)} />
+      )}
+
+      {/* Activity log */}
+      {showActivityLog && (
+        <ActivityLogPanel onClose={() => setShowActivityLog(false)} />
       )}
 
       {/* Dashboard */}
