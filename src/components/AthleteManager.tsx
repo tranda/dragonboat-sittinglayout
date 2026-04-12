@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Athlete, AppConfig } from '../types';
 import { getAthleteAgeCategory } from '../utils/policies';
+import { ImportEventsModal } from './ImportEventsModal';
 
 interface Props {
   config: AppConfig;
@@ -11,6 +12,8 @@ interface Props {
   onAdd: (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean, preferredSide?: 'left' | 'right' | 'both' | null) => void;
   onEdit: (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide' | 'notes'>>) => void;
   onClose: () => void;
+  onReload?: () => void;
+  userRole?: string;
 }
 
 function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F' | 'M') => void }) {
@@ -38,8 +41,9 @@ function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F'
   );
 }
 
-export function AthleteManager({ config, athletes, removedIds, onRemove, onRestore, onAdd, onEdit, onClose }: Props) {
+export function AthleteManager({ config, athletes, removedIds, onRemove, onRestore, onAdd, onEdit, onClose, onReload, userRole }: Props) {
   const [tab, setTab] = useState<'active' | 'removed'>('active');
+  const [showImportEvents, setShowImportEvents] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newName, setNewName] = useState('');
@@ -269,14 +273,31 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
             </div>
           </div>
         ) : (
-          <button
-            onClick={() => { clearForm(); setShowAddForm(true); }}
-            className="w-full py-2 text-sm bg-green-600 text-white rounded-lg font-medium"
-          >
-            + Add New Athlete
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { clearForm(); setShowAddForm(true); }}
+              className="flex-1 py-2 text-sm bg-green-600 text-white rounded-lg font-medium"
+            >
+              + Add Athlete
+            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => setShowImportEvents(true)}
+                className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium"
+              >
+                Import
+              </button>
+            )}
+          </div>
         )}
       </div>
+
+      {showImportEvents && (
+        <ImportEventsModal
+          onClose={() => setShowImportEvents(false)}
+          onImported={() => { setShowImportEvents(false); onReload?.(); }}
+        />
+      )}
     </div>
   );
 }

@@ -15,7 +15,6 @@ import { DashboardPanel } from './DashboardPanel';
 import { ActivityLogPanel } from './ActivityLogPanel';
 import { PdfExportModal } from './PdfExportModal';
 import { CompetitionManager } from './CompetitionManager';
-import { ImportEventsModal } from './ImportEventsModal';
 import { exportToExcel } from '../utils/excelExport';
 import { getPdfToken } from '../utils/api';
 import { importFromExcel } from '../utils/excelImport';
@@ -55,7 +54,6 @@ export function App() {
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [showPdfExport, setShowPdfExport] = useState(false);
   const [showCompetitions, setShowCompetitions] = useState(false);
-  const [showImportEvents, setShowImportEvents] = useState(false);
 
   // Persist view state
   useEffect(() => { localStorage.setItem('dragonboat-view', view); }, [view]);
@@ -469,7 +467,6 @@ export function App() {
         onShowReport={canEdit ? () => { setMenuOpen(false); setShowReport(true); } : undefined}
         onShowDashboard={canEdit ? () => { setMenuOpen(false); setView('dashboard'); } : undefined}
         onPdfExport={() => { setMenuOpen(false); setShowPdfExport(true); }}
-        onImportEvents={user?.role === 'admin' ? () => { setMenuOpen(false); setShowImportEvents(true); } : undefined}
         onManageCompetitions={user?.role === 'admin' ? () => { setMenuOpen(false); setShowCompetitions(true); } : undefined}
         onActivityLog={user?.role === 'admin' ? () => { setMenuOpen(false); setShowActivityLog(true); } : undefined}
         onManageUsers={user?.role === 'admin' ? () => { setMenuOpen(false); setShowUsers(true); } : undefined}
@@ -488,6 +485,8 @@ export function App() {
           onAdd={canEdit ? handleAddAthlete : async () => {}}
           onEdit={canEdit ? handleEditAthlete : async () => {}}
           onClose={() => setShowAthleteManager(false)}
+          onReload={loadData}
+          userRole={user?.role}
         />
       )}
 
@@ -503,14 +502,6 @@ export function App() {
       {/* User manager */}
       {showUsers && (
         <UserManager onClose={() => setShowUsers(false)} />
-      )}
-
-      {/* Import from Events */}
-      {showImportEvents && (
-        <ImportEventsModal
-          onClose={() => setShowImportEvents(false)}
-          onImported={() => loadData()}
-        />
       )}
 
       {/* Competitions & Teams */}
