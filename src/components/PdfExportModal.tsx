@@ -85,9 +85,9 @@ function generateHtml(races: Race[], layouts: Record<string, BoatLayout>, athlet
   }
 </style>
 </head><body>
-<div class="no-print" style="padding:12px 20px;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;background:#f8f8f8">
-  <span style="font-size:13px;color:#666">Use your browser's Print (Ctrl+P / Cmd+P) to save as PDF or print.</span>
-  <button onclick="window.print()" style="padding:6px 16px;background:#2563eb;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer">Print</button>
+<div class="no-print" style="position:sticky;top:0;z-index:10;padding:12px 20px;border-bottom:1px solid #ddd;display:flex;align-items:center;justify-content:space-between;background:#f8f8f8">
+  <span style="font-size:13px;color:#666">Tap Print or use Share &rarr; Print to save as PDF.</span>
+  <button onclick="window.print()" style="padding:8px 20px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Print</button>
 </div>
 ${pages}
 </body></html>`;
