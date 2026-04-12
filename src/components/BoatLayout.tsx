@@ -259,8 +259,8 @@ export function BoatLayout({
           const leftId = reserves[li] ?? null;
           const rightId = ri < reserveCount ? (reserves[ri] ?? null) : undefined;
           const helmNum = race.numRows * 2 + 2;
-          const leftResNum = helmNum + li + 1;
-          const rightResNum = helmNum + ri + 1;
+          const leftResNum = helmNum + pi + 1;
+          const rightResNum = helmNum + reservePairs + pi + 1;
           return (
             <div key={`res-${pi}`} className="contents">
               <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{leftResNum}</span></div>
