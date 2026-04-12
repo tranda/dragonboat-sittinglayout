@@ -204,6 +204,25 @@ export interface ApiTeam {
   athletes_count?: number;
 }
 
+// Events import
+export function fetchEventsAthletes(username: string, password: string) {
+  return request<EventsAthlete[]>('POST', '/events-import/athletes', { username, password });
+}
+
+export interface EventsAthlete {
+  id: number;
+  first_name: string;
+  last_name: string;
+  birth_date: string | null;
+  gender: string;
+  left_side: boolean;
+  right_side: boolean;
+  helm: boolean;
+  drummer: boolean;
+  edbf_id: string | null;
+  category: string | null;
+}
+
 // Activity log
 export function fetchActivityLog(limit = 50) {
   return request<ActivityLogEntry[]>('GET', `/activity-log?limit=${limit}`);

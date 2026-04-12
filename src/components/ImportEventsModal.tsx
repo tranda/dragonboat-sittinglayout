@@ -6,57 +6,27 @@ interface Props {
   onImported: () => void;
 }
 
-interface EventsAthlete {
-  id: number;
-  first_name: string;
-  last_name: string;
-  birth_date: string | null;
-  gender: string;
-  left_side: boolean;
-  right_side: boolean;
-  helm: boolean;
-  drummer: boolean;
-  edbf_id: string | null;
-  category: string | null;
-}
-
-const EVENTS_API = 'https://events.motion.rs/api';
-
 export function ImportEventsModal({ onClose, onImported }: Props) {
   const [step, setStep] = useState<'login' | 'select'>('login');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [athletes, setAthletes] = useState<EventsAthlete[]>([]);
+  const [athletes, setAthletes] = useState<api.EventsAthlete[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
 
   const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) return;
+    if (!username || !password) return;
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${EVENTS_API}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), password }),
-      });
-      if (!res.ok) throw new Error('Invalid credentials');
-      const data = await res.json();
-      const token = data.token;
-
-      // Fetch athletes
-      const athleteRes = await fetch(`${EVENTS_API}/athletes`, {
-        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
-      });
-      if (!athleteRes.ok) throw new Error('Failed to fetch athletes');
-      const athleteData: EventsAthlete[] = await athleteRes.json();
-      setAthletes(athleteData);
-      setSelected(new Set(athleteData.map(a => a.id)));
+      const data = await api.fetchEventsAthletes(username, password);
+      setAthletes(data);
+      setSelected(new Set(data.map(a => a.id)));
       setStep('select');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : 'Failed to connect');
     } finally {
       setLoading(false);
     }
@@ -112,7 +82,7 @@ export function ImportEventsModal({ onClose, onImported }: Props) {
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-[var(--bg-overlay)] pt-6">
       <div className="bg-[var(--bg-surface)] rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[85dvh] flex flex-col">
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-bold text-[var(--text-primary)]">Import from Events Platform</h2>
+          <h2 className="text-lg font-bold text-[var(--text-primary)]">Import from Events</h2>
           <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] text-xl px-1">&times;</button>
         </div>
 
@@ -120,10 +90,10 @@ export function ImportEventsModal({ onClose, onImported }: Props) {
           <div className="p-4 space-y-3">
             <p className="text-xs text-[var(--text-secondary)]">Log in to events.motion.rs to import athletes from your club.</p>
             <input
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Email"
-              type="email"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="Username"
+              type="text"
               className="w-full px-3 py-2 text-sm border rounded-lg"
               autoFocus
             />
@@ -138,7 +108,7 @@ export function ImportEventsModal({ onClose, onImported }: Props) {
             {error && <div className="text-xs text-red-600">{error}</div>}
             <button
               onClick={handleLogin}
-              disabled={loading || !email.trim() || !password.trim()}
+              disabled={loading || !username || !password}
               className="w-full py-2 text-sm bg-blue-600 text-white rounded-lg disabled:opacity-50"
             >
               {loading ? 'Connecting...' : 'Connect & Fetch Athletes'}
