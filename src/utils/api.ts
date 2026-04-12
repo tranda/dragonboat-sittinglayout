@@ -68,6 +68,8 @@ export function logout() {
   localStorage.removeItem('dragonboat-token');
   localStorage.removeItem('dragonboat-competition');
   localStorage.removeItem('dragonboat-team');
+  localStorage.removeItem('dragonboat-race');
+  localStorage.removeItem('dragonboat-view');
   activeCompetitionId = null;
   activeTeamId = null;
 }

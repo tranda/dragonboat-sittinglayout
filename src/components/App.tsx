@@ -40,7 +40,7 @@ export function App() {
   const [appConfig, setAppConfig] = useState<AppConfig>(DEFAULT_CONFIG);
 
   // UI state
-  const [selectedRaceId, setSelectedRaceId] = useState('');
+  const [selectedRaceId, setSelectedRaceId] = useState(() => localStorage.getItem('dragonboat-race') ?? '');
   const [menuOpen, setMenuOpen] = useState(false);
   const [showWeights, setShowWeights] = useState(false);
   const [showAthleteManager, setShowAthleteManager] = useState(false);
@@ -50,10 +50,14 @@ export function App() {
   const [showReorderRaces, setShowReorderRaces] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
-  const [view, setView] = useState<'layout' | 'dashboard'>('dashboard');
+  const [view, setView] = useState<'layout' | 'dashboard'>(() => (localStorage.getItem('dragonboat-view') as 'layout' | 'dashboard') ?? 'dashboard');
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [showPdfExport, setShowPdfExport] = useState(false);
   const [showCompetitions, setShowCompetitions] = useState(false);
+
+  // Persist view state
+  useEffect(() => { localStorage.setItem('dragonboat-view', view); }, [view]);
+  useEffect(() => { if (selectedRaceId) localStorage.setItem('dragonboat-race', selectedRaceId); }, [selectedRaceId]);
 
   // Role checks
   const canEdit = user?.role === 'admin' || user?.role === 'coach';
