@@ -29,11 +29,18 @@ export async function downloadCrewPdf(
     const totalPaddlers = race.numRows * 2;
 
     let rows = '';
-    rows += `<tr style="background:#fff8eb"><td class="seat">DR</td><td class="name">${getName(layout.drummer)}</td><td></td></tr>`;
+    const nameWithNum = (id: number | null, num: number) => {
+      const n = getName(id);
+      return n ? `<span style="color:#999;font-weight:normal;font-size:10px">${num}</span> ${n}` : '';
+    };
+    rows += `<tr style="background:#fff8eb"><td class="seat">DR</td><td class="name">${nameWithNum(layout.drummer, 1)}</td><td></td></tr>`;
     for (let i = 0; i < race.numRows; i++) {
-      rows += `<tr><td class="seat">${i + 2}</td><td class="name">${getName(layout.left[i])}</td><td class="name">${getName(layout.right[i])}</td></tr>`;
+      const leftNum = i + 2;
+      const rightNum = race.numRows + i + 2;
+      rows += `<tr><td class="seat">${i + 1}</td><td class="name">${nameWithNum(layout.left[i], leftNum)}</td><td class="name">${nameWithNum(layout.right[i], rightNum)}</td></tr>`;
     }
-    rows += `<tr style="background:#fff8eb"><td class="seat">HM</td><td></td><td class="name">${getName(layout.helm)}</td></tr>`;
+    const helmNum = race.numRows * 2 + 2;
+    rows += `<tr style="background:#fff8eb"><td class="seat">HM</td><td></td><td class="name">${nameWithNum(layout.helm, helmNum)}</td></tr>`;
 
     const reserves = layout.reserves.length > 0
       ? `<p style="margin-top:10px;font-size:13px"><b>Reserves:</b> ${layout.reserves.map(id => getName(id)).filter(Boolean).join(', ')}</p>`

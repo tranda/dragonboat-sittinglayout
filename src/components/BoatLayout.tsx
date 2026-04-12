@@ -209,40 +209,46 @@ export function BoatLayout({
           height: `calc(100dvh - 180px)`,
         }}
       >
-        {/* Drummer row */}
-        <Seat seatId="drummer" athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} />
+        {/* Drummer row — seat 1 */}
+        <Seat seatId="drummer" seatNumber={1} athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} />
         <div className="flex items-center justify-center bg-amber-50/60">
           <span className="text-[7px] text-amber-400">DR</span>
         </div>
         <div className="bg-amber-50/30" />
 
-        {/* Seat rows */}
-        {Array.from({ length: race.numRows }).map((_, i) => (
-          <div key={i} className="contents">
-            <Seat
-              seatId={`left-${i}`}
-              athlete={layout.left[i] ? athleteMap.get(layout.left[i]!) ?? null : null}
-              showWeight={showWeights}
-              onTap={() => handleSeatTap(`left-${i}`)}
-            />
-            <div className="flex items-center justify-center bg-gray-50/80">
-              <span className="text-[8px] text-gray-400 font-mono">{i + 2}</span>
+        {/* Seat rows — left: 2..numRows+1, right: numRows+2..numRows*2+1 */}
+        {Array.from({ length: race.numRows }).map((_, i) => {
+          const leftNum = i + 2;
+          const rightNum = race.numRows + i + 2;
+          return (
+            <div key={i} className="contents">
+              <Seat
+                seatId={`left-${i}`}
+                seatNumber={leftNum}
+                athlete={layout.left[i] ? athleteMap.get(layout.left[i]!) ?? null : null}
+                showWeight={showWeights}
+                onTap={() => handleSeatTap(`left-${i}`)}
+              />
+              <div className="flex items-center justify-center bg-gray-50/80">
+                <span className="text-[8px] text-gray-400 font-mono">{i + 1}</span>
+              </div>
+              <Seat
+                seatId={`right-${i}`}
+                seatNumber={rightNum}
+                athlete={layout.right[i] ? athleteMap.get(layout.right[i]!) ?? null : null}
+                showWeight={showWeights}
+                onTap={() => handleSeatTap(`right-${i}`)}
+              />
             </div>
-            <Seat
-              seatId={`right-${i}`}
-              athlete={layout.right[i] ? athleteMap.get(layout.right[i]!) ?? null : null}
-              showWeight={showWeights}
-              onTap={() => handleSeatTap(`right-${i}`)}
-            />
-          </div>
-        ))}
+          );
+        })}
 
         {/* Helm row */}
         <div className="bg-amber-50/30" />
         <div className="flex items-center justify-center bg-amber-50/60">
           <span className="text-[7px] text-amber-400">HM</span>
         </div>
-        <Seat seatId="helm" athlete={layout.helm ? athleteMap.get(layout.helm) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('helm')} />
+        <Seat seatId="helm" seatNumber={race.numRows * 2 + 2} athlete={layout.helm ? athleteMap.get(layout.helm) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('helm')} />
 
         {/* Reserve rows */}
         {Array.from({ length: reservePairs }).map((_, pi) => {
