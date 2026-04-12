@@ -51,21 +51,17 @@ export function UserManager({ onClose }: Props) {
     setFormRole('coach'); setFormTeamIds(new Set());
   };
 
-  const toggleTeam = (id: number) => {
-    setFormTeamIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
+
 
   const handleAdd = async () => {
-    if (!formName.trim() || !formEmail.trim() || !formPassword.trim() || formTeamIds.size === 0) return;
+    if (!formName.trim() || !formEmail.trim() || !formPassword.trim()) return;
+    if (formRole !== 'admin' && formTeamIds.size === 0) return;
     try {
-      await api.createUser({
-        name: formName.trim(), email: formEmail.trim(), password: formPassword,
-        role: formRole, team_ids: Array.from(formTeamIds),
-      });
+      const payload: Record<string, unknown> = {
+        name: formName.trim(), email: formEmail.trim(), password: formPassword, role: formRole,
+      };
+      if (formRole !== 'admin') payload.team_ids = Array.from(formTeamIds);
+      await api.createUser(payload);
       clearForm();
       await load();
     } catch (err) {
@@ -84,12 +80,13 @@ export function UserManager({ onClose }: Props) {
   };
 
   const handleEdit = async () => {
-    if (!editId || !formName.trim() || !formEmail.trim() || formTeamIds.size === 0) return;
+    if (!editId || !formName.trim() || !formEmail.trim()) return;
+    if (formRole !== 'admin' && formTeamIds.size === 0) return;
     try {
       const data: Record<string, unknown> = {
         name: formName.trim(), email: formEmail.trim(), role: formRole,
-        team_ids: Array.from(formTeamIds),
       };
+      if (formRole !== 'admin') data.team_ids = Array.from(formTeamIds);
       if (formPassword.trim()) data.password = formPassword.trim();
       await api.updateUser(editId, data);
       setEditId(null);
@@ -110,27 +107,44 @@ export function UserManager({ onClose }: Props) {
     catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   };
 
-  const teamSelector = (
-    <div>
-      <div className="text-[10px] font-semibold text-[var(--text-muted)] uppercase mb-1">Teams (required)</div>
-      <div className="flex flex-wrap gap-1.5">
-        {teams.map(t => (
-          <button
-            key={t.id}
-            type="button"
-            onClick={() => toggleTeam(t.id)}
-            className={`px-2.5 py-1 text-xs rounded-lg border transition-colors ${
-              formTeamIds.has(t.id)
-                ? 'bg-[var(--bg-active-tab)] text-[var(--text-active-tab)] border-transparent'
-                : 'bg-[var(--bg-surface-alt)] text-[var(--text-secondary)] border-[var(--border-default)]'
-            }`}
-          >
-            {t.name} <span className="text-[9px] opacity-70">({t.type})</span>
-          </button>
-        ))}
+  const clubTeams = teams.filter(t => t.type === 'club');
+  const nationalTeams = teams.filter(t => t.type === 'national');
+  const selectedClubId = Array.from(formTeamIds).find(id => clubTeams.some(t => t.id === id));
+  const selectedNationalId = Array.from(formTeamIds).find(id => nationalTeams.some(t => t.id === id));
+
+  const setClubTeam = (id: string) => {
+    setFormTeamIds(prev => {
+      const next = new Set(Array.from(prev).filter(tid => !clubTeams.some(t => t.id === tid)));
+      if (id) next.add(Number(id));
+      return next;
+    });
+  };
+  const setNationalTeam = (id: string) => {
+    setFormTeamIds(prev => {
+      const next = new Set(Array.from(prev).filter(tid => !nationalTeams.some(t => t.id === tid)));
+      if (id) next.add(Number(id));
+      return next;
+    });
+  };
+
+  const teamSelector = formRole !== 'admin' ? (
+    <div className="space-y-2">
+      <div>
+        <div className="text-[10px] font-semibold text-[var(--text-muted)] uppercase mb-1">Club Team</div>
+        <select value={selectedClubId ?? ''} onChange={e => setClubTeam(e.target.value)} className="w-full px-2 py-1.5 text-sm border rounded-lg">
+          <option value="">No club</option>
+          {clubTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+      </div>
+      <div>
+        <div className="text-[10px] font-semibold text-[var(--text-muted)] uppercase mb-1">National Team</div>
+        <select value={selectedNationalId ?? ''} onChange={e => setNationalTeam(e.target.value)} className="w-full px-2 py-1.5 text-sm border rounded-lg">
+          <option value="">No national team</option>
+          {nationalTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
       </div>
     </div>
-  );
+  ) : null;
 
   const formFields = (
     <div className="space-y-2">
@@ -163,7 +177,7 @@ export function UserManager({ onClose }: Props) {
                     <div className="space-y-2">
                       {formFields}
                       <div className="flex gap-2">
-                        <button onClick={handleEdit} disabled={formTeamIds.size === 0} className="flex-1 py-1.5 text-xs bg-blue-600 text-white rounded-lg disabled:opacity-50">Save</button>
+                        <button onClick={handleEdit} disabled={formRole !== 'admin' && formTeamIds.size === 0} className="flex-1 py-1.5 text-xs bg-blue-600 text-white rounded-lg disabled:opacity-50">Save</button>
                         <button onClick={() => setEditId(null)} className="px-3 py-1.5 text-xs bg-[var(--bg-surface-alt)] rounded-lg">Cancel</button>
                       </div>
                     </div>
@@ -205,7 +219,7 @@ export function UserManager({ onClose }: Props) {
                 <div className="border-2 border-dashed border-green-300 rounded-lg p-3 space-y-2">
                   {formFields}
                   <div className="flex gap-2">
-                    <button onClick={handleAdd} disabled={formTeamIds.size === 0} className="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg disabled:opacity-50">Add User</button>
+                    <button onClick={handleAdd} disabled={formRole !== 'admin' && formTeamIds.size === 0} className="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg disabled:opacity-50">Add User</button>
                     <button onClick={() => { clearForm(); setShowAdd(false); }} className="px-3 py-1.5 text-xs bg-[var(--bg-surface-alt)] rounded-lg">Cancel</button>
                   </div>
                 </div>
