@@ -101,6 +101,15 @@ export function HamburgerMenu({
             </button>
           )}
 
+          {onPdfExport && (
+            <button
+              onClick={() => { onPdfExport(); onClose(); }}
+              className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50 text-sm font-medium"
+            >
+              Print / PDF
+            </button>
+          )}
+
           {onShowDashboard && (
             <button
               onClick={() => { onShowDashboard(); onClose(); }}
@@ -241,15 +250,6 @@ export function HamburgerMenu({
               >
                 Export to Excel
               </button>
-
-              {onPdfExport && (
-                <button
-                  onClick={() => { onPdfExport(); onClose(); }}
-                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm text-blue-700 font-medium"
-                >
-                  Print / PDF
-                </button>
-              )}
 
               <button
                 onClick={onImport}
