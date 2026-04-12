@@ -4,9 +4,10 @@ import * as api from '../utils/api';
 interface Props {
   onClose: () => void;
   onImported: () => void;
+  existingAthletes?: { id: number; name: string }[];
 }
 
-export function ImportEventsModal({ onClose, onImported }: Props) {
+export function ImportEventsModal({ onClose, onImported, existingAthletes = [] }: Props) {
   const [step, setStep] = useState<'login' | 'select'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -49,6 +50,7 @@ export function ImportEventsModal({ onClose, onImported }: Props) {
     setImporting(true);
     try {
       const toImport = athletes.filter(a => selected.has(a.id));
+      let created = 0, updated = 0;
       for (const a of toImport) {
         const name = `${a.first_name} ${a.last_name}`.trim();
         const yob = a.birth_date ? new Date(a.birth_date).getFullYear() : undefined;
@@ -59,18 +61,27 @@ export function ImportEventsModal({ onClose, onImported }: Props) {
         else if (a.left_side) preferredSide = 'left';
         else if (a.right_side) preferredSide = 'right';
 
-        await api.createAthlete({
+        const data = {
           name, gender, weight: 0,
           year_of_birth: yob,
           preferred_side: preferredSide,
           is_helm: a.helm || false,
           is_drummer: a.drummer || false,
           edbf_id: a.edbf_id || null,
-        });
+        };
+
+        const existing = existingAthletes.find(e => e.name.toLowerCase() === name.toLowerCase());
+        if (existing) {
+          await api.updateAthlete(existing.id, data);
+          updated++;
+        } else {
+          await api.createAthlete(data);
+          created++;
+        }
       }
       onImported();
       onClose();
-      alert(`Imported ${toImport.length} athletes`);
+      alert(`${created} created, ${updated} updated`);
     } catch (err) {
       alert('Import failed: ' + (err instanceof Error ? err.message : ''));
     } finally {

@@ -320,6 +320,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
         <ImportEventsModal
           onClose={() => setShowImportEvents(false)}
           onImported={() => { setShowImportEvents(false); onReload?.(); }}
+          existingAthletes={athletes.map(a => ({ id: a.id, name: a.name }))}
         />
       )}
     </div>
