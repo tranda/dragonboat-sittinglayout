@@ -69,7 +69,7 @@ export function HamburgerMenu({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-1">
-          {userRole !== 'athlete' && (<>
+          {(userRole === 'admin' || userRole === 'coach') && (<>
           {/* Toggle weights */}
           <button
             onClick={() => { onToggleWeights(); }}
