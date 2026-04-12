@@ -52,7 +52,7 @@ export function ImportEventsModal({ onClose, onImported }: Props) {
       for (const a of toImport) {
         const name = `${a.first_name} ${a.last_name}`.trim();
         const yob = a.birth_date ? new Date(a.birth_date).getFullYear() : undefined;
-        const gender = a.gender?.toUpperCase() === 'F' ? 'F' : 'M';
+        const gender = a.gender?.toLowerCase().startsWith('f') ? 'F' : 'M';
 
         let preferredSide: string | null = null;
         if (a.left_side && a.right_side) preferredSide = 'both';
