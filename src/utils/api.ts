@@ -95,6 +95,12 @@ export function removeAthlete(id: number) {
 export function restoreAthlete(id: number) {
   return request('POST', `/athletes/${id}/restore`);
 }
+export function registerAthlete(id: number, competitionId: number) {
+  return request('POST', `/athletes/${id}/register`, { competition_id: competitionId });
+}
+export function unregisterAthlete(id: number, competitionId: number) {
+  return request('POST', `/athletes/${id}/unregister`, { competition_id: competitionId });
+}
 
 // Races
 export function createRace(data: Record<string, unknown>) {
@@ -245,6 +251,7 @@ export interface ApiAthlete {
   edbfId?: string | null;
   notes?: string | null;
   isRemoved?: boolean;
+  isRegistered?: boolean;
   raceAssignments: string[];
 }
 

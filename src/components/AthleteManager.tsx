@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Athlete, AppConfig } from '../types';
 import { getAthleteAgeCategory } from '../utils/policies';
 import { ImportEventsModal } from './ImportEventsModal';
+import * as api from '../utils/api';
 
 interface Props {
   config: AppConfig;
@@ -14,6 +15,7 @@ interface Props {
   onClose: () => void;
   onReload?: () => void;
   userRole?: string;
+  competitionId?: number | null;
 }
 
 function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F' | 'M') => void }) {
@@ -41,7 +43,7 @@ function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F'
   );
 }
 
-export function AthleteManager({ config, athletes, removedIds, onRemove, onRestore, onAdd, onEdit, onClose, onReload, userRole }: Props) {
+export function AthleteManager({ config, athletes, removedIds, onRemove, onRestore, onAdd, onEdit, onClose, onReload, userRole, competitionId }: Props) {
   const [tab, setTab] = useState<'active' | 'removed'>('active');
   const [showImportEvents, setShowImportEvents] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -176,21 +178,43 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
               </div>
               {a.notes && <div className="text-[10px] text-orange-600 truncate">{a.notes}</div>}
             </div>
-            {tab === 'active' ? (
-              <button
-                onClick={(e) => { e.stopPropagation(); onRemove(a.id); }}
-                className="text-xs text-red-500 font-medium px-2 py-1 rounded hover:bg-[var(--bg-role-admin)] flex-shrink-0"
-              >
-                Remove
-              </button>
-            ) : (
-              <button
-                onClick={() => onRestore(a.id)}
-                className="text-xs text-green-600 font-medium px-2 py-1 rounded hover:bg-[var(--bg-badge-side)] flex-shrink-0"
-              >
-                Restore
-              </button>
-            )}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {tab === 'active' && competitionId && (
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (a.isRegistered) await api.unregisterAthlete(a.id, competitionId);
+                    else await api.registerAthlete(a.id, competitionId);
+                    onReload?.();
+                  }}
+                  className={`px-2 py-1 text-[10px] font-semibold rounded-lg ${
+                    a.isRegistered
+                      ? 'bg-green-600 text-white'
+                      : 'bg-[var(--bg-surface-alt)] text-[var(--text-muted)] border border-[var(--border-default)]'
+                  }`}
+                >
+                  {a.isRegistered ? 'REG' : 'REG'}
+                </button>
+              )}
+              {tab === 'active' ? (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onRemove(a.id); }}
+                  className="p-1 text-red-500 rounded hover:bg-[var(--bg-role-admin)] flex-shrink-0"
+                  title="Remove"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  onClick={() => onRestore(a.id)}
+                  className="text-xs text-green-600 font-medium px-2 py-1 rounded hover:bg-[var(--bg-badge-side)] flex-shrink-0"
+                >
+                  Restore
+                </button>
+              )}
+            </div>
           </div>
         ))}
         {filtered.length === 0 && (

@@ -93,6 +93,7 @@ export function App() {
         edbfId: a.edbfId ?? null,
         notes: a.notes ?? null,
         isRemoved: a.isRemoved ?? false,
+        isRegistered: a.isRegistered ?? false,
         raceAssignments: a.raceAssignments || [],
       })) as Athlete[];
       setAthletes(mappedAthletes);
@@ -185,6 +186,7 @@ export function App() {
     if (!selectedRace) return [];
     const eligible = activeAthletes.filter(a => {
       if (seatedIds.has(a.id)) return false;
+      if (!a.isRegistered) return false;
       if (!isEligibleForGender(a, selectedRace)) return false;
       if (!isEligibleForAgeCategory(a, selectedRace.ageCategory, appConfig)) return false;
       return true;
@@ -487,6 +489,7 @@ export function App() {
           onClose={() => setShowAthleteManager(false)}
           onReload={loadData}
           userRole={user?.role}
+          competitionId={activeCompetitionId}
         />
       )}
 

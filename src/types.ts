@@ -11,6 +11,7 @@ export interface Athlete {
   edbfId?: string | null;
   notes?: string | null;
   isRemoved?: boolean;
+  isRegistered?: boolean;
   category?: string; // calculated from yearOfBirth + gender via policy (TBD)
   raceAssignments: string[];
 }
