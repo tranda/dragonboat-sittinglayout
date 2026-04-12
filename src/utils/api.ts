@@ -118,6 +118,58 @@ export function deleteUser(id: number) {
   return request('DELETE', `/users/${id}`);
 }
 
+// Competitions
+export function fetchCompetitions() {
+  return request<ApiCompetitionFull[]>('GET', '/competitions');
+}
+export function createCompetition(data: Record<string, unknown>) {
+  return request<ApiCompetitionFull>('POST', '/competitions', data);
+}
+export function updateCompetition(id: number, data: Record<string, unknown>) {
+  return request<ApiCompetitionFull>('PUT', `/competitions/${id}`, data);
+}
+export function deleteCompetition(id: number) {
+  return request('DELETE', `/competitions/${id}`);
+}
+export function addTeamToCompetition(compId: number, teamId: number) {
+  return request('POST', `/competitions/${compId}/teams`, { team_id: teamId });
+}
+export function removeTeamFromCompetition(compId: number, teamId: number) {
+  return request('DELETE', `/competitions/${compId}/teams/${teamId}`);
+}
+
+export interface ApiCompetitionFull {
+  id: number;
+  name: string;
+  year: number;
+  location: string | null;
+  is_active: boolean;
+  teams?: { id: number; name: string }[];
+}
+
+// Teams
+export function fetchTeams() {
+  return request<ApiTeam[]>('GET', '/teams');
+}
+export function createTeam(data: Record<string, unknown>) {
+  return request<ApiTeam>('POST', '/teams', data);
+}
+export function updateTeam(id: number, data: Record<string, unknown>) {
+  return request<ApiTeam>('PUT', `/teams/${id}`, data);
+}
+export function deleteTeam(id: number) {
+  return request('DELETE', `/teams/${id}`);
+}
+
+export interface ApiTeam {
+  id: number;
+  name: string;
+  country: string | null;
+  type: string;
+  users_count?: number;
+  athletes_count?: number;
+}
+
 // Activity log
 export function fetchActivityLog(limit = 50) {
   return request<ActivityLogEntry[]>('GET', `/activity-log?limit=${limit}`);
