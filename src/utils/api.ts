@@ -95,7 +95,7 @@ export function reorderRaces(ids: string[]) {
 }
 
 // Layouts
-export function saveLayout(raceId: string, layout: { drummer: number | null; helm: number | null; left: (number | null)[]; right: (number | null)[]; reserves: number[] }) {
+export function saveLayout(raceId: string, layout: { drummer: number | null; helm: number | null; left: (number | null)[]; right: (number | null)[]; reserves: (number | null)[] }) {
   return request('PUT', `/layouts/${raceId}`, layout);
 }
 

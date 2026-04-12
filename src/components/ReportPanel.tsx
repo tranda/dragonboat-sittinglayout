@@ -75,7 +75,7 @@ export function ReportPanel({ athletes, races, layouts, config, onClose }: Props
       layout.reserves.forEach(id => add(id, 'reserve', race.name));
     }
     const r = athletes
-      .filter(a => !(a as unknown as { isRemoved?: boolean }).isRemoved)
+      .filter(a => !a.isRemoved)
       .map(a => {
         const c = counts.get(a.id) ?? { paddle: 0, helm: 0, drummer: 0, reserve: 0 };
         const total = c.paddle + c.helm + c.drummer + c.reserve;
@@ -184,8 +184,8 @@ export function ReportPanel({ athletes, races, layouts, config, onClose }: Props
                   </div>
                   {isExpanded && assignments.length > 0 && (
                     <div className="px-4 py-2 bg-white border-t border-gray-100 space-y-1">
-                      {assignments.map((a, i) => (
-                        <div key={i} className="flex items-center justify-between text-xs">
+                      {assignments.map((a) => (
+                        <div key={`${a.raceName}-${a.role}`} className="flex items-center justify-between text-xs">
                           <span className="text-gray-700 truncate mr-2">{a.raceName}</span>
                           <span className={`flex-shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                             a.role === 'paddle' ? 'bg-blue-100 text-blue-700' :

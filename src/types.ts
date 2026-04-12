@@ -7,6 +7,7 @@ export interface Athlete {
   isBCP?: boolean; // manually set — Breast Cancer Paddler designation
   preferredSide?: 'left' | 'right' | 'both' | null;
   notes?: string | null;
+  isRemoved?: boolean;
   category?: string; // calculated from yearOfBirth + gender via policy (TBD)
   raceAssignments: string[];
 }
@@ -30,7 +31,7 @@ export interface BoatLayout {
   helm: number | null;
   left: (number | null)[];
   right: (number | null)[];
-  reserves: number[];
+  reserves: (number | null)[];
 }
 
 export interface AppData {

@@ -53,9 +53,9 @@ function setAthleteInSeat(layout: BoatLayoutType, seatId: string, athleteId: num
   else if (type === 'helm') next.helm = athleteId;
   else if (type === 'reserve') {
     // Expand reserves array to fit the index
-    while (next.reserves.length <= (index ?? 0)) next.reserves.push(null as unknown as number);
+    while (next.reserves.length <= (index ?? 0)) next.reserves.push(null);
     if (athleteId === null) {
-      next.reserves[index!] = null as unknown as number;
+      next.reserves[index!] = null;
     } else {
       next.reserves[index!] = athleteId;
     }
@@ -178,7 +178,7 @@ export function BoatLayout({
 
   // Ensure layout.reserves has enough slots
   const reserves = [...layout.reserves];
-  while (reserves.length < reserveCount) reserves.push(null as unknown as number);
+  while (reserves.length < reserveCount) reserves.push(null);
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>

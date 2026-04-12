@@ -105,8 +105,8 @@ export function App() {
         });
       }
 
-      if (mappedRaces.length > 0 && !selectedRaceId) {
-        setSelectedRaceId(mappedRaces[0].id);
+      if (mappedRaces.length > 0) {
+        setSelectedRaceId(prev => prev || mappedRaces[0].id);
       }
     } catch {
       // Token expired or invalid
@@ -115,12 +115,12 @@ export function App() {
     } finally {
       setLoading(false);
     }
-  }, [selectedRaceId]);
+  }, []);
 
   useEffect(() => {
     if (loggedIn) loadData();
     else setLoading(false);
-  }, [loggedIn]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loggedIn, loadData]);
 
   const handleSwitchCompetition = useCallback((compId: number) => {
     api.setCompetitionId(compId);
@@ -131,8 +131,8 @@ export function App() {
   }, [loadData]);
 
   // Athlete helpers
-  const activeAthletes = useMemo(() => athletes.filter(a => !(a as unknown as Record<string, boolean>).isRemoved), [athletes]);
-  const removedIds = useMemo(() => new Set(athletes.filter(a => (a as unknown as Record<string, boolean>).isRemoved).map(a => a.id)), [athletes]);
+  const activeAthletes = useMemo(() => athletes.filter(a => !a.isRemoved), [athletes]);
+  const removedIds = useMemo(() => new Set(athletes.filter(a => a.isRemoved).map(a => a.id)), [athletes]);
 
   const athleteMap = useMemo(() => {
     const map = new Map<number, Athlete>();
@@ -151,7 +151,7 @@ export function App() {
     layout.right.forEach(id => id !== null && ids.add(id));
     if (layout.drummer !== null) ids.add(layout.drummer);
     if (layout.helm !== null) ids.add(layout.helm);
-    layout.reserves.forEach(id => ids.add(id));
+    layout.reserves.forEach(id => id !== null && ids.add(id));
     return ids;
   }, [layout]);
 
@@ -173,7 +173,9 @@ export function App() {
 
   const handleLayoutChange = useCallback((newLayout: BoatLayoutType) => {
     setLayouts(prev => ({ ...prev, [selectedRaceId]: newLayout }));
-    api.saveLayout(selectedRaceId, newLayout).catch(console.error);
+    api.saveLayout(selectedRaceId, newLayout).catch(() => {
+      alert('Failed to save layout. Please check your connection and try again.');
+    });
   }, [selectedRaceId]);
 
   const handleAddRace = async (name: string, boatType: 'standard' | 'small', distance: string, genderCategory?: string, ageCategory?: string) => {
@@ -212,14 +214,14 @@ export function App() {
   const handleRemoveAthlete = useCallback(async (id: number) => {
     try {
       await api.removeAthlete(id);
-      setAthletes(prev => prev.map(a => a.id === id ? { ...a, isRemoved: true } as unknown as Athlete : a));
+      setAthletes(prev => prev.map(a => a.id === id ? { ...a, isRemoved: true } : a));
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   }, []);
 
   const handleRestoreAthlete = useCallback(async (id: number) => {
     try {
       await api.restoreAthlete(id);
-      setAthletes(prev => prev.map(a => a.id === id ? { ...a, isRemoved: false } as unknown as Athlete : a));
+      setAthletes(prev => prev.map(a => a.id === id ? { ...a, isRemoved: false } : a));
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   }, []);
 
