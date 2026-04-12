@@ -21,19 +21,19 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) 
       <div
         ref={setDropRef}
         className={`w-full h-6 rounded border-2 border-dashed transition-colors ${
-          isOver ? 'border-blue-400 bg-blue-50' : 'border-transparent'
+          isOver ? 'border-[var(--border-male-strong)] bg-[var(--bg-male)]' : 'border-transparent'
         }`}
       />
     );
   }
 
   const genderBg = athlete?.gender === 'F'
-    ? 'bg-pink-100 border-pink-400 shadow-sm'
+    ? 'bg-[var(--bg-female-strong)] border-[var(--border-female-strong)] shadow-sm'
     : athlete?.gender === 'M'
-    ? 'bg-blue-100 border-blue-400 shadow-sm'
-    : 'bg-gray-100 border-gray-300 shadow-sm';
+    ? 'bg-[var(--bg-male-strong)] border-[var(--border-male-strong)] shadow-sm'
+    : 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] shadow-sm';
 
-  const emptyStyle = 'bg-gray-50 border-gray-400 border-dashed';
+  const emptyStyle = 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] border-dashed';
 
   return (
     <div
@@ -49,12 +49,12 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) 
       } ${isOver ? 'ring-2 ring-blue-400' : ''} ${athlete ? genderBg : emptyStyle}`}
     >
       {athlete ? (
-        <span className="text-[13px] font-bold leading-tight text-center line-clamp-2 break-words text-gray-800">
+        <span className="text-[13px] font-bold leading-tight text-center line-clamp-2 break-words text-[var(--text-primary)]">
           {athlete.name}
-          {showWeight && athlete.weight ? <span className="text-gray-500 font-normal text-[10px] ml-0.5">{athlete.weight}</span> : null}
+          {showWeight && athlete.weight ? <span className="text-[var(--text-secondary)] font-normal text-[10px] ml-0.5">{athlete.weight}</span> : null}
         </span>
       ) : (
-        <span className="text-[20px] text-gray-400 font-light leading-none">+</span>
+        <span className="text-[20px] text-[var(--text-muted)] font-light leading-none">+</span>
       )}
     </div>
   );

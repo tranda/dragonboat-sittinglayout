@@ -107,18 +107,18 @@ export function UserManager({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-8">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[85dvh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-[var(--bg-overlay)] pt-8">
+      <div className="bg-[var(--bg-surface)] rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[85dvh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-bold text-gray-800">User Management</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl px-1">&times;</button>
+          <h2 className="text-lg font-bold text-[var(--text-primary)]">User Management</h2>
+          <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] text-xl px-1">&times;</button>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {loading ? (
-            <div className="text-center text-gray-400 py-8">Loading...</div>
+            <div className="text-center text-[var(--text-muted)] py-8">Loading...</div>
           ) : (
             <>
               {users.map(u => (
@@ -165,18 +165,18 @@ export function UserManager({ onClose }: Props) {
                       </div>
                       <div className="flex gap-2">
                         <button onClick={handleEdit} className="flex-1 py-1.5 text-xs bg-blue-600 text-white rounded-lg">Save</button>
-                        <button onClick={() => setEditId(null)} className="px-3 py-1.5 text-xs bg-gray-100 rounded-lg">Cancel</button>
+                        <button onClick={() => setEditId(null)} className="px-3 py-1.5 text-xs bg-[var(--bg-surface-alt)] rounded-lg">Cancel</button>
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-sm font-medium text-gray-800">{u.name}</div>
-                        <div className="text-xs text-gray-500">{u.email}{u.team ? ` · ${u.team}` : ''}</div>
+                        <div className="text-sm font-medium text-[var(--text-primary)]">{u.name}</div>
+                        <div className="text-xs text-[var(--text-secondary)]">{u.email}{u.team ? ` · ${u.team}` : ''}</div>
                         <span className={`inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                          u.role === 'admin' ? 'bg-red-100 text-red-700' :
-                          u.role === 'coach' ? 'bg-blue-100 text-blue-700' :
-                          'bg-gray-100 text-gray-600'
+                          u.role === 'admin' ? 'bg-[var(--bg-role-admin)] text-[var(--text-role-admin)]' :
+                          u.role === 'coach' ? 'bg-[var(--bg-male-strong)] text-blue-700' :
+                          'bg-[var(--bg-surface-alt)] text-[var(--text-secondary)]'
                         }`}>{u.role}</span>
                         {!u.is_active && (
                           <span className="inline-block mt-1 ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-yellow-100 text-yellow-700">inactive</span>
@@ -189,7 +189,7 @@ export function UserManager({ onClose }: Props) {
                         >{u.is_active ? 'Deactivate' : 'Activate'}</button>
                         <button
                           onClick={() => startEdit(u)}
-                          className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded"
+                          className="px-2 py-1 text-xs text-blue-600 hover:bg-[var(--bg-male)] rounded"
                         >Edit</button>
                         <button
                           onClick={() => handleDelete(u.id, u.name)}
@@ -244,13 +244,13 @@ export function UserManager({ onClose }: Props) {
                   </div>
                   <div className="flex gap-2">
                     <button onClick={handleAdd} className="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg">Add User</button>
-                    <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs bg-gray-100 rounded-lg">Cancel</button>
+                    <button onClick={() => setShowAdd(false)} className="px-3 py-1.5 text-xs bg-[var(--bg-surface-alt)] rounded-lg">Cancel</button>
                   </div>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowAdd(true)}
-                  className="w-full py-2 text-sm text-green-700 border-2 border-dashed border-green-300 rounded-lg hover:bg-green-50"
+                  className="w-full py-2 text-sm text-[var(--text-badge-side)] border-2 border-dashed border-green-300 rounded-lg hover:bg-green-50"
                 >
                   + Add User
                 </button>

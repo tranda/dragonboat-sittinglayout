@@ -193,16 +193,16 @@ export function BoatLayout({
       {/* Compact balance bar — only visible when showWeights is on (admin/coach toggle) */}
       {showWeights && (
         <div className="flex items-center justify-between text-[11px] mb-1 px-1 font-semibold">
-          <span className="text-gray-700">{stats.totalWeight}kg</span>
+          <span className="text-[var(--text-primary)]">{stats.totalWeight}kg</span>
           <span className={`${lrColor} font-bold`}>L/R: {stats.leftRightDiff > 0 ? '+' : ''}{stats.leftRightDiff}</span>
           <span className={`${tdColor} font-bold`}>F/R: {stats.topDownDiff > 0 ? '+' : ''}{stats.topDownDiff}</span>
-          <span className="text-gray-500">L:{stats.leftWeight} R:{stats.rightWeight}</span>
+          <span className="text-[var(--text-secondary)]">L:{stats.leftWeight} R:{stats.rightWeight}</span>
         </div>
       )}
 
       {/* Boat grid — unified, fits viewport */}
       <div
-        className="grid gap-x-px gap-y-1.5 bg-white rounded-lg border border-gray-200 overflow-hidden p-1"
+        className="grid gap-x-px gap-y-1.5 bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] overflow-hidden p-1"
         style={{
           gridTemplateColumns: '14px 1fr 18px 1fr 14px',
           gridTemplateRows: `repeat(${totalRows}, 1fr)`,
@@ -210,7 +210,7 @@ export function BoatLayout({
         }}
       >
         {/* Drummer row — seat 1 */}
-        <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">1</span></div>
+        <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">1</span></div>
         <Seat seatId="drummer" athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} />
         <div className="flex items-center justify-center bg-amber-50/60">
           <span className="text-[7px] text-amber-400">DR</span>
@@ -224,7 +224,7 @@ export function BoatLayout({
           const rightNum = race.numRows + i + 2;
           return (
             <div key={i} className="contents">
-              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">{leftNum}</span></div>
+              <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">{leftNum}</span></div>
               <Seat
                 seatId={`left-${i}`}
                 athlete={layout.left[i] ? athleteMap.get(layout.left[i]!) ?? null : null}
@@ -238,7 +238,7 @@ export function BoatLayout({
                 showWeight={showWeights}
                 onTap={() => handleSeatTap(`right-${i}`)}
               />
-              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">{rightNum}</span></div>
+              <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">{rightNum}</span></div>
             </div>
           );
         })}
@@ -250,7 +250,7 @@ export function BoatLayout({
           <span className="text-[7px] text-amber-400">HM</span>
         </div>
         <Seat seatId="helm" athlete={layout.helm ? athleteMap.get(layout.helm) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('helm')} />
-        <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">{race.numRows * 2 + 2}</span></div>
+        <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">{race.numRows * 2 + 2}</span></div>
 
         {/* Reserve rows */}
         {Array.from({ length: reservePairs }).map((_, pi) => {
@@ -263,7 +263,7 @@ export function BoatLayout({
           const rightResNum = helmNum + reservePairs + pi + 1;
           return (
             <div key={`res-${pi}`} className="contents">
-              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">{leftResNum}</span></div>
+              <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">{leftResNum}</span></div>
               <Seat
                 seatId={`reserve-${li}`}
                 athlete={leftId ? athleteMap.get(leftId) ?? null : null}
@@ -284,7 +284,7 @@ export function BoatLayout({
                 <div className="bg-green-50/20" />
               )}
               {rightId !== undefined ? (
-                <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">{rightResNum}</span></div>
+                <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">{rightResNum}</span></div>
               ) : (
                 <div />
               )}
@@ -295,7 +295,7 @@ export function BoatLayout({
 
       {/* Bench (scrollable horizontal) */}
       <div className="mt-1">
-        <div className="flex items-center gap-1 text-[10px] text-gray-400 mb-0.5 px-1">
+        <div className="flex items-center gap-1 text-[10px] text-[var(--text-muted)] mb-0.5 px-1">
           <span>Bench ({unassignedAthletes.length})</span>
           <Seat seatId="bench-drop" athlete={null} isDropZone />
         </div>
@@ -304,7 +304,7 @@ export function BoatLayout({
             <AthleteChip key={a.id} athlete={a} seatId={`bench-${a.id}`} showWeight={showWeights} />
           ))}
           {unassignedAthletes.length === 0 && (
-            <span className="text-[10px] text-gray-300 py-1">No athletes on bench</span>
+            <span className="text-[10px] text-[var(--text-muted)] py-1">No athletes on bench</span>
           )}
         </div>
       </div>

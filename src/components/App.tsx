@@ -305,20 +305,20 @@ export function App() {
 
   if (loading) {
     return (
-      <div className="h-dvh flex items-center justify-center bg-slate-100">
-        <div className="text-gray-400 text-sm">Loading...</div>
+      <div className="h-dvh flex items-center justify-center bg-[var(--bg-app)]">
+        <div className="text-[var(--text-muted)] text-sm">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-dvh flex flex-col bg-slate-100 overflow-hidden max-w-lg mx-auto">
+    <div className="h-dvh flex flex-col bg-[var(--bg-app)] overflow-hidden max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 px-3 pt-2 pb-1 flex-shrink-0">
         <button
           onClick={() => setView('dashboard')}
           className={`w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0 ${
-            view === 'dashboard' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200 text-gray-500'
+            view === 'dashboard' ? 'bg-[var(--bg-male-strong)] text-blue-600' : 'hover:bg-[var(--bg-surface-alt)] text-[var(--text-secondary)]'
           }`}
           title="Crews Dashboard"
         >
@@ -329,12 +329,12 @@ export function App() {
         </button>
         <div className="min-w-0 flex-1 flex items-center gap-1">
           <div className="min-w-0">
-            <div className="text-[10px] text-gray-400 leading-tight">
+            <div className="text-[10px] text-[var(--text-muted)] leading-tight">
             {competitions.length > 1 ? (
               <select
                 value={activeCompetitionId ?? ''}
                 onChange={e => handleSwitchCompetition(Number(e.target.value))}
-                className="bg-transparent text-[10px] text-gray-400 outline-none cursor-pointer -ml-0.5"
+                className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer -ml-0.5"
               >
                 {competitions.map(c => (
                   <option key={c.id} value={c.id}>{c.name}{user?.team?.name ? ` · ${user.team.name}` : ''}</option>
@@ -344,14 +344,14 @@ export function App() {
               <span>{competitions[0]?.name ?? 'Dragon Boat'}{user?.team?.name ? ` · ${user.team.name}` : ''}</span>
             )}
           </div>
-            <div className="text-sm font-bold text-gray-800 leading-tight truncate">
+            <div className="text-sm font-bold text-[var(--text-primary)] leading-tight truncate">
               {view === 'dashboard' ? 'Crews Dashboard' : (selectedRace?.name ?? 'No crew selected')}
             </div>
           </div>
           {view === 'layout' && selectedRace && layout && (
             <button
               onClick={async () => { const t = await getPdfToken(); window.open(`/api/crew-sheet?ids=${encodeURIComponent(selectedRace.id)}&token=${t}`, '_blank'); }}
-              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-200 text-gray-400 flex-shrink-0"
+              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[var(--bg-surface-alt)] text-[var(--text-muted)] flex-shrink-0"
               title="Download PDF"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -363,14 +363,14 @@ export function App() {
           )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0">
-          <span className="text-[10px] text-gray-400">{user?.name}</span>
+          <span className="text-[10px] text-[var(--text-muted)]">{user?.name}</span>
           <button
             onClick={() => setMenuOpen(true)}
-            className="w-8 h-8 flex flex-col items-center justify-center gap-[3px] rounded-lg hover:bg-gray-200"
+            className="w-8 h-8 flex flex-col items-center justify-center gap-[3px] rounded-lg hover:bg-[var(--bg-surface-alt)]"
           >
-            <div className="w-4 h-0.5 bg-gray-600 rounded" />
-            <div className="w-4 h-0.5 bg-gray-600 rounded" />
-            <div className="w-4 h-0.5 bg-gray-600 rounded" />
+            <div className="w-4 h-0.5 bg-[var(--text-secondary)] rounded" />
+            <div className="w-4 h-0.5 bg-[var(--text-secondary)] rounded" />
+            <div className="w-4 h-0.5 bg-[var(--text-secondary)] rounded" />
           </button>
         </div>
       </div>
@@ -403,7 +403,7 @@ export function App() {
                 readOnly={!canEdit}
               />
             ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Select a crew</div>
+              <div className="flex-1 flex items-center justify-center text-[var(--text-muted)] text-sm">Select a crew</div>
             )}
           </div>
         </>

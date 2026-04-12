@@ -27,11 +27,11 @@ export function RaceSelector({ races, selectedRaceId, onSelect }: Props) {
           className={`flex-shrink-0 px-2.5 py-1 text-[11px] rounded-full whitespace-nowrap font-medium transition-colors ${
             selectedRaceId === race.id
               ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-white text-gray-600 border border-gray-200'
+              : 'bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-default)]'
           }`}
         >
           {race.name}
-          <span className={`ml-0.5 text-[9px] ${selectedRaceId === race.id ? 'text-blue-200' : 'text-gray-400'}`}>
+          <span className={`ml-0.5 text-[9px] ${selectedRaceId === race.id ? 'text-blue-200' : 'text-[var(--text-muted)]'}`}>
             {race.boatType === 'standard' ? '20' : '10'}
           </span>
         </button>

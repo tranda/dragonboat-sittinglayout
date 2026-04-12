@@ -4,7 +4,14 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Dragon Boat Layout - Munich 2026</title>
+    <title>Dragon Boat Crews</title>
+    <script>
+      (function(){
+        var t=localStorage.getItem('theme');
+        if(t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches))
+          document.documentElement.classList.add('dark');
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

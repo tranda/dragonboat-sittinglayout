@@ -48,11 +48,11 @@ export function DashboardPanel({ races, layouts, athleteMap, onSelectRace }: Pro
               key={race.id}
               onClick={() => onSelectRace(race.id)}
               className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                isFull ? 'border-green-200 bg-green-50/50' : 'border-gray-200 hover:bg-gray-50'
+                isFull ? 'border-green-200 bg-green-50/50' : 'border-[var(--border-default)] hover:bg-[var(--bg-surface-alt)]'
               }`}
             >
               <div className="flex items-center justify-between mb-1">
-                <div className="text-sm font-semibold text-gray-800 truncate mr-2">{race.name}</div>
+                <div className="text-sm font-semibold text-[var(--text-primary)] truncate mr-2">{race.name}</div>
                 <span className={`text-xs font-bold flex-shrink-0 ${
                   isFull ? 'text-green-600' : pct >= 80 ? 'text-yellow-600' : 'text-red-600'
                 }`}>
@@ -61,7 +61,7 @@ export function DashboardPanel({ races, layouts, athleteMap, onSelectRace }: Pro
               </div>
 
               {/* Progress bar */}
-              <div className="w-full h-1.5 bg-gray-200 rounded-full mb-1.5">
+              <div className="w-full h-1.5 bg-[var(--border-default)] rounded-full mb-1.5">
                 <div
                   className={`h-full rounded-full transition-all ${
                     isFull ? 'bg-green-500' : pct >= 80 ? 'bg-yellow-500' : 'bg-red-500'
@@ -70,11 +70,11 @@ export function DashboardPanel({ races, layouts, athleteMap, onSelectRace }: Pro
                 />
               </div>
 
-              <div className="flex gap-3 text-[10px] text-gray-500">
-                <span>Paddlers: <b className={c.paddlers === c.totalPaddlers ? 'text-green-600' : 'text-gray-700'}>{c.paddlers}/{c.totalPaddlers}</b></span>
+              <div className="flex gap-3 text-[10px] text-[var(--text-secondary)]">
+                <span>Paddlers: <b className={c.paddlers === c.totalPaddlers ? 'text-green-600' : 'text-[var(--text-primary)]'}>{c.paddlers}/{c.totalPaddlers}</b></span>
                 <span>DR: <b className={c.drummer ? 'text-green-600' : 'text-red-500'}>{c.drummer ? '✓' : '✗'}</b></span>
                 <span>HM: <b className={c.helm ? 'text-green-600' : 'text-red-500'}>{c.helm ? '✓' : '✗'}</b></span>
-                <span>Res: <b className="text-gray-700">{c.reserves}/{c.maxReserves}</b></span>
+                <span>Res: <b className="text-[var(--text-primary)]">{c.reserves}/{c.maxReserves}</b></span>
               </div>
 
               {/* Warnings for athletes with notes */}

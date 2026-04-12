@@ -27,19 +27,19 @@ export function AthletePoolModal({ athletes, onSelect, onClose, title }: Props) 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" onClick={onClose}>
       {/* Backdrop */}
-      <div className="flex-1 bg-black/30" />
+      <div className="flex-1 bg-[var(--bg-overlay)]" />
 
       {/* Bottom sheet */}
       <div
-        className="bg-white rounded-t-2xl shadow-2xl max-h-[70vh] min-h-[50vh] flex flex-col animate-slide-up"
+        className="bg-[var(--bg-surface)] rounded-t-2xl shadow-2xl max-h-[70vh] min-h-[50vh] flex flex-col animate-slide-up"
         onClick={e => e.stopPropagation()}
       >
         {/* Handle + title */}
         <div className="pt-2 pb-1 px-4">
-          <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2" />
+          <div className="w-10 h-1 bg-[var(--border-default)] rounded-full mx-auto mb-2" />
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-700">{title || 'Select Athlete'}</span>
-            <button onClick={onClose} className="text-gray-400 text-lg px-2">&times;</button>
+            <span className="text-sm font-semibold text-[var(--text-primary)]">{title || 'Select Athlete'}</span>
+            <button onClick={onClose} className="text-[var(--text-muted)] text-lg px-2">&times;</button>
           </div>
         </div>
 
@@ -48,7 +48,7 @@ export function AthletePoolModal({ athletes, onSelect, onClose, title }: Props) 
           <button
             onClick={() => setGenderTab('F')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-lg ${
-              genderTab === 'F' ? 'bg-pink-100 text-pink-700' : 'bg-gray-100 text-gray-500'
+              genderTab === 'F' ? 'bg-[var(--bg-female-strong)] text-[var(--text-female)]' : 'bg-[var(--bg-surface-alt)] text-[var(--text-secondary)]'
             }`}
           >
             Women ({women.length})
@@ -56,7 +56,7 @@ export function AthletePoolModal({ athletes, onSelect, onClose, title }: Props) 
           <button
             onClick={() => setGenderTab('M')}
             className={`flex-1 py-1.5 text-xs font-semibold rounded-lg ${
-              genderTab === 'M' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+              genderTab === 'M' ? 'bg-[var(--bg-male-strong)] text-blue-700' : 'bg-[var(--bg-surface-alt)] text-[var(--text-secondary)]'
             }`}
           >
             Men ({men.length})
@@ -69,14 +69,14 @@ export function AthletePoolModal({ athletes, onSelect, onClose, title }: Props) 
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search..."
-            className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400"
+            className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
           />
         </div>
 
         {/* List */}
         <div className="overflow-y-auto flex-1 px-4 pb-4">
           {filtered.length === 0 ? (
-            <div className="text-center text-gray-400 text-sm py-4">No athletes available</div>
+            <div className="text-center text-[var(--text-muted)] text-sm py-4">No athletes available</div>
           ) : (
             <div className="grid grid-cols-1 gap-1">
               {filtered.map(a => (
@@ -84,19 +84,19 @@ export function AthletePoolModal({ athletes, onSelect, onClose, title }: Props) 
                   key={a.id}
                   onClick={() => onSelect(a)}
                   className={`flex items-center justify-between px-3 py-2 rounded-lg text-left text-sm ${
-                    a.gender === 'F' ? 'bg-pink-50 hover:bg-pink-100' : 'bg-blue-50 hover:bg-blue-100'
+                    a.gender === 'F' ? 'bg-[var(--bg-female)] hover:bg-[var(--bg-female-strong)]' : 'bg-[var(--bg-male)] hover:bg-[var(--bg-male-strong)]'
                   }`}
                 >
                   <span className="font-medium flex items-center min-w-0">
                     <span className="truncate">{a.name}</span>
                     {a.preferredSide && (
-                      <span className="ml-1 px-1 py-0.5 bg-green-100 text-green-700 rounded text-[9px] font-semibold flex-shrink-0">{a.preferredSide === 'both' ? 'L/R' : a.preferredSide === 'left' ? 'L' : 'R'}</span>
+                      <span className="ml-1 px-1 py-0.5 bg-[var(--bg-badge-side)] text-[var(--text-badge-side)] rounded text-[9px] font-semibold flex-shrink-0">{a.preferredSide === 'both' ? 'L/R' : a.preferredSide === 'left' ? 'L' : 'R'}</span>
                     )}
                     {a.isBCP && (
-                      <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold flex-shrink-0">BCP</span>
+                      <span className="ml-1 px-1 py-0.5 bg-[var(--bg-badge-bcp)] text-[var(--text-badge-bcp)] rounded text-[9px] font-semibold flex-shrink-0">BCP</span>
                     )}
                   </span>
-                  <span className="text-gray-400 text-xs flex-shrink-0 ml-2">{a.weight || '?'} kg</span>
+                  <span className="text-[var(--text-muted)] text-xs flex-shrink-0 ml-2">{a.weight || '?'} kg</span>
                 </button>
               ))}
             </div>

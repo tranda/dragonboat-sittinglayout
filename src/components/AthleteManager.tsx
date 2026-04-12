@@ -20,7 +20,7 @@ function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F'
         type="button"
         onClick={() => onChange('F')}
         className={`flex-1 py-2 text-sm font-semibold rounded-lg border-2 ${
-          value === 'F' ? 'bg-pink-100 border-pink-400 text-pink-700' : 'bg-gray-50 border-gray-200 text-gray-400'
+          value === 'F' ? 'bg-[var(--bg-female-strong)] border-[var(--border-female-strong)] text-[var(--text-female)]' : 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] text-[var(--text-muted)]'
         }`}
       >
         Female
@@ -29,7 +29,7 @@ function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F'
         type="button"
         onClick={() => onChange('M')}
         className={`flex-1 py-2 text-sm font-semibold rounded-lg border-2 ${
-          value === 'M' ? 'bg-blue-100 border-blue-400 text-blue-700' : 'bg-gray-50 border-gray-200 text-gray-400'
+          value === 'M' ? 'bg-[var(--bg-male-strong)] border-[var(--border-male-strong)] text-blue-700' : 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] text-[var(--text-muted)]'
         }`}
       >
         Male
@@ -114,19 +114,19 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
   const isEditing = editingId !== null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-100 flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[var(--bg-app)] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-3 pb-2 bg-white border-b">
-        <h2 className="text-base font-bold text-gray-800">Athletes</h2>
-        <button onClick={onClose} className="text-gray-400 text-xl px-2">&times;</button>
+      <div className="flex items-center justify-between px-4 pt-3 pb-2 bg-[var(--bg-surface)] border-b">
+        <h2 className="text-base font-bold text-[var(--text-primary)]">Athletes</h2>
+        <button onClick={onClose} className="text-[var(--text-muted)] text-xl px-2">&times;</button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 px-4 py-2 bg-white">
+      <div className="flex gap-1 px-4 py-2 bg-[var(--bg-surface)]">
         <button
           onClick={() => setTab('active')}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg ${
-            tab === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'
+            tab === 'active' ? 'bg-[var(--bg-male-strong)] text-blue-700' : 'bg-[var(--bg-surface-alt)] text-[var(--text-secondary)]'
           }`}
         >
           Active ({active.length})
@@ -134,7 +134,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
         <button
           onClick={() => setTab('removed')}
           className={`flex-1 py-1.5 text-xs font-semibold rounded-lg ${
-            tab === 'removed' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'
+            tab === 'removed' ? 'bg-[var(--bg-role-admin)] text-[var(--text-role-admin)]' : 'bg-[var(--bg-surface-alt)] text-[var(--text-secondary)]'
           }`}
         >
           Removed ({removed.length})
@@ -142,12 +142,12 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
       </div>
 
       {/* Search */}
-      <div className="px-4 py-2 bg-white border-b">
+      <div className="px-4 py-2 bg-[var(--bg-surface)] border-b">
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Search..."
-          className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400"
+          className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
         />
       </div>
 
@@ -158,31 +158,31 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
             key={a.id}
             className={`flex items-center justify-between px-3 py-2.5 mb-1 rounded-lg ${
               editingId === a.id ? 'ring-2 ring-blue-400' : ''
-            } ${a.gender === 'F' ? 'bg-pink-50' : 'bg-blue-50'}`}
+            } ${a.gender === 'F' ? 'bg-[var(--bg-female)]' : 'bg-[var(--bg-male)]'}`}
             onClick={() => tab === 'active' && startEdit(a)}
           >
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate">{a.name}</div>
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-[var(--text-muted)]">
                 {a.weight ? `${a.weight} kg` : 'no weight'} · {a.gender === 'F' ? 'W' : 'M'}
                 {a.yearOfBirth ? ` · ${a.yearOfBirth}` : ''}
                 {(() => { const cat = getAthleteAgeCategory(a, config); return cat ? ` · ${cat}` : ''; })()}
-                {a.preferredSide ? <span className="ml-1 px-1 py-0.5 bg-green-100 text-green-700 rounded text-[9px] font-semibold">{a.preferredSide === 'both' ? 'L/R' : a.preferredSide === 'left' ? 'L' : 'R'}</span> : null}
-                {a.isBCP ? <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold">BCP</span> : null}
+                {a.preferredSide ? <span className="ml-1 px-1 py-0.5 bg-[var(--bg-badge-side)] text-[var(--text-badge-side)] rounded text-[9px] font-semibold">{a.preferredSide === 'both' ? 'L/R' : a.preferredSide === 'left' ? 'L' : 'R'}</span> : null}
+                {a.isBCP ? <span className="ml-1 px-1 py-0.5 bg-[var(--bg-badge-bcp)] text-[var(--text-badge-bcp)] rounded text-[9px] font-semibold">BCP</span> : null}
               </div>
               {a.notes && <div className="text-[10px] text-orange-600 truncate">{a.notes}</div>}
             </div>
             {tab === 'active' ? (
               <button
                 onClick={(e) => { e.stopPropagation(); onRemove(a.id); }}
-                className="text-xs text-red-500 font-medium px-2 py-1 rounded hover:bg-red-100 flex-shrink-0"
+                className="text-xs text-red-500 font-medium px-2 py-1 rounded hover:bg-[var(--bg-role-admin)] flex-shrink-0"
               >
                 Remove
               </button>
             ) : (
               <button
                 onClick={() => onRestore(a.id)}
-                className="text-xs text-green-600 font-medium px-2 py-1 rounded hover:bg-green-100 flex-shrink-0"
+                className="text-xs text-green-600 font-medium px-2 py-1 rounded hover:bg-[var(--bg-badge-side)] flex-shrink-0"
               >
                 Restore
               </button>
@@ -190,24 +190,24 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
           </div>
         ))}
         {filtered.length === 0 && (
-          <div className="text-center text-gray-400 text-sm py-8">
+          <div className="text-center text-[var(--text-muted)] text-sm py-8">
             {search ? 'No matches' : tab === 'removed' ? 'No removed athletes' : 'No athletes'}
           </div>
         )}
       </div>
 
       {/* Add / Edit form */}
-      <div className="px-4 py-3 bg-white border-t">
+      <div className="px-4 py-3 bg-[var(--bg-surface)] border-t">
         {showAddForm || isEditing ? (
           <div className="space-y-2">
-            <div className="text-xs font-semibold text-gray-500 uppercase">
+            <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase">
               {isEditing ? 'Edit Athlete' : 'New Athlete'}
             </div>
             <input
               value={newName}
               onChange={e => setNewName(e.target.value)}
               placeholder="Name"
-              className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400"
+              className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
               autoFocus
             />
             <GenderToggle value={newGender} onChange={setNewGender} />
@@ -217,14 +217,14 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
                 onChange={e => setNewWeight(e.target.value)}
                 placeholder="Weight (kg)"
                 type="number"
-                className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400"
+                className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
               />
               <input
                 value={newYearOfBirth}
                 onChange={e => setNewYearOfBirth(e.target.value)}
                 placeholder="Year of birth"
                 type="number"
-                className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400"
+                className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
               />
             </div>
             <textarea
@@ -232,13 +232,13 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
               onChange={e => setNewNotes(e.target.value)}
               placeholder="Notes (injury, strength, etc.)"
               rows={2}
-              className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400 resize-none"
+              className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)] resize-none"
             />
             <div className="flex gap-2">
               <select
                 value={newPreferredSide}
                 onChange={e => setNewPreferredSide(e.target.value as 'left' | 'right' | 'both' | '')}
-                className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400"
+                className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
               >
                 <option value="">No side pref.</option>
                 <option value="left">Left</option>
@@ -249,7 +249,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
                 type="button"
                 onClick={() => setNewIsBCP(!newIsBCP)}
                 className={`flex-1 flex items-center justify-between px-3 py-2 rounded-lg border-2 text-sm ${
-                  newIsBCP ? 'bg-purple-100 border-purple-400 text-purple-700 font-semibold' : 'bg-gray-50 border-gray-200 text-gray-400'
+                  newIsBCP ? 'bg-[var(--bg-badge-bcp)] border-purple-400 text-[var(--text-badge-bcp)] font-semibold' : 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] text-[var(--text-muted)]'
                 }`}
               >
                 <span>BCP</span>
@@ -263,7 +263,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
               >
                 {isEditing ? 'Save Changes' : 'Add Athlete'}
               </button>
-              <button onClick={clearForm} className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded-lg">
+              <button onClick={clearForm} className="px-4 py-2 text-sm bg-[var(--bg-surface-alt)] text-[var(--text-secondary)] rounded-lg">
                 Cancel
               </button>
             </div>

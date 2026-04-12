@@ -1,10 +1,98 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Semantic color tokens ── */
+:root {
+  --bg-app: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-surface-alt: #f9fafb;
+  --bg-input: #ffffff;
+  --bg-overlay: rgba(0,0,0,0.4);
+  --border-default: #e5e7eb;
+  --border-input: #d1d5db;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+
+  /* Gender */
+  --bg-female: #fdf2f8;
+  --bg-female-strong: #fce7f3;
+  --border-female: #fbcfe8;
+  --border-female-strong: #f472b6;
+  --text-female: #9d174d;
+
+  --bg-male: #eff6ff;
+  --bg-male-strong: #dbeafe;
+  --border-male: #bfdbfe;
+  --border-male-strong: #60a5fa;
+  --text-male: #1e40af;
+
+  /* Badges */
+  --bg-badge-bcp: #f3e8ff;
+  --text-badge-bcp: #7c3aed;
+  --bg-badge-side: #dcfce7;
+  --text-badge-side: #15803d;
+  --bg-badge-special: rgba(251,191,36,0.15);
+  --text-badge-special: #f59e0b;
+
+  /* Roles */
+  --bg-role-admin: #fee2e2;
+  --text-role-admin: #b91c1c;
+  --bg-role-coach: #dbeafe;
+  --text-role-coach: #1d4ed8;
+
+  /* Status */
+  --bg-active-tab: #2563eb;
+  --text-active-tab: #ffffff;
+}
+
+.dark {
+  --bg-app: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-surface-alt: #334155;
+  --bg-input: #334155;
+  --bg-overlay: rgba(0,0,0,0.6);
+  --border-default: #475569;
+  --border-input: #475569;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --bg-female: #500724;
+  --bg-female-strong: #831843;
+  --border-female: #9d174d;
+  --border-female-strong: #ec4899;
+  --text-female: #fbcfe8;
+
+  --bg-male: #172554;
+  --bg-male-strong: #1e3a5f;
+  --border-male: #1e40af;
+  --border-male-strong: #60a5fa;
+  --text-male: #bfdbfe;
+
+  --bg-badge-bcp: #3b0764;
+  --text-badge-bcp: #c4b5fd;
+  --bg-badge-side: #052e16;
+  --text-badge-side: #86efac;
+  --bg-badge-special: rgba(251,191,36,0.15);
+  --text-badge-special: #fbbf24;
+
+  --bg-role-admin: #450a0a;
+  --text-role-admin: #fca5a5;
+  --bg-role-coach: #172554;
+  --text-role-coach: #93c5fd;
+
+  --bg-active-tab: #3b82f6;
+  --text-active-tab: #ffffff;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background: #f1f5f9;
+  background: var(--bg-app);
+  color: var(--text-primary);
   overscroll-behavior: none;
 }
 
@@ -15,6 +103,13 @@ body {
 /* Prevent iOS auto-zoom on input focus */
 input, select, textarea {
   font-size: 16px !important;
+}
+
+/* Global dark styles for form elements */
+input, select, textarea {
+  background-color: var(--bg-input);
+  border-color: var(--border-input);
+  color: var(--text-primary);
 }
 
 .scrollbar-hide::-webkit-scrollbar {

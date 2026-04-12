@@ -19,12 +19,12 @@ export function ImportDialog({ onImport, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/30" />
+      <div className="absolute inset-0 bg-[var(--bg-overlay)]" />
       <div
-        className="relative bg-white rounded-2xl shadow-2xl mx-4 w-full max-w-sm p-5 space-y-4"
+        className="relative bg-[var(--bg-surface)] rounded-2xl shadow-2xl mx-4 w-full max-w-sm p-5 space-y-4"
         onClick={e => e.stopPropagation()}
       >
-        <h3 className="text-base font-bold text-gray-800">Import from Excel</h3>
+        <h3 className="text-base font-bold text-[var(--text-primary)]">Import from Excel</h3>
 
         {/* File picker */}
         <input
@@ -36,31 +36,31 @@ export function ImportDialog({ onImport, onClose }: Props) {
         />
         <button
           onClick={() => inputRef.current?.click()}
-          className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-500"
+          className="w-full py-3 border-2 border-dashed border-[var(--border-input)] rounded-lg text-sm text-[var(--text-secondary)] hover:border-[var(--border-male-strong)] hover:text-blue-500"
         >
           {file ? file.name : 'Choose .xlsx file'}
         </button>
 
         {/* Import mode */}
         <div className="space-y-2">
-          <div className="text-xs font-semibold text-gray-500 uppercase">Import mode</div>
+          <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase">Import mode</div>
           <button
             onClick={() => setMode('athletes')}
             className={`w-full text-left px-4 py-3 rounded-lg border-2 ${
-              mode === 'athletes' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+              mode === 'athletes' ? 'border-blue-500 bg-[var(--bg-male)]' : 'border-[var(--border-default)]'
             }`}
           >
             <div className="text-sm font-semibold">Only Athletes</div>
-            <div className="text-xs text-gray-500">Update athlete info (names, weights, gender, year). Keeps current boat layouts.</div>
+            <div className="text-xs text-[var(--text-secondary)]">Update athlete info (names, weights, gender, year). Keeps current boat layouts.</div>
           </button>
           <button
             onClick={() => setMode('full')}
             className={`w-full text-left px-4 py-3 rounded-lg border-2 ${
-              mode === 'full' ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+              mode === 'full' ? 'border-blue-500 bg-[var(--bg-male)]' : 'border-[var(--border-default)]'
             }`}
           >
             <div className="text-sm font-semibold">Full Import</div>
-            <div className="text-xs text-gray-500">Replace everything: athletes, races, and boat layouts.</div>
+            <div className="text-xs text-[var(--text-secondary)]">Replace everything: athletes, races, and boat layouts.</div>
           </button>
         </div>
 
@@ -70,12 +70,12 @@ export function ImportDialog({ onImport, onClose }: Props) {
             onClick={handleImport}
             disabled={!file || importing}
             className={`flex-1 py-2.5 text-sm font-medium rounded-lg ${
-              file && !importing ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-400'
+              file && !importing ? 'bg-blue-600 text-white' : 'bg-[var(--border-default)] text-[var(--text-muted)]'
             }`}
           >
             {importing ? 'Importing...' : 'Import'}
           </button>
-          <button onClick={onClose} className="px-4 py-2.5 text-sm bg-gray-100 text-gray-600 rounded-lg">
+          <button onClick={onClose} className="px-4 py-2.5 text-sm bg-[var(--bg-surface-alt)] text-[var(--text-secondary)] rounded-lg">
             Cancel
           </button>
         </div>

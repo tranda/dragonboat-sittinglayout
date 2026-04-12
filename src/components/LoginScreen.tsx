@@ -26,31 +26,31 @@ export function LoginScreen({ onLogin }: Props) {
   };
 
   return (
-    <div className="h-dvh flex items-center justify-center bg-slate-100 px-4">
+    <div className="h-dvh flex items-center justify-center bg-[var(--bg-app)] px-4">
       <div className="w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-1">Dragon Boat</h1>
-        <p className="text-center text-gray-400 text-sm mb-6">Crew Layout Manager</p>
+        <h1 className="text-2xl font-bold text-center text-[var(--text-primary)] mb-1">Dragon Boat</h1>
+        <p className="text-center text-[var(--text-muted)] text-sm mb-6">Crew Layout Manager</p>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-[var(--bg-surface)] rounded-2xl shadow-sm border p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
+            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Email</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl outline-none focus:border-blue-400 text-base"
+              className="w-full px-4 py-3 border rounded-xl outline-none focus:border-[var(--border-male-strong)] text-base"
               placeholder="email@example.com"
               required
               autoComplete="email"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">Password</label>
+            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Password</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl outline-none focus:border-blue-400 text-base"
+              className="w-full px-4 py-3 border rounded-xl outline-none focus:border-[var(--border-male-strong)] text-base"
               placeholder="password"
               required
               autoComplete="current-password"

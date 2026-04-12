@@ -11,8 +11,8 @@ export function AthleteChip({ athlete, seatId, showWeight }: Props) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: seatId });
 
   const genderColor = athlete.gender === 'F'
-    ? 'bg-pink-50 border-pink-200 text-pink-800'
-    : 'bg-blue-50 border-blue-200 text-blue-800';
+    ? 'bg-[var(--bg-female)] border-[var(--border-female)] text-[var(--text-female)]'
+    : 'bg-[var(--bg-male)] border-[var(--border-male)] text-[var(--text-male)]';
 
   return (
     <div
@@ -24,8 +24,8 @@ export function AthleteChip({ athlete, seatId, showWeight }: Props) {
       } ${genderColor}`}
     >
       {athlete.name}
-      {athlete.preferredSide && <span className="ml-1 px-1 bg-green-100 text-green-700 rounded text-[8px] font-semibold">{athlete.preferredSide === 'both' ? 'L/R' : athlete.preferredSide === 'left' ? 'L' : 'R'}</span>}
-      {athlete.isBCP && <span className="ml-1 px-1 bg-purple-100 text-purple-700 rounded text-[8px] font-semibold">BCP</span>}
+      {athlete.preferredSide && <span className="ml-1 px-1 bg-[var(--bg-badge-side)] text-[var(--text-badge-side)] rounded text-[8px] font-semibold">{athlete.preferredSide === 'both' ? 'L/R' : athlete.preferredSide === 'left' ? 'L' : 'R'}</span>}
+      {athlete.isBCP && <span className="ml-1 px-1 bg-[var(--bg-badge-bcp)] text-[var(--text-badge-bcp)] rounded text-[8px] font-semibold">BCP</span>}
       {showWeight && <span className="opacity-50 ml-0.5">{athlete.weight || '?'}</span>}
     </div>
   );
