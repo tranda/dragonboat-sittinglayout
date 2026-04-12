@@ -16,7 +16,7 @@ interface Props {
   onDuplicateRace: () => void;
   onRenameRace: (name: string) => void;
   onManageAthletes: () => void;
-  onImport: () => void;
+  onImport?: () => void;
   onSettings: () => void;
   onCompareCrew?: () => void;
   onReorderRaces?: () => void;
@@ -250,13 +250,6 @@ export function HamburgerMenu({
                 className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm text-blue-700 font-medium"
               >
                 Export to Excel
-              </button>
-
-              <button
-                onClick={onImport}
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm text-blue-700 font-medium"
-              >
-                Import from Excel
               </button>
 
               <button
