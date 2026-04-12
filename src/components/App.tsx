@@ -59,6 +59,7 @@ export function App() {
         yearOfBirth: a.yearOfBirth ?? undefined,
         isBCP: a.isBCP ?? false,
         preferredSide: a.preferredSide ?? null,
+        notes: a.notes ?? null,
         isRemoved: a.isRemoved ?? false,
         raceAssignments: a.raceAssignments || [],
       })) as Athlete[];
@@ -196,12 +197,12 @@ export function App() {
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   }, []);
 
-  const handleEditAthlete = useCallback(async (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide'>>) => {
+  const handleEditAthlete = useCallback(async (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide' | 'notes'>>) => {
     try {
       await api.updateAthlete(id, {
         name: updates.name, weight: updates.weight, gender: updates.gender,
         year_of_birth: updates.yearOfBirth, is_bcp: updates.isBCP,
-        preferred_side: updates.preferredSide,
+        preferred_side: updates.preferredSide, notes: updates.notes,
       });
       setAthletes(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }

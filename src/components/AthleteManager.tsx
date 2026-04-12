@@ -9,7 +9,7 @@ interface Props {
   onRemove: (id: number) => void;
   onRestore: (id: number) => void;
   onAdd: (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean, preferredSide?: 'left' | 'right' | 'both' | null) => void;
-  onEdit: (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide'>>) => void;
+  onEdit: (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide' | 'notes'>>) => void;
   onClose: () => void;
 }
 
@@ -48,6 +48,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
   const [newYearOfBirth, setNewYearOfBirth] = useState('');
   const [newIsBCP, setNewIsBCP] = useState(false);
   const [newPreferredSide, setNewPreferredSide] = useState<'left' | 'right' | 'both' | ''>('');
+  const [newNotes, setNewNotes] = useState('');
   const [search, setSearch] = useState('');
 
   const active = athletes
@@ -78,6 +79,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
     setNewYearOfBirth(a.yearOfBirth ? String(a.yearOfBirth) : '');
     setNewIsBCP(!!a.isBCP);
     setNewPreferredSide(a.preferredSide || '');
+    setNewNotes(a.notes || '');
     setShowAddForm(false);
   };
 
@@ -92,6 +94,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
       yearOfBirth: parseInt(newYearOfBirth) || undefined,
       isBCP: newIsBCP || undefined,
       preferredSide: newPreferredSide || null,
+      notes: newNotes.trim() || null,
     });
     clearForm();
   };
@@ -105,6 +108,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
     setNewYearOfBirth('');
     setNewIsBCP(false);
     setNewPreferredSide('');
+    setNewNotes('');
   };
 
   const isEditing = editingId !== null;
@@ -166,6 +170,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
                 {a.preferredSide ? <span className="ml-1 px-1 py-0.5 bg-green-100 text-green-700 rounded text-[9px] font-semibold">{a.preferredSide === 'both' ? 'L/R' : a.preferredSide === 'left' ? 'L' : 'R'}</span> : null}
                 {a.isBCP ? <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold">BCP</span> : null}
               </div>
+              {a.notes && <div className="text-[10px] text-orange-600 truncate">{a.notes}</div>}
             </div>
             {tab === 'active' ? (
               <button
@@ -222,6 +227,13 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
                 className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400"
               />
             </div>
+            <textarea
+              value={newNotes}
+              onChange={e => setNewNotes(e.target.value)}
+              placeholder="Notes (injury, strength, etc.)"
+              rows={2}
+              className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400 resize-none"
+            />
             <div className="flex gap-2">
               <select
                 value={newPreferredSide}
