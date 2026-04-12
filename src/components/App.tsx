@@ -15,7 +15,7 @@ import { DashboardPanel } from './DashboardPanel';
 import { ActivityLogPanel } from './ActivityLogPanel';
 import { PdfExportModal } from './PdfExportModal';
 import { exportToExcel } from '../utils/excelExport';
-import { downloadCrewPdf } from '../utils/pdfExport';
+import { getToken } from '../utils/api';
 import { importFromExcel } from '../utils/excelImport';
 import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
 import * as api from '../utils/api';
@@ -314,7 +314,7 @@ export function App() {
           </div>
           {view === 'layout' && selectedRace && layout && (
             <button
-              onClick={() => downloadCrewPdf([selectedRace], layouts, athleteMap, `${selectedRace.name}.pdf`)}
+              onClick={() => window.open(`/api/crew-sheet?ids=${selectedRace.id}&token=${getToken()}`, '_blank')}
               className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-gray-200 text-gray-400 flex-shrink-0"
               title="Download PDF"
             >
@@ -433,8 +433,6 @@ export function App() {
       {showPdfExport && (
         <PdfExportModal
           races={races}
-          layouts={layouts}
-          athleteMap={athleteMap}
           onClose={() => setShowPdfExport(false)}
         />
       )}

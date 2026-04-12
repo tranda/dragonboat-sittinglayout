@@ -1,17 +1,14 @@
 import { useState } from 'react';
-import type { Athlete, Race, BoatLayout } from '../types';
-import { downloadCrewPdf } from '../utils/pdfExport';
+import type { Race } from '../types';
+import { getToken } from '../utils/api';
 
 interface Props {
   races: Race[];
-  layouts: Record<string, BoatLayout>;
-  athleteMap: Map<number, Athlete>;
   onClose: () => void;
 }
 
-export function PdfExportModal({ races, layouts, athleteMap, onClose }: Props) {
+export function PdfExportModal({ races, onClose }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set(races.map(r => r.id)));
-  const [generating, setGenerating] = useState(false);
 
   const toggleRace = (id: string) => {
     setSelected(prev => {
@@ -24,16 +21,9 @@ export function PdfExportModal({ races, layouts, athleteMap, onClose }: Props) {
   const selectAll = () => setSelected(new Set(races.map(r => r.id)));
   const selectNone = () => setSelected(new Set());
 
-  const handleDownload = async () => {
-    setGenerating(true);
-    try {
-      const selectedRaces = races.filter(r => selected.has(r.id));
-      await downloadCrewPdf(selectedRaces, layouts, athleteMap);
-    } catch (err) {
-      alert('PDF generation failed: ' + (err instanceof Error ? err.message : ''));
-    } finally {
-      setGenerating(false);
-    }
+  const handleOpen = () => {
+    const ids = Array.from(selected).join(',');
+    window.open(`/api/crew-sheet?ids=${ids}&token=${getToken()}`, '_blank');
   };
 
   return (
@@ -75,11 +65,11 @@ export function PdfExportModal({ races, layouts, athleteMap, onClose }: Props) {
 
         <div className="flex gap-2 p-4 border-t">
           <button
-            onClick={handleDownload}
-            disabled={selected.size === 0 || generating}
+            onClick={handleOpen}
+            disabled={selected.size === 0}
             className="flex-1 py-2 text-sm bg-blue-600 text-white rounded-lg disabled:opacity-50"
           >
-            {generating ? 'Generating...' : `Download PDF (${selected.size})`}
+            Open Crew Sheets ({selected.size})
           </button>
           <button onClick={onClose} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg">
             Cancel
