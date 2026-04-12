@@ -210,7 +210,7 @@ export function BoatLayout({
         }}
       >
         {/* Drummer row — seat 1 */}
-        <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">1</span></div>
+        <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">1</span></div>
         <Seat seatId="drummer" athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} />
         <div className="flex items-center justify-center bg-amber-50/60">
           <span className="text-[7px] text-amber-400">DR</span>
@@ -224,7 +224,7 @@ export function BoatLayout({
           const rightNum = race.numRows + i + 2;
           return (
             <div key={i} className="contents">
-              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{leftNum}</span></div>
+              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">{leftNum}</span></div>
               <Seat
                 seatId={`left-${i}`}
                 athlete={layout.left[i] ? athleteMap.get(layout.left[i]!) ?? null : null}
@@ -238,7 +238,7 @@ export function BoatLayout({
                 showWeight={showWeights}
                 onTap={() => handleSeatTap(`right-${i}`)}
               />
-              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{rightNum}</span></div>
+              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">{rightNum}</span></div>
             </div>
           );
         })}
@@ -250,7 +250,7 @@ export function BoatLayout({
           <span className="text-[7px] text-amber-400">HM</span>
         </div>
         <Seat seatId="helm" athlete={layout.helm ? athleteMap.get(layout.helm) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('helm')} />
-        <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{race.numRows * 2 + 2}</span></div>
+        <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">{race.numRows * 2 + 2}</span></div>
 
         {/* Reserve rows */}
         {Array.from({ length: reservePairs }).map((_, pi) => {
@@ -263,7 +263,7 @@ export function BoatLayout({
           const rightResNum = helmNum + reservePairs + pi + 1;
           return (
             <div key={`res-${pi}`} className="contents">
-              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{leftResNum}</span></div>
+              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">{leftResNum}</span></div>
               <Seat
                 seatId={`reserve-${li}`}
                 athlete={leftId ? athleteMap.get(leftId) ?? null : null}
@@ -284,7 +284,7 @@ export function BoatLayout({
                 <div className="bg-green-50/20" />
               )}
               {rightId !== undefined ? (
-                <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{rightResNum}</span></div>
+                <div className="flex items-center justify-center"><span className="text-[8px] text-gray-500 font-mono font-bold">{rightResNum}</span></div>
               ) : (
                 <div />
               )}
