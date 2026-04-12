@@ -89,6 +89,9 @@ export function AthletePoolModal({ athletes, onSelect, onClose, title }: Props) 
                 >
                   <span className="font-medium flex items-center min-w-0">
                     <span className="truncate">{a.name}</span>
+                    {a.preferredSide && (
+                      <span className="ml-1 px-1 py-0.5 bg-green-100 text-green-700 rounded text-[9px] font-semibold flex-shrink-0">{a.preferredSide === 'both' ? 'L/R' : a.preferredSide === 'left' ? 'L' : 'R'}</span>
+                    )}
                     {a.isBCP && (
                       <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold flex-shrink-0">BCP</span>
                     )}
