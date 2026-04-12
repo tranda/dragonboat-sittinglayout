@@ -13,6 +13,7 @@ import { ReportPanel } from './ReportPanel';
 import { CrewCompareModal } from './CrewCompareModal';
 import { DashboardPanel } from './DashboardPanel';
 import { ActivityLogPanel } from './ActivityLogPanel';
+import { PdfExportModal } from './PdfExportModal';
 import { exportToExcel } from '../utils/excelExport';
 import { importFromExcel } from '../utils/excelImport';
 import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
@@ -43,6 +44,7 @@ export function App() {
   const [showCompare, setShowCompare] = useState(false);
   const [showDashboard, setShowDashboard] = useState(false);
   const [showActivityLog, setShowActivityLog] = useState(false);
+  const [showPdfExport, setShowPdfExport] = useState(false);
 
   // Role checks
   const canEdit = user?.role === 'admin' || user?.role === 'coach';
@@ -353,6 +355,7 @@ export function App() {
         onReorderRaces={canEdit ? () => { setMenuOpen(false); setShowReorderRaces(true); } : undefined}
         onShowReport={canEdit ? () => { setMenuOpen(false); setShowReport(true); } : undefined}
         onShowDashboard={canEdit ? () => { setMenuOpen(false); setShowDashboard(true); } : undefined}
+        onPdfExport={() => { setMenuOpen(false); setShowPdfExport(true); }}
         onActivityLog={user?.role === 'admin' ? () => { setMenuOpen(false); setShowActivityLog(true); } : undefined}
         onManageUsers={user?.role === 'admin' ? () => { setMenuOpen(false); setShowUsers(true); } : undefined}
         onLogout={() => { handleLogout(); setMenuOpen(false); }}
@@ -385,6 +388,16 @@ export function App() {
       {/* User manager */}
       {showUsers && (
         <UserManager onClose={() => setShowUsers(false)} />
+      )}
+
+      {/* PDF export */}
+      {showPdfExport && (
+        <PdfExportModal
+          races={races}
+          layouts={layouts}
+          athleteMap={athleteMap}
+          onClose={() => setShowPdfExport(false)}
+        />
       )}
 
       {/* Activity log */}

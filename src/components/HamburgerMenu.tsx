@@ -22,6 +22,7 @@ interface Props {
   onReorderRaces?: () => void;
   onShowReport?: () => void;
   onShowDashboard?: () => void;
+  onPdfExport?: () => void;
   onActivityLog?: () => void;
   onManageUsers?: () => void;
   onLogout?: () => void;
@@ -31,7 +32,7 @@ interface Props {
 export function HamburgerMenu({
   isOpen, onClose, showWeights, onToggleWeights,
   onExport, onResetCurrent, onResetAll,
-  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onActivityLog, onManageUsers, onLogout, userRole,
+  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onActivityLog, onManageUsers, onLogout, userRole,
 }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBoatType, setNewBoatType] = useState<'standard' | 'small'>('standard');
@@ -240,6 +241,15 @@ export function HamburgerMenu({
               >
                 Export to Excel
               </button>
+
+              {onPdfExport && (
+                <button
+                  onClick={() => { onPdfExport(); onClose(); }}
+                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-blue-50 text-sm text-blue-700 font-medium"
+                >
+                  Print / PDF
+                </button>
+              )}
 
               <button
                 onClick={onImport}
