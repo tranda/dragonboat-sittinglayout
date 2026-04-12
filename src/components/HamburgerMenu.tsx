@@ -18,6 +18,7 @@ interface Props {
   onManageAthletes: () => void;
   onImport: () => void;
   onSettings: () => void;
+  onCompareCrew?: () => void;
   onReorderRaces?: () => void;
   onShowReport?: () => void;
   onManageUsers?: () => void;
@@ -28,7 +29,7 @@ interface Props {
 export function HamburgerMenu({
   isOpen, onClose, showWeights, onToggleWeights,
   onExport, onResetCurrent, onResetAll,
-  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport, onSettings, onReorderRaces, onShowReport, onManageUsers, onLogout, userRole,
+  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onManageUsers, onLogout, userRole,
 }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBoatType, setNewBoatType] = useState<'standard' | 'small'>('standard');
@@ -133,6 +134,15 @@ export function HamburgerMenu({
           >
             Duplicate Race
           </button>
+
+          {onCompareCrew && (
+            <button
+              onClick={() => { onCompareCrew(); onClose(); }}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm"
+            >
+              Compare / Copy Crew
+            </button>
+          )}
 
           <button
             onClick={() => { onResetCurrent(); onClose(); }}

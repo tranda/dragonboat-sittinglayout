@@ -10,6 +10,7 @@ import { LoginScreen } from './LoginScreen';
 import { UserManager } from './UserManager';
 import { RaceReorderModal } from './RaceReorderModal';
 import { ReportPanel } from './ReportPanel';
+import { CrewCompareModal } from './CrewCompareModal';
 import { exportToExcel } from '../utils/excelExport';
 import { importFromExcel } from '../utils/excelImport';
 import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
@@ -37,6 +38,7 @@ export function App() {
   const [showUsers, setShowUsers] = useState(false);
   const [showReorderRaces, setShowReorderRaces] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
 
   // Role checks
   const canEdit = user?.role === 'admin' || user?.role === 'coach';
@@ -223,6 +225,14 @@ export function App() {
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   }, []);
 
+  const handleCopyCrew = useCallback((fromRaceId: string) => {
+    const source = layouts[fromRaceId];
+    if (!source || !selectedRaceId) return;
+    const copied = { ...source, left: [...source.left], right: [...source.right], reserves: [...source.reserves] };
+    setLayouts(prev => ({ ...prev, [selectedRaceId]: copied }));
+    api.saveLayout(selectedRaceId, copied).catch(console.error);
+  }, [layouts, selectedRaceId]);
+
   const handleExport = () => exportToExcel(races, layouts, athleteMap);
 
   const handleImport = useCallback(async (file: File, mode: 'athletes' | 'full') => {
@@ -334,6 +344,7 @@ export function App() {
         onManageAthletes={() => { setMenuOpen(false); setShowAthleteManager(true); }}
         onImport={canEdit ? () => { setMenuOpen(false); setShowImport(true); } : () => {}}
         onSettings={() => { setMenuOpen(false); setShowConfig(true); }}
+        onCompareCrew={canEdit && selectedRace ? () => { setMenuOpen(false); setShowCompare(true); } : undefined}
         onReorderRaces={canEdit ? () => { setMenuOpen(false); setShowReorderRaces(true); } : undefined}
         onShowReport={canEdit ? () => { setMenuOpen(false); setShowReport(true); } : undefined}
         onManageUsers={user?.role === 'admin' ? () => { setMenuOpen(false); setShowUsers(true); } : undefined}
@@ -367,6 +378,19 @@ export function App() {
       {/* User manager */}
       {showUsers && (
         <UserManager onClose={() => setShowUsers(false)} />
+      )}
+
+      {/* Crew compare */}
+      {showCompare && selectedRace && layout && (
+        <CrewCompareModal
+          currentRace={selectedRace}
+          currentLayout={layout}
+          races={races}
+          layouts={layouts}
+          athleteMap={athleteMap}
+          onCopyCrew={handleCopyCrew}
+          onClose={() => setShowCompare(false)}
+        />
       )}
 
       {/* Report panel */}
