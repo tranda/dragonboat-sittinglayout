@@ -42,7 +42,7 @@ export function App() {
   const [showReorderRaces, setShowReorderRaces] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [view, setView] = useState<'layout' | 'dashboard'>('dashboard');
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [showPdfExport, setShowPdfExport] = useState(false);
 
@@ -292,10 +292,22 @@ export function App() {
     <div className="h-dvh flex flex-col bg-slate-100 overflow-hidden max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 px-3 pt-2 pb-1 flex-shrink-0">
+        <button
+          onClick={() => setView('dashboard')}
+          className={`w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0 ${
+            view === 'dashboard' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200 text-gray-500'
+          }`}
+          title="Races Dashboard"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        </button>
         <div className="min-w-0 flex-1">
           <div className="text-[10px] text-gray-400 leading-tight">Dragon Boat · Munich 2026</div>
           <div className="text-sm font-bold text-gray-800 leading-tight truncate">
-            {selectedRace?.name ?? 'No race selected'}
+            {view === 'dashboard' ? 'Races Dashboard' : (selectedRace?.name ?? 'No race selected')}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -311,28 +323,39 @@ export function App() {
         </div>
       </div>
 
-      {/* Race tabs */}
-      <div className="px-3 pb-1 flex-shrink-0">
-        <RaceSelector races={races} selectedRaceId={selectedRaceId} onSelect={setSelectedRaceId} />
-      </div>
+      {view === 'dashboard' ? (
+        <DashboardPanel
+          races={races}
+          layouts={layouts}
+          athleteMap={athleteMap}
+          onSelectRace={(id) => { setSelectedRaceId(id); setView('layout'); }}
+        />
+      ) : (
+        <>
+          {/* Race tabs */}
+          <div className="px-3 pb-1 flex-shrink-0">
+            <RaceSelector races={races} selectedRaceId={selectedRaceId} onSelect={setSelectedRaceId} />
+          </div>
 
-      {/* Boat layout */}
-      <div className="flex-1 px-2 pb-1 min-h-0 flex flex-col">
-        {selectedRace && layout ? (
-          <BoatLayout
-            race={selectedRace}
-            layout={layout}
-            athleteMap={athleteMap}
-            benchFactors={currentBenchFactors}
-            unassignedAthletes={unassignedAthletes}
-            showWeights={showWeights}
-            onLayoutChange={canEdit ? handleLayoutChange : () => {}}
-            readOnly={!canEdit}
-          />
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Select a race</div>
-        )}
-      </div>
+          {/* Boat layout */}
+          <div className="flex-1 px-2 pb-1 min-h-0 flex flex-col">
+            {selectedRace && layout ? (
+              <BoatLayout
+                race={selectedRace}
+                layout={layout}
+                athleteMap={athleteMap}
+                benchFactors={currentBenchFactors}
+                unassignedAthletes={unassignedAthletes}
+                showWeights={showWeights}
+                onLayoutChange={canEdit ? handleLayoutChange : () => {}}
+                readOnly={!canEdit}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-gray-400 text-sm">Select a race</div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Hamburger menu */}
       <HamburgerMenu
@@ -354,7 +377,7 @@ export function App() {
         onCompareCrew={canEdit && selectedRace ? () => { setMenuOpen(false); setShowCompare(true); } : undefined}
         onReorderRaces={canEdit ? () => { setMenuOpen(false); setShowReorderRaces(true); } : undefined}
         onShowReport={canEdit ? () => { setMenuOpen(false); setShowReport(true); } : undefined}
-        onShowDashboard={canEdit ? () => { setMenuOpen(false); setShowDashboard(true); } : undefined}
+        onShowDashboard={canEdit ? () => { setMenuOpen(false); setView('dashboard'); } : undefined}
         onPdfExport={() => { setMenuOpen(false); setShowPdfExport(true); }}
         onActivityLog={user?.role === 'admin' ? () => { setMenuOpen(false); setShowActivityLog(true); } : undefined}
         onManageUsers={user?.role === 'admin' ? () => { setMenuOpen(false); setShowUsers(true); } : undefined}
@@ -405,16 +428,6 @@ export function App() {
         <ActivityLogPanel onClose={() => setShowActivityLog(false)} />
       )}
 
-      {/* Dashboard */}
-      {showDashboard && (
-        <DashboardPanel
-          races={races}
-          layouts={layouts}
-          athleteMap={athleteMap}
-          onSelectRace={(id) => { setSelectedRaceId(id); setShowDashboard(false); }}
-          onClose={() => setShowDashboard(false)}
-        />
-      )}
 
       {/* Crew compare */}
       {showCompare && selectedRace && layout && (
