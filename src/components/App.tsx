@@ -297,7 +297,7 @@ export function App() {
           className={`w-8 h-8 flex items-center justify-center rounded-lg flex-shrink-0 ${
             view === 'dashboard' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200 text-gray-500'
           }`}
-          title="Races Dashboard"
+          title="Crews Dashboard"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -307,7 +307,7 @@ export function App() {
         <div className="min-w-0 flex-1">
           <div className="text-[10px] text-gray-400 leading-tight">Dragon Boat · Munich 2026</div>
           <div className="text-sm font-bold text-gray-800 leading-tight truncate">
-            {view === 'dashboard' ? 'Races Dashboard' : (selectedRace?.name ?? 'No race selected')}
+            {view === 'dashboard' ? 'Crews Dashboard' : (selectedRace?.name ?? 'No race selected')}
           </div>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
