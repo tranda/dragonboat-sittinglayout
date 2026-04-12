@@ -115,6 +115,7 @@ export interface ApiUser {
   email: string;
   role: string;
   athlete_id: number | null;
+  is_active: boolean;
 }
 
 export interface ApiAthlete {

@@ -11,6 +11,7 @@ interface UserRow {
   email: string;
   role: string;
   athlete_id: number | null;
+  is_active: boolean;
 }
 
 const ROLES = ['admin', 'coach', 'athlete'] as const;
@@ -89,6 +90,15 @@ export function UserManager({ onClose }: Props) {
     }
   };
 
+  const handleToggleActive = async (id: number, isActive: boolean) => {
+    try {
+      await api.updateUser(id, { is_active: isActive });
+      await load();
+    } catch (err) {
+      alert('Failed: ' + (err instanceof Error ? err.message : ''));
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-8">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[85dvh] flex flex-col">
@@ -105,7 +115,7 @@ export function UserManager({ onClose }: Props) {
           ) : (
             <>
               {users.map(u => (
-                <div key={u.id} className="border rounded-lg p-3">
+                <div key={u.id} className={`border rounded-lg p-3 ${!u.is_active ? 'opacity-50' : ''}`}>
                   {editId === u.id ? (
                     <div className="space-y-2">
                       <input
@@ -151,8 +161,15 @@ export function UserManager({ onClose }: Props) {
                           u.role === 'coach' ? 'bg-blue-100 text-blue-700' :
                           'bg-gray-100 text-gray-600'
                         }`}>{u.role}</span>
+                        {!u.is_active && (
+                          <span className="inline-block mt-1 ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-yellow-100 text-yellow-700">inactive</span>
+                        )}
                       </div>
                       <div className="flex gap-1">
+                        <button
+                          onClick={() => handleToggleActive(u.id, !u.is_active)}
+                          className={`px-2 py-1 text-xs rounded ${u.is_active ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'}`}
+                        >{u.is_active ? 'Deactivate' : 'Activate'}</button>
                         <button
                           onClick={() => startEdit(u)}
                           className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded"
