@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import type { Race } from '../types';
 
 interface Props {
@@ -17,8 +17,15 @@ export function RaceSelector({ races, selectedRaceId, onSelect }: Props) {
     }
   }, [selectedRaceId]);
 
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (containerRef.current && e.deltaY !== 0) {
+      e.preventDefault();
+      containerRef.current.scrollLeft += e.deltaY;
+    }
+  }, []);
+
   return (
-    <div ref={containerRef} className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+    <div ref={containerRef} onWheel={handleWheel} className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
       {races.map(race => (
         <button
           key={race.id}

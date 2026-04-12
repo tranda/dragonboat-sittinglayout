@@ -297,7 +297,7 @@ export function BoatLayout({
           <span>Bench ({unassignedAthletes.length})</span>
           <Seat seatId="bench-drop" athlete={null} isDropZone />
         </div>
-        <div className="flex gap-1 overflow-x-auto pb-1 px-1 scrollbar-hide">
+        <div className="flex gap-1 overflow-x-auto pb-1 px-1 scrollbar-hide" onWheel={e => { if (e.deltaY !== 0) { e.preventDefault(); e.currentTarget.scrollLeft += e.deltaY; } }}>
           {unassignedAthletes.map(a => (
             <AthleteChip key={a.id} athlete={a} seatId={`bench-${a.id}`} showWeight={showWeights} />
           ))}
