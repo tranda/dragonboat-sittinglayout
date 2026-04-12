@@ -1,7 +1,6 @@
-import { useState, useRef } from 'react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { useState } from 'react';
 import type { Athlete, Race, BoatLayout } from '../types';
+import { downloadCrewPdf } from '../utils/pdfExport';
 
 interface Props {
   races: Race[];
@@ -10,71 +9,9 @@ interface Props {
   onClose: () => void;
 }
 
-function CrewSheetPage({ race, layout, athleteMap }: {
-  race: Race;
-  layout: BoatLayout;
-  athleteMap: Map<number, Athlete>;
-}) {
-  const getName = (id: number | null) => {
-    if (id === null) return '';
-    return athleteMap.get(id)?.name ?? '?';
-  };
-  const paddlersFilled = layout.left.filter(Boolean).length + layout.right.filter(Boolean).length;
-  const totalPaddlers = race.numRows * 2;
-
-  const th = { border: '1px solid #ccc', padding: '5px 10px', background: '#f0f0f0', textAlign: 'left' as const, color: '#555' };
-  const td = { border: '1px solid #ccc', padding: '5px 10px' };
-  const seatTd = { ...td, textAlign: 'center' as const, color: '#999', fontSize: '11px', width: '40px' };
-  const nameTd = { ...td, fontWeight: 500 };
-
-  return (
-    <div style={{ width: '794px', padding: '40px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', color: '#222', background: 'white' }}>
-      <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '4px' }}>{race.name}</h2>
-      <p style={{ fontSize: '12px', color: '#888', marginBottom: '16px' }}>
-        {race.boatType === 'standard' ? 'Standard (20)' : 'Small (10)'} · {race.distance} · {paddlersFilled}/{totalPaddlers} paddlers
-      </p>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-        <thead>
-          <tr>
-            <th style={{ ...th, width: '40px', textAlign: 'center' }}>Seat</th>
-            <th style={th}>Left</th>
-            <th style={th}>Right</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style={{ background: '#fff8eb' }}>
-            <td style={seatTd}>DR</td>
-            <td style={nameTd}>{getName(layout.drummer)}</td>
-            <td style={td}></td>
-          </tr>
-          {Array.from({ length: race.numRows }).map((_, i) => (
-            <tr key={i}>
-              <td style={seatTd}>{i + 2}</td>
-              <td style={nameTd}>{getName(layout.left[i])}</td>
-              <td style={nameTd}>{getName(layout.right[i])}</td>
-            </tr>
-          ))}
-          <tr style={{ background: '#fff8eb' }}>
-            <td style={seatTd}>HM</td>
-            <td style={td}></td>
-            <td style={nameTd}>{getName(layout.helm)}</td>
-          </tr>
-        </tbody>
-      </table>
-      {layout.reserves.length > 0 && (
-        <p style={{ marginTop: '10px', fontSize: '13px' }}>
-          <b>Reserves: </b>
-          {layout.reserves.map(id => getName(id)).filter(Boolean).join(', ')}
-        </p>
-      )}
-    </div>
-  );
-}
-
 export function PdfExportModal({ races, layouts, athleteMap, onClose }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set(races.map(r => r.id)));
   const [generating, setGenerating] = useState(false);
-  const renderRef = useRef<HTMLDivElement>(null);
 
   const toggleRace = (id: string) => {
     setSelected(prev => {
@@ -87,30 +24,11 @@ export function PdfExportModal({ races, layouts, athleteMap, onClose }: Props) {
   const selectAll = () => setSelected(new Set(races.map(r => r.id)));
   const selectNone = () => setSelected(new Set());
 
-  const selectedRaces = races.filter(r => selected.has(r.id));
-
   const handleDownload = async () => {
-    if (!renderRef.current || selectedRaces.length === 0) return;
     setGenerating(true);
-
     try {
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pages = renderRef.current.children;
-
-      for (let i = 0; i < pages.length; i++) {
-        if (i > 0) doc.addPage();
-        const canvas = await html2canvas(pages[i] as HTMLElement, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-        });
-        const imgData = canvas.toDataURL('image/png');
-        const pageWidth = 210;
-        const pageHeight = (canvas.height * pageWidth) / canvas.width;
-        doc.addImage(imgData, 'PNG', 0, 0, pageWidth, Math.min(pageHeight, 297));
-      }
-
-      doc.save('crew-sheets.pdf');
+      const selectedRaces = races.filter(r => selected.has(r.id));
+      await downloadCrewPdf(selectedRaces, layouts, athleteMap);
     } catch (err) {
       alert('PDF generation failed: ' + (err instanceof Error ? err.message : ''));
     } finally {
@@ -167,14 +85,6 @@ export function PdfExportModal({ races, layouts, athleteMap, onClose }: Props) {
             Cancel
           </button>
         </div>
-      </div>
-
-      {/* Hidden render area for html2canvas */}
-      <div ref={renderRef} style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-        {selectedRaces.map(race => {
-          const layout = layouts[race.id];
-          return layout ? <CrewSheetPage key={race.id} race={race} layout={layout} athleteMap={athleteMap} /> : null;
-        })}
       </div>
     </div>
   );
