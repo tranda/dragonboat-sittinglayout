@@ -351,24 +351,24 @@ export function App() {
         </button>
         <div className="min-w-0 flex-1 flex items-center gap-1">
           <div className="min-w-0">
-            <div className="text-[10px] text-[var(--text-muted)] leading-tight flex items-center gap-1">
+            <div className="text-[10px] text-[var(--text-muted)] leading-tight truncate">
               {userTeams.length > 1 ? (
                 <select
                   value={activeTeamId ?? ''}
                   onChange={e => handleSwitchTeam(Number(e.target.value))}
-                  className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer"
+                  className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer max-w-[45%]"
                 >
                   {userTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
               ) : (
                 <span>{userTeams[0]?.name ?? ''}</span>
               )}
-              {(userTeams.length > 0 && competitions.length > 0) && <span>·</span>}
+              {(userTeams.length > 0 && competitions.length > 0) && ' · '}
               {competitions.length > 1 ? (
                 <select
                   value={activeCompetitionId ?? ''}
                   onChange={e => handleSwitchCompetition(Number(e.target.value))}
-                  className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer"
+                  className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer max-w-[45%]"
                 >
                   {competitions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
