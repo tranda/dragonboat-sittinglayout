@@ -388,7 +388,14 @@ export function App() {
           </div>
           {view === 'layout' && selectedRace && layout && (
             <button
-              onClick={async () => { try { const t = await getPdfToken(); window.open(`/api/crew-sheet?ids=${encodeURIComponent(selectedRace.id)}&token=${t}`, '_blank'); } catch (err) { alert('PDF failed: ' + (err instanceof Error ? err.message : String(err))); } }}
+              onClick={() => {
+                const win = window.open('', '_blank');
+                getPdfToken().then(t => {
+                  const url = `/api/crew-sheet?ids=${encodeURIComponent(selectedRace.id)}&token=${t}`;
+                  if (win) win.location.href = url;
+                  else window.location.href = url;
+                }).catch(err => { if (win) win.close(); alert('PDF failed: ' + (err instanceof Error ? err.message : String(err))); });
+              }}
               className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[var(--bg-surface-alt)] text-[var(--text-muted)] flex-shrink-0"
               title="Download PDF"
             >

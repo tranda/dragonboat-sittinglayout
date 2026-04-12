@@ -22,17 +22,18 @@ export function PdfExportModal({ races, onClose }: Props) {
   const selectAll = () => setSelected(new Set(races.map(r => r.id)));
   const selectNone = () => setSelected(new Set());
 
-  const handleOpen = async () => {
+  const handleOpen = () => {
     setGenerating(true);
-    try {
-      const token = await getPdfToken();
+    const win = window.open('', '_blank');
+    getPdfToken().then(token => {
       const ids = Array.from(selected).map(encodeURIComponent).join(',');
-      window.open(`/api/crew-sheet?ids=${ids}&token=${token}`, '_blank');
-    } catch (err) {
+      const url = `/api/crew-sheet?ids=${ids}&token=${token}`;
+      if (win) win.location.href = url;
+      else window.location.href = url;
+    }).catch(err => {
+      if (win) win.close();
       alert('Failed: ' + (err instanceof Error ? err.message : ''));
-    } finally {
-      setGenerating(false);
-    }
+    }).finally(() => setGenerating(false));
   };
 
   return (
