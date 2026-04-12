@@ -190,8 +190,8 @@ export function BoatLayout({
         </>
       )}
 
-      {/* Compact balance bar — only visible when showWeights is on (admin/coach toggle) */}
-      {showWeights && (
+      {/* Compact balance bar — always visible for admin/coach */}
+      {!readOnly && (
         <div className="flex items-center justify-between text-[11px] mb-1 px-1 font-semibold">
           <span className="text-[var(--text-primary)]">{stats.totalWeight}kg</span>
           <span className={`${lrColor} font-bold`}>L/R: {stats.leftRightDiff > 0 ? '+' : ''}{stats.leftRightDiff}</span>
