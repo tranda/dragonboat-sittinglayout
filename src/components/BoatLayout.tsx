@@ -190,15 +190,13 @@ export function BoatLayout({
         </>
       )}
 
-      {/* Compact balance bar — always visible for admin/coach */}
-      {!readOnly && (
-        <div className="flex items-center justify-between text-[11px] mb-1 px-1 font-semibold">
-          <span className="text-[var(--text-primary)]">{stats.totalWeight}kg</span>
-          <span className={`${lrColor} font-bold`}>L/R: {stats.leftRightDiff > 0 ? '+' : ''}{stats.leftRightDiff}</span>
-          <span className={`${tdColor} font-bold`}>F/R: {stats.topDownDiff > 0 ? '+' : ''}{stats.topDownDiff}</span>
-          <span className="text-[var(--text-secondary)]">L:{stats.leftWeight} R:{stats.rightWeight}</span>
-        </div>
-      )}
+      {/* Compact balance bar — always visible */}
+      <div className="flex items-center justify-between text-[11px] mb-1 px-1 font-semibold">
+        <span className="text-[var(--text-primary)]">{stats.totalWeight}kg</span>
+        <span className={`${lrColor} font-bold`}>L/R: {stats.leftRightDiff > 0 ? '+' : ''}{stats.leftRightDiff}</span>
+        <span className={`${tdColor} font-bold`}>F/R: {stats.topDownDiff > 0 ? '+' : ''}{stats.topDownDiff}</span>
+        <span className="text-[var(--text-secondary)]">L:{stats.leftWeight} R:{stats.rightWeight}</span>
+      </div>
 
       {/* Boat grid — unified, fits viewport */}
       <div
