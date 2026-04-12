@@ -204,17 +204,19 @@ export function BoatLayout({
       <div
         className="grid gap-x-px gap-y-1.5 bg-white rounded-lg border border-gray-200 overflow-hidden p-1"
         style={{
-          gridTemplateColumns: '1fr 18px 1fr',
+          gridTemplateColumns: '14px 1fr 18px 1fr 14px',
           gridTemplateRows: `repeat(${totalRows}, 1fr)`,
           height: `calc(100dvh - 180px)`,
         }}
       >
         {/* Drummer row — seat 1 */}
-        <Seat seatId="drummer" seatNumber={1} athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} />
+        <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">1</span></div>
+        <Seat seatId="drummer" athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} />
         <div className="flex items-center justify-center bg-amber-50/60">
           <span className="text-[7px] text-amber-400">DR</span>
         </div>
         <div className="bg-amber-50/30" />
+        <div />
 
         {/* Seat rows — left: 2..numRows+1, right: numRows+2..numRows*2+1 */}
         {Array.from({ length: race.numRows }).map((_, i) => {
@@ -222,33 +224,33 @@ export function BoatLayout({
           const rightNum = race.numRows + i + 2;
           return (
             <div key={i} className="contents">
+              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{leftNum}</span></div>
               <Seat
                 seatId={`left-${i}`}
-                seatNumber={leftNum}
                 athlete={layout.left[i] ? athleteMap.get(layout.left[i]!) ?? null : null}
                 showWeight={showWeights}
                 onTap={() => handleSeatTap(`left-${i}`)}
               />
-              <div className="flex items-center justify-center bg-gray-50/80">
-                <span className="text-[8px] text-gray-400 font-mono">{i + 1}</span>
-              </div>
+              <div className="flex items-center justify-center bg-gray-50/80" />
               <Seat
                 seatId={`right-${i}`}
-                seatNumber={rightNum}
                 athlete={layout.right[i] ? athleteMap.get(layout.right[i]!) ?? null : null}
                 showWeight={showWeights}
                 onTap={() => handleSeatTap(`right-${i}`)}
               />
+              <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{rightNum}</span></div>
             </div>
           );
         })}
 
         {/* Helm row */}
+        <div />
         <div className="bg-amber-50/30" />
         <div className="flex items-center justify-center bg-amber-50/60">
           <span className="text-[7px] text-amber-400">HM</span>
         </div>
-        <Seat seatId="helm" seatNumber={race.numRows * 2 + 2} athlete={layout.helm ? athleteMap.get(layout.helm) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('helm')} />
+        <Seat seatId="helm" athlete={layout.helm ? athleteMap.get(layout.helm) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('helm')} />
+        <div className="flex items-center justify-center"><span className="text-[8px] text-gray-400 font-mono">{race.numRows * 2 + 2}</span></div>
 
         {/* Reserve rows */}
         {Array.from({ length: reservePairs }).map((_, pi) => {
@@ -258,6 +260,7 @@ export function BoatLayout({
           const rightId = ri < reserveCount ? (reserves[ri] ?? null) : undefined;
           return (
             <div key={`res-${pi}`} className="contents">
+              <div />
               <Seat
                 seatId={`reserve-${li}`}
                 athlete={leftId ? athleteMap.get(leftId) ?? null : null}
@@ -277,6 +280,7 @@ export function BoatLayout({
               ) : (
                 <div className="bg-green-50/20" />
               )}
+              <div />
             </div>
           );
         })}

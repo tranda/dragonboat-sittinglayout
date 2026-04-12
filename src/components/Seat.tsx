@@ -4,13 +4,12 @@ import type { Athlete } from '../types';
 interface Props {
   seatId: string;
   athlete: Athlete | null;
-  seatNumber?: number;
   showWeight?: boolean;
   onTap?: () => void;
   isDropZone?: boolean;
 }
 
-export function Seat({ seatId, athlete, seatNumber, showWeight, onTap, isDropZone }: Props) {
+export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) {
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: seatId });
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id: seatId,
@@ -51,15 +50,11 @@ export function Seat({ seatId, athlete, seatNumber, showWeight, onTap, isDropZon
     >
       {athlete ? (
         <span className="text-[13px] font-bold leading-tight text-center line-clamp-2 break-words text-gray-800">
-          {seatNumber != null && <span className="text-[9px] text-gray-400 font-normal mr-0.5">{seatNumber}</span>}
           {athlete.name}
           {showWeight && athlete.weight ? <span className="text-gray-500 font-normal text-[10px] ml-0.5">{athlete.weight}</span> : null}
         </span>
       ) : (
-        <span className="text-gray-400 leading-none">
-          {seatNumber != null && <span className="text-[9px] mr-0.5">{seatNumber}</span>}
-          <span className="text-[20px] font-light">+</span>
-        </span>
+        <span className="text-[20px] text-gray-400 font-light leading-none">+</span>
       )}
     </div>
   );
