@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { Race } from '../types';
 
 interface Props {
@@ -7,11 +8,21 @@ interface Props {
 }
 
 export function RaceSelector({ races, selectedRaceId, onSelect }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const selectedRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (selectedRef.current && containerRef.current) {
+      selectedRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [selectedRaceId]);
+
   return (
-    <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+    <div ref={containerRef} className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
       {races.map(race => (
         <button
           key={race.id}
+          ref={race.id === selectedRaceId ? selectedRef : undefined}
           onClick={() => onSelect(race.id)}
           className={`flex-shrink-0 px-2.5 py-1 text-[11px] rounded-full whitespace-nowrap font-medium transition-colors ${
             selectedRaceId === race.id
