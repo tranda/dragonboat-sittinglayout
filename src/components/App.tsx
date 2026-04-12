@@ -15,6 +15,7 @@ import { DashboardPanel } from './DashboardPanel';
 import { ActivityLogPanel } from './ActivityLogPanel';
 import { PdfExportModal } from './PdfExportModal';
 import { CompetitionManager } from './CompetitionManager';
+import { ImportEventsModal } from './ImportEventsModal';
 import { exportToExcel } from '../utils/excelExport';
 import { getPdfToken } from '../utils/api';
 import { importFromExcel } from '../utils/excelImport';
@@ -54,6 +55,7 @@ export function App() {
   const [showActivityLog, setShowActivityLog] = useState(false);
   const [showPdfExport, setShowPdfExport] = useState(false);
   const [showCompetitions, setShowCompetitions] = useState(false);
+  const [showImportEvents, setShowImportEvents] = useState(false);
 
   // Persist view state
   useEffect(() => { localStorage.setItem('dragonboat-view', view); }, [view]);
@@ -88,6 +90,9 @@ export function App() {
         yearOfBirth: a.yearOfBirth ?? undefined,
         isBCP: a.isBCP ?? false,
         preferredSide: a.preferredSide ?? null,
+        isHelm: a.isHelm ?? false,
+        isDrummer: a.isDrummer ?? false,
+        edbfId: a.edbfId ?? null,
         notes: a.notes ?? null,
         isRemoved: a.isRemoved ?? false,
         raceAssignments: a.raceAssignments || [],
@@ -248,12 +253,13 @@ export function App() {
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   }, []);
 
-  const handleEditAthlete = useCallback(async (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide' | 'notes'>>) => {
+  const handleEditAthlete = useCallback(async (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide' | 'isHelm' | 'isDrummer' | 'edbfId' | 'notes'>>) => {
     try {
       await api.updateAthlete(id, {
         name: updates.name, weight: updates.weight, gender: updates.gender,
         year_of_birth: updates.yearOfBirth, is_bcp: updates.isBCP,
-        preferred_side: updates.preferredSide, notes: updates.notes,
+        preferred_side: updates.preferredSide, is_helm: updates.isHelm,
+        is_drummer: updates.isDrummer, edbf_id: updates.edbfId, notes: updates.notes,
       });
       setAthletes(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
@@ -463,6 +469,7 @@ export function App() {
         onShowReport={canEdit ? () => { setMenuOpen(false); setShowReport(true); } : undefined}
         onShowDashboard={canEdit ? () => { setMenuOpen(false); setView('dashboard'); } : undefined}
         onPdfExport={() => { setMenuOpen(false); setShowPdfExport(true); }}
+        onImportEvents={user?.role === 'admin' ? () => { setMenuOpen(false); setShowImportEvents(true); } : undefined}
         onManageCompetitions={user?.role === 'admin' ? () => { setMenuOpen(false); setShowCompetitions(true); } : undefined}
         onActivityLog={user?.role === 'admin' ? () => { setMenuOpen(false); setShowActivityLog(true); } : undefined}
         onManageUsers={user?.role === 'admin' ? () => { setMenuOpen(false); setShowUsers(true); } : undefined}
@@ -496,6 +503,14 @@ export function App() {
       {/* User manager */}
       {showUsers && (
         <UserManager onClose={() => setShowUsers(false)} />
+      )}
+
+      {/* Import from Events */}
+      {showImportEvents && (
+        <ImportEventsModal
+          onClose={() => setShowImportEvents(false)}
+          onImported={() => loadData()}
+        />
       )}
 
       {/* Competitions & Teams */}

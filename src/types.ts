@@ -6,6 +6,9 @@ export interface Athlete {
   yearOfBirth?: number;
   isBCP?: boolean; // manually set — Breast Cancer Paddler designation
   preferredSide?: 'left' | 'right' | 'both' | null;
+  isHelm?: boolean;
+  isDrummer?: boolean;
+  edbfId?: string | null;
   notes?: string | null;
   isRemoved?: boolean;
   category?: string; // calculated from yearOfBirth + gender via policy (TBD)

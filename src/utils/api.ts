@@ -240,6 +240,9 @@ export interface ApiAthlete {
   yearOfBirth?: number;
   isBCP?: boolean;
   preferredSide?: 'left' | 'right' | 'both' | null;
+  isHelm?: boolean;
+  isDrummer?: boolean;
+  edbfId?: string | null;
   notes?: string | null;
   isRemoved?: boolean;
   raceAssignments: string[];
