@@ -8,8 +8,8 @@ interface Props {
   removedIds: Set<number>;
   onRemove: (id: number) => void;
   onRestore: (id: number) => void;
-  onAdd: (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean) => void;
-  onEdit: (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP'>>) => void;
+  onAdd: (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean, preferredSide?: 'left' | 'right' | 'both' | null) => void;
+  onEdit: (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide'>>) => void;
   onClose: () => void;
 }
 
@@ -47,6 +47,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
   const [newGender, setNewGender] = useState<'F' | 'M'>('F');
   const [newYearOfBirth, setNewYearOfBirth] = useState('');
   const [newIsBCP, setNewIsBCP] = useState(false);
+  const [newPreferredSide, setNewPreferredSide] = useState<'left' | 'right' | 'both' | ''>('');
   const [search, setSearch] = useState('');
 
   const active = athletes
@@ -65,7 +66,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
     const name = newName.trim();
     if (!name) return;
     const yob = parseInt(newYearOfBirth) || undefined;
-    onAdd(name, parseFloat(newWeight) || 0, newGender, yob, newIsBCP || undefined);
+    onAdd(name, parseFloat(newWeight) || 0, newGender, yob, newIsBCP || undefined, newPreferredSide || null);
     clearForm();
   };
 
@@ -76,6 +77,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
     setNewGender(a.gender);
     setNewYearOfBirth(a.yearOfBirth ? String(a.yearOfBirth) : '');
     setNewIsBCP(!!a.isBCP);
+    setNewPreferredSide(a.preferredSide || '');
     setShowAddForm(false);
   };
 
@@ -89,6 +91,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
       gender: newGender,
       yearOfBirth: parseInt(newYearOfBirth) || undefined,
       isBCP: newIsBCP || undefined,
+      preferredSide: newPreferredSide || null,
     });
     clearForm();
   };
@@ -101,6 +104,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
     setNewGender('F');
     setNewYearOfBirth('');
     setNewIsBCP(false);
+    setNewPreferredSide('');
   };
 
   const isEditing = editingId !== null;
@@ -159,6 +163,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
                 {a.weight ? `${a.weight} kg` : 'no weight'} · {a.gender === 'F' ? 'W' : 'M'}
                 {a.yearOfBirth ? ` · ${a.yearOfBirth}` : ''}
                 {(() => { const cat = getAthleteAgeCategory(a, config); return cat ? ` · ${cat}` : ''; })()}
+                {a.preferredSide ? <span className="ml-1 px-1 py-0.5 bg-green-100 text-green-700 rounded text-[9px] font-semibold">{a.preferredSide === 'both' ? 'L/R' : a.preferredSide === 'left' ? 'L' : 'R'}</span> : null}
                 {a.isBCP ? <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold">BCP</span> : null}
               </div>
             </div>
@@ -217,16 +222,28 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
                 className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400"
               />
             </div>
-            <button
-              type="button"
-              onClick={() => setNewIsBCP(!newIsBCP)}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border-2 text-sm ${
-                newIsBCP ? 'bg-purple-100 border-purple-400 text-purple-700 font-semibold' : 'bg-gray-50 border-gray-200 text-gray-400'
-              }`}
-            >
-              <span>BCP (Breast Cancer Paddler)</span>
-              <span>{newIsBCP ? 'Yes' : 'No'}</span>
-            </button>
+            <div className="flex gap-2">
+              <select
+                value={newPreferredSide}
+                onChange={e => setNewPreferredSide(e.target.value as 'left' | 'right' | 'both' | '')}
+                className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-blue-400"
+              >
+                <option value="">No side pref.</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+                <option value="both">Both</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => setNewIsBCP(!newIsBCP)}
+                className={`flex-1 flex items-center justify-between px-3 py-2 rounded-lg border-2 text-sm ${
+                  newIsBCP ? 'bg-purple-100 border-purple-400 text-purple-700 font-semibold' : 'bg-gray-50 border-gray-200 text-gray-400'
+                }`}
+              >
+                <span>BCP</span>
+                <span>{newIsBCP ? 'Yes' : 'No'}</span>
+              </button>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={isEditing ? handleSaveEdit : handleAdd}

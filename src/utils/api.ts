@@ -125,6 +125,7 @@ export interface ApiAthlete {
   gender: 'M' | 'F';
   yearOfBirth?: number;
   isBCP?: boolean;
+  preferredSide?: 'left' | 'right' | 'both' | null;
   isRemoved?: boolean;
   raceAssignments: string[];
 }

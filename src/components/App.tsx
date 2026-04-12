@@ -56,6 +56,7 @@ export function App() {
         gender: a.gender,
         yearOfBirth: a.yearOfBirth ?? undefined,
         isBCP: a.isBCP ?? false,
+        preferredSide: a.preferredSide ?? null,
         isRemoved: a.isRemoved ?? false,
         raceAssignments: a.raceAssignments || [],
       })) as Athlete[];
@@ -193,20 +194,21 @@ export function App() {
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   }, []);
 
-  const handleEditAthlete = useCallback(async (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP'>>) => {
+  const handleEditAthlete = useCallback(async (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide'>>) => {
     try {
       await api.updateAthlete(id, {
         name: updates.name, weight: updates.weight, gender: updates.gender,
         year_of_birth: updates.yearOfBirth, is_bcp: updates.isBCP,
+        preferred_side: updates.preferredSide,
       });
       setAthletes(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   }, []);
 
-  const handleAddAthlete = useCallback(async (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean) => {
+  const handleAddAthlete = useCallback(async (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean, preferredSide?: 'left' | 'right' | 'both' | null) => {
     try {
-      const created = await api.createAthlete({ name, weight, gender, year_of_birth: yearOfBirth, is_bcp: isBCP });
-      setAthletes(prev => [...prev, { id: created.id, name, weight, gender, yearOfBirth, isBCP, raceAssignments: [] }]);
+      const created = await api.createAthlete({ name, weight, gender, year_of_birth: yearOfBirth, is_bcp: isBCP, preferred_side: preferredSide });
+      setAthletes(prev => [...prev, { id: created.id, name, weight, gender, yearOfBirth, isBCP, preferredSide, raceAssignments: [] }]);
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   }, []);
 

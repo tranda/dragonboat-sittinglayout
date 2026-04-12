@@ -5,6 +5,7 @@ export interface Athlete {
   gender: 'M' | 'F';
   yearOfBirth?: number;
   isBCP?: boolean; // manually set — Breast Cancer Paddler designation
+  preferredSide?: 'left' | 'right' | 'both' | null;
   category?: string; // calculated from yearOfBirth + gender via policy (TBD)
   raceAssignments: string[];
 }

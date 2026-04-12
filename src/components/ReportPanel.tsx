@@ -164,6 +164,7 @@ export function ReportPanel({ athletes, races, layouts, config, onClose }: Props
                       {athlete.weight ? `${athlete.weight} kg` : 'no weight'} · {athlete.gender === 'F' ? 'W' : 'M'}
                       {athlete.yearOfBirth ? ` · ${athlete.yearOfBirth}` : ''}
                       {ageCat ? ` · ${ageCat}` : ''}
+                      {athlete.preferredSide && <span className="ml-1 px-1 py-0.5 bg-green-100 text-green-700 rounded text-[9px] font-semibold">{athlete.preferredSide === 'both' ? 'L/R' : athlete.preferredSide === 'left' ? 'L' : 'R'}</span>}
                       {athlete.isBCP && <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold">BCP</span>}
                     </div>
                   </div>
