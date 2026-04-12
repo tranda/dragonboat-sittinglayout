@@ -162,7 +162,7 @@ export function ReportPanel({ athletes, races, layouts, config, onClose }: Props
                     <div className="text-sm font-medium truncate">{athlete.name}</div>
                     <div className="text-xs text-gray-400">
                       {athlete.weight ? `${athlete.weight} kg` : 'no weight'} · {athlete.gender === 'F' ? 'W' : 'M'}
-                      {athlete.yearOfBirth ? ` · b.${athlete.yearOfBirth}` : ''}
+                      {athlete.yearOfBirth ? ` · ${athlete.yearOfBirth}` : ''}
                       {ageCat ? ` · ${ageCat}` : ''}
                       {athlete.isBCP && <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold">BCP</span>}
                     </div>

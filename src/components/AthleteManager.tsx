@@ -157,7 +157,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
               <div className="text-sm font-medium truncate">{a.name}</div>
               <div className="text-xs text-gray-400">
                 {a.weight ? `${a.weight} kg` : 'no weight'} · {a.gender === 'F' ? 'W' : 'M'}
-                {a.yearOfBirth ? ` · b.${a.yearOfBirth}` : ''}
+                {a.yearOfBirth ? ` · ${a.yearOfBirth}` : ''}
                 {(() => { const cat = getAthleteAgeCategory(a, config); return cat ? ` · ${cat}` : ''; })()}
                 {a.isBCP ? <span className="ml-1 px-1 py-0.5 bg-purple-100 text-purple-700 rounded text-[9px] font-semibold">BCP</span> : null}
               </div>
