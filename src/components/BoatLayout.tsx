@@ -201,17 +201,19 @@ export function BoatLayout({
         <span className="text-[var(--text-secondary)]">L:{stats.leftWeight} R:{stats.rightWeight}</span>
       </div>
       {/* Mixed ratio warning */}
-      {mixedRatio && (mixedRatio.womenCount > 0 || mixedRatio.menCount > 0) && (
-        <div className={`flex items-center justify-center gap-2 text-[11px] mb-1 px-1 py-0.5 rounded font-semibold ${
-          mixedRatio.valid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-        }`}>
-          <span>W:{mixedRatio.womenCount} M:{mixedRatio.menCount}</span>
-          <span className="text-[10px] font-normal">
-            (need {mixedRatio.minSameGender}-{mixedRatio.maxSameGender} each)
-          </span>
-          {!mixedRatio.valid && <span>!</span>}
-        </div>
-      )}
+      {mixedRatio && (mixedRatio.womenCount > 0 || mixedRatio.menCount > 0) && (() => {
+        const exceeded = mixedRatio.womenCount > mixedRatio.maxSameGender || mixedRatio.menCount > mixedRatio.maxSameGender;
+        const colorClass = exceeded ? 'bg-red-50 text-red-700' : mixedRatio.valid ? 'bg-green-50 text-green-700' : 'text-[var(--text-secondary)]';
+        return (
+          <div className={`flex items-center justify-center gap-2 text-[11px] mb-1 px-1 py-0.5 rounded font-semibold ${colorClass}`}>
+            <span>W:{mixedRatio.womenCount} M:{mixedRatio.menCount}</span>
+            <span className="text-[10px] font-normal">
+              (need {mixedRatio.minSameGender}-{mixedRatio.maxSameGender} each)
+            </span>
+            {exceeded && <span>!</span>}
+          </div>
+        );
+      })()}
 
       {/* Boat grid — unified, fits viewport */}
       <div
