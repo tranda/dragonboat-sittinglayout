@@ -115,6 +115,20 @@ export function BoatLayout({
     setIsDragging(true);
   };
 
+  // Check if adding an athlete to a paddler seat would exceed the gender max
+  const isPaddlerSeat = (seatId: string) => {
+    const { type } = parseSeatId(seatId);
+    return type === 'left' || type === 'right';
+  };
+
+  const wouldExceedGenderMax = (athleteId: number, toSeatId: string): boolean => {
+    if (!mixedRatio || !isPaddlerSeat(toSeatId)) return false;
+    const athlete = athleteMap.get(athleteId);
+    if (!athlete) return false;
+    const count = athlete.gender === 'F' ? mixedRatio.womenCount : mixedRatio.menCount;
+    return count >= mixedRatio.maxSameGender;
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveItem(null);
     setIsDragging(false);
@@ -143,12 +157,24 @@ export function BoatLayout({
 
     if (fromIsBench) {
       const athleteId = parseInt(fromId.replace('bench-', ''));
+      // Block if gender max would be exceeded on a paddler seat
+      if (wouldExceedGenderMax(athleteId, toId)) return;
       onLayoutChange(setAthleteInSeat(layout, toId, athleteId));
     } else if (toIsBench) {
       onLayoutChange(setAthleteInSeat(layout, fromId, null));
     } else {
+      // Seat-to-seat swap: check if the incoming athlete to a paddler seat exceeds max
       const fromAthlete = getAthleteFromSeat(layout, fromId);
       const toAthlete = getAthleteFromSeat(layout, toId);
+      // For swaps, we need to check net effect — only block if adding a new gender to a paddler seat
+      // If swapping two paddler seats, the counts stay the same, so allow
+      // If moving from non-paddler to paddler, check the athlete being placed
+      if (fromAthlete && isPaddlerSeat(toId) && !isPaddlerSeat(fromId)) {
+        if (wouldExceedGenderMax(fromAthlete, toId)) return;
+      }
+      if (toAthlete && isPaddlerSeat(fromId) && !isPaddlerSeat(toId)) {
+        if (wouldExceedGenderMax(toAthlete, fromId)) return;
+      }
       let next = setAthleteInSeat(layout, fromId, toAthlete);
       next = setAthleteInSeat(next, toId, fromAthlete);
       onLayoutChange(next);
@@ -167,10 +193,19 @@ export function BoatLayout({
 
   const handlePoolSelect = (athlete: Athlete) => {
     if (poolSeatId) {
+      if (wouldExceedGenderMax(athlete.id, poolSeatId)) return;
       onLayoutChange(setAthleteInSeat(layout, poolSeatId, athlete.id));
       setPoolSeatId(null);
     }
   };
+
+  // Filter pool athletes: hide gender-maxed athletes for paddler seats
+  const poolAthletes = poolSeatId && mixedRatio && isPaddlerSeat(poolSeatId)
+    ? unassignedAthletes.filter(a => {
+        const count = a.gender === 'F' ? mixedRatio.womenCount : mixedRatio.menCount;
+        return count < mixedRatio.maxSameGender;
+      })
+    : unassignedAthletes;
 
   const activeAthlete = activeItem?.athleteId ? athleteMap.get(activeItem.athleteId) : null;
 
@@ -336,7 +371,7 @@ export function BoatLayout({
       {/* Athlete pool modal */}
       {poolSeatId && (
         <AthletePoolModal
-          athletes={unassignedAthletes}
+          athletes={poolAthletes}
           onSelect={handlePoolSelect}
           onClose={() => setPoolSeatId(null)}
         />
