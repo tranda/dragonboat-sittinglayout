@@ -17,6 +17,10 @@ export function CompetitionManager({ onClose }: Props) {
   const [compName, setCompName] = useState('');
   const [compYear, setCompYear] = useState(String(new Date().getFullYear()));
   const [compLocation, setCompLocation] = useState('');
+  const [stdMin, setStdMin] = useState('8');
+  const [stdMax, setStdMax] = useState('12');
+  const [smMin, setSmMin] = useState('4');
+  const [smMax, setSmMax] = useState('6');
 
   // Team form
   const [showAddTeam, setShowAddTeam] = useState(false);
@@ -40,15 +44,21 @@ export function CompetitionManager({ onClose }: Props) {
   useEffect(() => { load(); }, [load]);
 
   // Competition handlers
-  const clearCompForm = () => { setShowAddComp(false); setEditCompId(null); setCompName(''); setCompYear(String(new Date().getFullYear())); setCompLocation(''); };
+  const clearCompForm = () => { setShowAddComp(false); setEditCompId(null); setCompName(''); setCompYear(String(new Date().getFullYear())); setCompLocation(''); setStdMin('8'); setStdMax('12'); setSmMin('4'); setSmMax('6'); };
 
   const handleSaveComp = async () => {
     if (!compName.trim()) return;
+    const genderPolicy = {
+      mixedRatio: {
+        standard: { minSameGender: parseInt(stdMin) || 0, maxSameGender: parseInt(stdMax) || 20 },
+        small: { minSameGender: parseInt(smMin) || 0, maxSameGender: parseInt(smMax) || 10 },
+      },
+    };
     try {
       if (editCompId) {
-        await api.updateCompetition(editCompId, { name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null });
+        await api.updateCompetition(editCompId, { name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, gender_policy: genderPolicy });
       } else {
-        await api.createCompetition({ name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, is_active: true });
+        await api.createCompetition({ name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, is_active: true, gender_policy: genderPolicy });
       }
       clearCompForm();
       await load();
@@ -135,12 +145,25 @@ export function CompetitionManager({ onClose }: Props) {
                         className={`px-2 py-1 text-xs rounded ${c.is_active ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'}`}>
                         {c.is_active ? 'Deactivate' : 'Activate'}
                       </button>
-                      <button onClick={() => { setEditCompId(c.id); setCompName(c.name); setCompYear(String(c.year)); setCompLocation(c.location ?? ''); setShowAddComp(true); }}
+                      <button onClick={() => {
+                        setEditCompId(c.id); setCompName(c.name); setCompYear(String(c.year)); setCompLocation(c.location ?? '');
+                        setStdMin(String(c.gender_policy?.mixedRatio?.standard?.minSameGender ?? 8));
+                        setStdMax(String(c.gender_policy?.mixedRatio?.standard?.maxSameGender ?? 12));
+                        setSmMin(String(c.gender_policy?.mixedRatio?.small?.minSameGender ?? 4));
+                        setSmMax(String(c.gender_policy?.mixedRatio?.small?.maxSameGender ?? 6));
+                        setShowAddComp(true);
+                      }}
                         className="px-2 py-1 text-xs text-blue-600 hover:bg-[var(--bg-male)] rounded">Edit</button>
                       <button onClick={() => handleDeleteComp(c.id, c.name)}
                         className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded">Delete</button>
                     </div>
                   </div>
+                  {/* Gender policy summary */}
+                  {c.gender_policy?.mixedRatio && (
+                    <div className="text-[10px] text-[var(--text-muted)] mt-1">
+                      Mixed: 20p {c.gender_policy.mixedRatio.standard.minSameGender}–{c.gender_policy.mixedRatio.standard.maxSameGender}, 10p {c.gender_policy.mixedRatio.small.minSameGender}–{c.gender_policy.mixedRatio.small.maxSameGender} per gender
+                    </div>
+                  )}
                   {/* Teams in this competition */}
                   <div className="mt-2">
                     <div className="text-[10px] text-[var(--text-muted)] uppercase font-semibold mb-1">Teams</div>
@@ -173,6 +196,20 @@ export function CompetitionManager({ onClose }: Props) {
                   <div className="flex gap-2">
                     <input value={compYear} onChange={e => setCompYear(e.target.value)} placeholder="Year" type="number" className="flex-1 px-2 py-1.5 text-sm border rounded-lg" />
                     <input value={compLocation} onChange={e => setCompLocation(e.target.value)} placeholder="Location" className="flex-1 px-2 py-1.5 text-sm border rounded-lg" />
+                  </div>
+                  {/* Mixed crew gender ratio */}
+                  <div className="text-[10px] text-[var(--text-muted)] uppercase font-semibold mt-1">Mixed Crew — Min/Max same gender</div>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-[10px] text-[var(--text-secondary)] w-8">20p</span>
+                    <input value={stdMin} onChange={e => setStdMin(e.target.value)} type="number" placeholder="Min" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
+                    <span className="text-[var(--text-muted)]">—</span>
+                    <input value={stdMax} onChange={e => setStdMax(e.target.value)} type="number" placeholder="Max" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-[10px] text-[var(--text-secondary)] w-8">10p</span>
+                    <input value={smMin} onChange={e => setSmMin(e.target.value)} type="number" placeholder="Min" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
+                    <span className="text-[var(--text-muted)]">—</span>
+                    <input value={smMax} onChange={e => setSmMax(e.target.value)} type="number" placeholder="Max" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
                   </div>
                   <div className="flex gap-2">
                     <button onClick={handleSaveComp} className="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg">{editCompId ? 'Save' : 'Add'}</button>

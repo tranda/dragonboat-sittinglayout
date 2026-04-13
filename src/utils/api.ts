@@ -178,6 +178,12 @@ export interface ApiCompetitionFull {
   year: number;
   location: string | null;
   is_active: boolean;
+  gender_policy?: {
+    mixedRatio: {
+      standard: { minSameGender: number; maxSameGender: number };
+      small: { minSameGender: number; maxSameGender: number };
+    };
+  } | null;
   teams?: { id: number; name: string }[];
 }
 
@@ -255,6 +261,12 @@ export interface ApiCompetition {
   year: number;
   location: string | null;
   isActive: boolean;
+  genderPolicy?: {
+    mixedRatio: {
+      standard: { minSameGender: number; maxSameGender: number };
+      small: { minSameGender: number; maxSameGender: number };
+    };
+  } | null;
 }
 
 export interface ApiAthlete {

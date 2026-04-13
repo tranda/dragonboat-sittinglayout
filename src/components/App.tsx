@@ -113,10 +113,16 @@ export function App() {
       setBenchFactors(data.benchFactors);
 
       if (data.config) {
+        // Gender policy comes from competition, fall back to config, then defaults
+        const activeComp = (data.competitions ?? []).find(c => c.id === data.activeCompetitionId);
+        const genderPolicy = activeComp?.genderPolicy
+          ?? (data.config.genderPolicy as AppConfig['genderPolicy'] | null)
+          ?? DEFAULT_CONFIG.genderPolicy;
+
         setAppConfig({
           competitionYear: data.config.competitionYear,
           ageCategoryRules: data.config.ageCategoryRules as AppConfig['ageCategoryRules'],
-          genderPolicy: data.config.genderPolicy as AppConfig['genderPolicy'],
+          genderPolicy,
         });
       }
 
@@ -446,6 +452,7 @@ export function App() {
                 showWeights={showWeights}
                 onLayoutChange={canEdit ? handleLayoutChange : () => {}}
                 readOnly={!canEdit}
+                appConfig={appConfig}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center text-[var(--text-muted)] text-sm">Select a crew</div>

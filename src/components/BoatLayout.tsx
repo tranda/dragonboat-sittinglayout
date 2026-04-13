@@ -10,11 +10,12 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import type { Athlete, BoatLayout as BoatLayoutType, Race } from '../types';
+import type { Athlete, BoatLayout as BoatLayoutType, Race, AppConfig } from '../types';
 import { Seat } from './Seat';
 import { AthleteChip } from './AthleteChip';
 import { AthletePoolModal } from './AthletePoolModal';
 import { calcWeightStats } from '../utils/weightCalc';
+import { validateMixedRatio } from '../utils/policies';
 
 interface Props {
   race: Race;
@@ -25,6 +26,7 @@ interface Props {
   showWeights: boolean;
   onLayoutChange: (layout: BoatLayoutType) => void;
   readOnly?: boolean;
+  appConfig: AppConfig;
 }
 
 function parseSeatId(id: string): { type: string; index?: number } {
@@ -85,7 +87,7 @@ function UnseatZone({ id, side }: { id: string; side: 'left' | 'right' }) {
 
 export function BoatLayout({
   race, layout, athleteMap, benchFactors, unassignedAthletes,
-  showWeights, onLayoutChange, readOnly = false,
+  showWeights, onLayoutChange, readOnly = false, appConfig,
 }: Props) {
   const [activeItem, setActiveItem] = useState<{ seatId: string; athleteId: number | null } | null>(null);
   const [poolSeatId, setPoolSeatId] = useState<string | null>(null);
@@ -96,6 +98,7 @@ export function BoatLayout({
   const sensors = useSensors(...(readOnly ? [] : [mouseSensor, touchSensor]));
 
   const stats = calcWeightStats(layout, athleteMap, benchFactors);
+  const mixedRatio = race.genderCategory === 'Mixed' ? validateMixedRatio(layout, race, athleteMap, appConfig) : null;
 
   // Balance color
   const lrAbs = Math.abs(stats.leftRightDiff);
@@ -197,6 +200,18 @@ export function BoatLayout({
         <span className={`${tdColor} font-bold`}>F/R: {stats.topDownDiff > 0 ? '+' : ''}{stats.topDownDiff}</span>
         <span className="text-[var(--text-secondary)]">L:{stats.leftWeight} R:{stats.rightWeight}</span>
       </div>
+      {/* Mixed ratio warning */}
+      {mixedRatio && (mixedRatio.womenCount > 0 || mixedRatio.menCount > 0) && (
+        <div className={`flex items-center justify-center gap-2 text-[11px] mb-1 px-1 py-0.5 rounded font-semibold ${
+          mixedRatio.valid ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+        }`}>
+          <span>W:{mixedRatio.womenCount} M:{mixedRatio.menCount}</span>
+          <span className="text-[10px] font-normal">
+            (need {mixedRatio.minSameGender}-{mixedRatio.maxSameGender} each)
+          </span>
+          {!mixedRatio.valid && <span>!</span>}
+        </div>
+      )}
 
       {/* Boat grid — unified, fits viewport */}
       <div

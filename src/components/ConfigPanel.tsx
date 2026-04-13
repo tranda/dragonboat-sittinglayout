@@ -9,21 +9,11 @@ interface Props {
 
 export function ConfigPanel({ config, onSave, onClose }: Props) {
   const [year, setYear] = useState(String(config.competitionYear));
-  const [stdMin, setStdMin] = useState(String(config.genderPolicy.mixedRatio.standard.minSameGender));
-  const [stdMax, setStdMax] = useState(String(config.genderPolicy.mixedRatio.standard.maxSameGender));
-  const [smMin, setSmMin] = useState(String(config.genderPolicy.mixedRatio.small.minSameGender));
-  const [smMax, setSmMax] = useState(String(config.genderPolicy.mixedRatio.small.maxSameGender));
 
   const handleSave = () => {
     onSave({
       ...config,
       competitionYear: parseInt(year) || 2026,
-      genderPolicy: {
-        mixedRatio: {
-          standard: { minSameGender: parseInt(stdMin) || 0, maxSameGender: parseInt(stdMax) || 20 },
-          small: { minSameGender: parseInt(smMin) || 0, maxSameGender: parseInt(smMax) || 10 },
-        },
-      },
     });
     onClose();
   };
@@ -48,58 +38,18 @@ export function ConfigPanel({ config, onSave, onClose }: Props) {
           <div className="text-xs text-[var(--text-muted)] mt-1">Used to calculate athlete age from year of birth</div>
         </div>
 
-        {/* Mixed ratio */}
+        {/* Mixed ratio (read-only, set per competition) */}
         <div>
           <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Mixed Boat Ratio</div>
-          <div className="text-xs text-[var(--text-muted)] mb-3">Min and max of <strong>either gender</strong> in a mixed crew</div>
-
-          <div className="bg-[var(--bg-surface)] rounded-lg border p-3 mb-2">
-            <div className="text-sm font-medium mb-2">Standard boat (20 paddlers)</div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <label className="text-xs text-[var(--text-muted)]">Min either gender</label>
-                <input
-                  value={stdMin}
-                  onChange={e => setStdMin(e.target.value)}
-                  type="number"
-                  className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
-                />
-              </div>
-              <span className="text-[var(--text-muted)] pt-4">—</span>
-              <div className="flex-1">
-                <label className="text-xs text-[var(--text-muted)]">Max either gender</label>
-                <input
-                  value={stdMax}
-                  onChange={e => setStdMax(e.target.value)}
-                  type="number"
-                  className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
-                />
-              </div>
+          <div className="text-xs text-[var(--text-muted)] mb-3">Set per competition in Competitions & Teams</div>
+          <div className="bg-[var(--bg-surface)] rounded-lg border p-3 text-sm text-[var(--text-secondary)]">
+            <div className="flex justify-between mb-1">
+              <span>Standard (20p)</span>
+              <span>{config.genderPolicy.mixedRatio.standard.minSameGender}–{config.genderPolicy.mixedRatio.standard.maxSameGender} per gender</span>
             </div>
-          </div>
-
-          <div className="bg-[var(--bg-surface)] rounded-lg border p-3">
-            <div className="text-sm font-medium mb-2">Small boat (10 paddlers)</div>
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <label className="text-xs text-[var(--text-muted)]">Min either gender</label>
-                <input
-                  value={smMin}
-                  onChange={e => setSmMin(e.target.value)}
-                  type="number"
-                  className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
-                />
-              </div>
-              <span className="text-[var(--text-muted)] pt-4">—</span>
-              <div className="flex-1">
-                <label className="text-xs text-[var(--text-muted)]">Max either gender</label>
-                <input
-                  value={smMax}
-                  onChange={e => setSmMax(e.target.value)}
-                  type="number"
-                  className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
-                />
-              </div>
+            <div className="flex justify-between">
+              <span>Small (10p)</span>
+              <span>{config.genderPolicy.mixedRatio.small.minSameGender}–{config.genderPolicy.mixedRatio.small.maxSameGender} per gender</span>
             </div>
           </div>
         </div>
