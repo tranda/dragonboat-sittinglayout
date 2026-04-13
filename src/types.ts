@@ -80,4 +80,5 @@ export interface AppConfig {
   competitionYear: number;
   ageCategoryRules: AgeCategoryRule[];
   genderPolicy: GenderPolicy;
+  reserves?: { standard: number; small: number };
 }

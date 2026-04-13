@@ -184,6 +184,7 @@ export interface ApiCompetitionFull {
       small: { minSameGender: number; maxSameGender: number };
     };
   } | null;
+  reserves?: { standard: number; small: number } | null;
   teams?: { id: number; name: string }[];
 }
 
@@ -267,6 +268,7 @@ export interface ApiCompetition {
       small: { minSameGender: number; maxSameGender: number };
     };
   } | null;
+  reserves?: { standard: number; small: number } | null;
 }
 
 export interface ApiAthlete {

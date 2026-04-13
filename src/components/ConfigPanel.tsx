@@ -1,23 +1,11 @@
-import { useState } from 'react';
 import type { AppConfig } from '../types';
 
 interface Props {
   config: AppConfig;
-  onSave: (config: AppConfig) => void;
   onClose: () => void;
 }
 
-export function ConfigPanel({ config, onSave, onClose }: Props) {
-  const [year, setYear] = useState(String(config.competitionYear));
-
-  const handleSave = () => {
-    onSave({
-      ...config,
-      competitionYear: parseInt(year) || 2026,
-    });
-    onClose();
-  };
-
+export function ConfigPanel({ config, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 bg-[var(--bg-app)] flex flex-col">
       <div className="flex items-center justify-between px-4 pt-3 pb-2 bg-[var(--bg-surface)] border-b">
@@ -26,22 +14,36 @@ export function ConfigPanel({ config, onSave, onClose }: Props) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+        <div className="text-xs text-[var(--text-muted)]">Settings are configured per competition in Competitions & Teams.</div>
+
         {/* Competition year */}
         <div>
           <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Competition Year</div>
-          <input
-            value={year}
-            onChange={e => setYear(e.target.value)}
-            type="number"
-            className="w-full px-3 py-2 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
-          />
-          <div className="text-xs text-[var(--text-muted)] mt-1">Used to calculate athlete age from year of birth</div>
+          <div className="bg-[var(--bg-surface)] rounded-lg border p-3 text-sm text-[var(--text-secondary)]">
+            {config.competitionYear}
+          </div>
         </div>
 
-        {/* Mixed ratio (read-only, set per competition) */}
+        {/* Reserves */}
+        {config.reserves && (
+          <div>
+            <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Reserves</div>
+            <div className="bg-[var(--bg-surface)] rounded-lg border p-3 text-sm text-[var(--text-secondary)]">
+              <div className="flex justify-between mb-1">
+                <span>Standard (20p)</span>
+                <span>{config.reserves.standard}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Small (10p)</span>
+                <span>{config.reserves.small}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mixed ratio */}
         <div>
           <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Mixed Boat Ratio</div>
-          <div className="text-xs text-[var(--text-muted)] mb-3">Set per competition in Competitions & Teams</div>
           <div className="bg-[var(--bg-surface)] rounded-lg border p-3 text-sm text-[var(--text-secondary)]">
             <div className="flex justify-between mb-1">
               <span>Standard (20p)</span>
@@ -54,7 +56,7 @@ export function ConfigPanel({ config, onSave, onClose }: Props) {
           </div>
         </div>
 
-        {/* Age categories (read-only display) */}
+        {/* Age categories */}
         <div>
           <div className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Age Categories</div>
           <div className="bg-[var(--bg-surface)] rounded-lg border divide-y">
@@ -74,12 +76,6 @@ export function ConfigPanel({ config, onSave, onClose }: Props) {
             ))}
           </div>
         </div>
-      </div>
-
-      <div className="px-4 py-3 bg-[var(--bg-surface)] border-t">
-        <button onClick={handleSave} className="w-full py-2.5 text-sm bg-blue-600 text-white rounded-lg font-medium">
-          Save Settings
-        </button>
       </div>
     </div>
   );

@@ -123,6 +123,7 @@ export function App() {
           competitionYear: data.config.competitionYear,
           ageCategoryRules: data.config.ageCategoryRules as AppConfig['ageCategoryRules'],
           genderPolicy,
+          reserves: activeComp?.reserves ?? undefined,
         });
       }
 
@@ -278,16 +279,7 @@ export function App() {
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   }, []);
 
-  const handleSaveConfig = useCallback(async (config: AppConfig) => {
-    setAppConfig(config);
-    try {
-      await api.saveConfigApi({
-        competitionYear: config.competitionYear,
-        genderPolicy: config.genderPolicy,
-        ageCategoryRules: config.ageCategoryRules,
-      });
-    } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
-  }, []);
+
 
   const handleCopyCrew = useCallback((fromRaceId: string) => {
     const source = layouts[fromRaceId];
@@ -511,7 +503,6 @@ export function App() {
       {showConfig && (
         <ConfigPanel
           config={appConfig}
-          onSave={canEdit ? handleSaveConfig : () => {}}
           onClose={() => setShowConfig(false)}
         />
       )}

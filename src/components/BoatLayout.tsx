@@ -209,7 +209,9 @@ export function BoatLayout({
 
   const activeAthlete = activeItem?.athleteId ? athleteMap.get(activeItem.athleteId) : null;
 
-  const reserveCount = race.boatType === 'standard' ? 4 : 2;
+  const reserveCount = appConfig.reserves
+    ? (race.boatType === 'standard' ? appConfig.reserves.standard : appConfig.reserves.small)
+    : (race.boatType === 'standard' ? 4 : 2);
   const reservePairs = Math.ceil(reserveCount / 2);
   // Total grid rows: 1 drummer + numRows seats + 1 helm + reservePairs reserves
   const totalRows = 1 + race.numRows + 1 + reservePairs;

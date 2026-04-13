@@ -21,6 +21,8 @@ export function CompetitionManager({ onClose }: Props) {
   const [stdMax, setStdMax] = useState('12');
   const [smMin, setSmMin] = useState('4');
   const [smMax, setSmMax] = useState('6');
+  const [stdReserves, setStdReserves] = useState('4');
+  const [smReserves, setSmReserves] = useState('2');
 
   // Team form
   const [showAddTeam, setShowAddTeam] = useState(false);
@@ -44,7 +46,7 @@ export function CompetitionManager({ onClose }: Props) {
   useEffect(() => { load(); }, [load]);
 
   // Competition handlers
-  const clearCompForm = () => { setShowAddComp(false); setEditCompId(null); setCompName(''); setCompYear(String(new Date().getFullYear())); setCompLocation(''); setStdMin('8'); setStdMax('12'); setSmMin('4'); setSmMax('6'); };
+  const clearCompForm = () => { setShowAddComp(false); setEditCompId(null); setCompName(''); setCompYear(String(new Date().getFullYear())); setCompLocation(''); setStdMin('8'); setStdMax('12'); setSmMin('4'); setSmMax('6'); setStdReserves('4'); setSmReserves('2'); };
 
   const handleSaveComp = async () => {
     if (!compName.trim()) return;
@@ -54,11 +56,15 @@ export function CompetitionManager({ onClose }: Props) {
         small: { minSameGender: parseInt(smMin) || 0, maxSameGender: parseInt(smMax) || 10 },
       },
     };
+    const reserves = {
+      standard: parseInt(stdReserves) || 4,
+      small: parseInt(smReserves) || 2,
+    };
     try {
       if (editCompId) {
-        await api.updateCompetition(editCompId, { name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, gender_policy: genderPolicy });
+        await api.updateCompetition(editCompId, { name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, gender_policy: genderPolicy, reserves });
       } else {
-        await api.createCompetition({ name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, is_active: true, gender_policy: genderPolicy });
+        await api.createCompetition({ name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, is_active: true, gender_policy: genderPolicy, reserves });
       }
       clearCompForm();
       await load();
@@ -151,6 +157,8 @@ export function CompetitionManager({ onClose }: Props) {
                         setStdMax(String(c.gender_policy?.mixedRatio?.standard?.maxSameGender ?? 12));
                         setSmMin(String(c.gender_policy?.mixedRatio?.small?.minSameGender ?? 4));
                         setSmMax(String(c.gender_policy?.mixedRatio?.small?.maxSameGender ?? 6));
+                        setStdReserves(String(c.reserves?.standard ?? 4));
+                        setSmReserves(String(c.reserves?.small ?? 2));
                         setShowAddComp(true);
                       }}
                         className="px-2 py-1 text-xs text-blue-600 hover:bg-[var(--bg-male)] rounded">Edit</button>
@@ -158,12 +166,12 @@ export function CompetitionManager({ onClose }: Props) {
                         className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded">Delete</button>
                     </div>
                   </div>
-                  {/* Gender policy summary */}
-                  {c.gender_policy?.mixedRatio && (
-                    <div className="text-[10px] text-[var(--text-muted)] mt-1">
-                      Mixed: 20p {c.gender_policy.mixedRatio.standard.minSameGender}–{c.gender_policy.mixedRatio.standard.maxSameGender}, 10p {c.gender_policy.mixedRatio.small.minSameGender}–{c.gender_policy.mixedRatio.small.maxSameGender} per gender
-                    </div>
-                  )}
+                  {/* Competition settings summary */}
+                  <div className="text-[10px] text-[var(--text-muted)] mt-1">
+                    {c.reserves && <>Reserves: 20p {c.reserves.standard}, 10p {c.reserves.small}</>}
+                    {c.reserves && c.gender_policy?.mixedRatio && <> · </>}
+                    {c.gender_policy?.mixedRatio && <>Mixed: 20p {c.gender_policy.mixedRatio.standard.minSameGender}–{c.gender_policy.mixedRatio.standard.maxSameGender}, 10p {c.gender_policy.mixedRatio.small.minSameGender}–{c.gender_policy.mixedRatio.small.maxSameGender} per gender</>}
+                  </div>
                   {/* Teams in this competition */}
                   <div className="mt-2">
                     <div className="text-[10px] text-[var(--text-muted)] uppercase font-semibold mb-1">Teams</div>
@@ -196,6 +204,14 @@ export function CompetitionManager({ onClose }: Props) {
                   <div className="flex gap-2">
                     <input value={compYear} onChange={e => setCompYear(e.target.value)} placeholder="Year" type="number" className="flex-1 px-2 py-1.5 text-sm border rounded-lg" />
                     <input value={compLocation} onChange={e => setCompLocation(e.target.value)} placeholder="Location" className="flex-1 px-2 py-1.5 text-sm border rounded-lg" />
+                  </div>
+                  {/* Reserves */}
+                  <div className="text-[10px] text-[var(--text-muted)] uppercase font-semibold mt-1">Reserves</div>
+                  <div className="flex gap-2 items-center">
+                    <span className="text-[10px] text-[var(--text-secondary)] w-8">20p</span>
+                    <input value={stdReserves} onChange={e => setStdReserves(e.target.value)} type="number" placeholder="Reserves" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
+                    <span className="text-[10px] text-[var(--text-secondary)] w-8">10p</span>
+                    <input value={smReserves} onChange={e => setSmReserves(e.target.value)} type="number" placeholder="Reserves" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
                   </div>
                   {/* Mixed crew gender ratio */}
                   <div className="text-[10px] text-[var(--text-muted)] uppercase font-semibold mt-1">Mixed Crew — Min/Max same gender</div>
