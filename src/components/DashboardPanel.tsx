@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import type { Athlete, Race, BoatLayout } from '../types';
 
 interface Props {
@@ -5,6 +6,7 @@ interface Props {
   layouts: Record<string, BoatLayout>;
   athleteMap: Map<number, Athlete>;
   onSelectRace: (id: string) => void;
+  currentAthleteId?: number | null;
 }
 
 function countFilled(layout: BoatLayout, race: Race) {
@@ -17,11 +19,43 @@ function countFilled(layout: BoatLayout, race: Race) {
   return { paddlers, totalPaddlers, drummer, helm, reserves, maxReserves };
 }
 
-export function DashboardPanel({ races, layouts, athleteMap, onSelectRace }: Props) {
+export function DashboardPanel({ races, layouts, athleteMap, onSelectRace, currentAthleteId }: Props) {
+  const [filter, setFilter] = useState<'mine' | 'all'>(currentAthleteId ? 'mine' : 'all');
+
+  const visibleRaces = useMemo(() => {
+    if (filter === 'all' || !currentAthleteId) return races;
+    return races.filter(race => {
+      const layout = layouts[race.id];
+      if (!layout) return false;
+      const ids = [...layout.left, ...layout.right, layout.drummer, layout.helm, ...layout.reserves];
+      return ids.includes(currentAthleteId);
+    });
+  }, [races, layouts, filter, currentAthleteId]);
+
   return (
     <div className="flex-1 overflow-y-auto px-3 pb-2">
+      {currentAthleteId && (
+        <div className="flex gap-1 mb-2 mt-1">
+          <button
+            onClick={() => setFilter('mine')}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+              filter === 'mine' ? 'bg-[var(--bg-active-tab)] text-[var(--text-active-tab)]' : 'bg-[var(--bg-surface-alt)] text-[var(--text-secondary)]'
+            }`}
+          >
+            My Crews
+          </button>
+          <button
+            onClick={() => setFilter('all')}
+            className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+              filter === 'all' ? 'bg-[var(--bg-active-tab)] text-[var(--text-active-tab)]' : 'bg-[var(--bg-surface-alt)] text-[var(--text-secondary)]'
+            }`}
+          >
+            All Crews
+          </button>
+        </div>
+      )}
       <div className="space-y-2">
-        {races.map(race => {
+        {visibleRaces.map(race => {
           const layout = layouts[race.id];
           if (!layout) return null;
           const c = countFilled(layout, race);
@@ -90,6 +124,11 @@ export function DashboardPanel({ races, layouts, athleteMap, onSelectRace }: Pro
             </button>
           );
         })}
+        {visibleRaces.length === 0 && (
+          <div className="text-center text-[var(--text-muted)] text-sm py-8">
+            {filter === 'mine' ? 'You are not in any crew yet' : 'No crews'}
+          </div>
+        )}
       </div>
     </div>
   );

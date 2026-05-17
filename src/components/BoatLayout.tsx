@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -15,7 +15,7 @@ import { Seat } from './Seat';
 import { AthleteChip } from './AthleteChip';
 import { AthletePoolModal } from './AthletePoolModal';
 import { calcWeightStats } from '../utils/weightCalc';
-import { validateMixedRatio } from '../utils/policies';
+import { validateMixedRatio, isEligibleForAgeCategory } from '../utils/policies';
 
 interface Props {
   race: Race;
@@ -23,10 +23,13 @@ interface Props {
   athleteMap: Map<number, Athlete>;
   benchFactors: number[];
   unassignedAthletes: Athlete[];
+  unassignedAthletesAnyAge: Athlete[];
   showWeights: boolean;
   onLayoutChange: (layout: BoatLayoutType) => void;
   readOnly?: boolean;
   appConfig: AppConfig;
+  athleteConflicts?: Map<number, import('../utils/conflicts').ConflictGroup[]>;
+  onShowConflict?: (athleteId: number) => void;
 }
 
 function parseSeatId(id: string): { type: string; index?: number } {
@@ -86,9 +89,22 @@ function UnseatZone({ id, side }: { id: string; side: 'left' | 'right' }) {
 }
 
 export function BoatLayout({
-  race, layout, athleteMap, benchFactors, unassignedAthletes,
+  race, layout, athleteMap, benchFactors, unassignedAthletes, unassignedAthletesAnyAge,
   showWeights, onLayoutChange, readOnly = false, appConfig,
+  athleteConflicts, onShowConflict,
 }: Props) {
+  const conflictedInThisRace = (() => {
+    const set = new Set<number>();
+    if (!athleteConflicts) return set;
+    for (const [athleteId, groups] of athleteConflicts) {
+      if (groups.some(g => g.races.some(r => r.id === race.id))) {
+        set.add(athleteId);
+      }
+    }
+    return set;
+  })();
+  const seatHasConflict = (athleteId: number | null | undefined) =>
+    athleteId != null && conflictedInThisRace.has(athleteId);
   const [activeItem, setActiveItem] = useState<{ seatId: string; athleteId: number | null } | null>(null);
   const [poolSeatId, setPoolSeatId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -96,6 +112,13 @@ export function BoatLayout({
   const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 5 } });
   const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } });
   const sensors = useSensors(...(readOnly ? [] : [mouseSensor, touchSensor]));
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const prevent = (e: TouchEvent) => e.preventDefault();
+    document.addEventListener('touchmove', prevent, { passive: false });
+    return () => document.removeEventListener('touchmove', prevent);
+  }, [isDragging]);
 
   const stats = calcWeightStats(layout, athleteMap, benchFactors);
   const mixedRatio = race.genderCategory === 'Mixed' ? validateMixedRatio(layout, race, athleteMap, appConfig) : null;
@@ -121,11 +144,24 @@ export function BoatLayout({
     return type === 'left' || type === 'right';
   };
 
+  const isAgeIneligibleForPaddler = (athleteId: number, toSeatId: string): boolean => {
+    if (!isPaddlerSeat(toSeatId)) return false;
+    const athlete = athleteMap.get(athleteId);
+    if (!athlete) return false;
+    return !isEligibleForAgeCategory(athlete, race.ageCategory, appConfig);
+  };
+
   const wouldExceedGenderMax = (athleteId: number, toSeatId: string): boolean => {
     if (!mixedRatio || !isPaddlerSeat(toSeatId)) return false;
     const athlete = athleteMap.get(athleteId);
     if (!athlete) return false;
     const count = athlete.gender === 'F' ? mixedRatio.womenCount : mixedRatio.menCount;
+    // If replacing an athlete of the same gender on the target seat, net count is unchanged
+    const existingId = getAthleteFromSeat(layout, toSeatId);
+    if (existingId != null) {
+      const existing = athleteMap.get(existingId);
+      if (existing && existing.gender === athlete.gender) return false;
+    }
     return count >= mixedRatio.maxSameGender;
   };
 
@@ -159,21 +195,21 @@ export function BoatLayout({
       const athleteId = parseInt(fromId.replace('bench-', ''));
       // Block if gender max would be exceeded on a paddler seat
       if (wouldExceedGenderMax(athleteId, toId)) return;
+      if (isAgeIneligibleForPaddler(athleteId, toId)) return;
       onLayoutChange(setAthleteInSeat(layout, toId, athleteId));
     } else if (toIsBench) {
       onLayoutChange(setAthleteInSeat(layout, fromId, null));
     } else {
-      // Seat-to-seat swap: check if the incoming athlete to a paddler seat exceeds max
+      // Seat-to-seat swap: check if the incoming athlete to a paddler seat exceeds max or is age-ineligible
       const fromAthlete = getAthleteFromSeat(layout, fromId);
       const toAthlete = getAthleteFromSeat(layout, toId);
-      // For swaps, we need to check net effect — only block if adding a new gender to a paddler seat
-      // If swapping two paddler seats, the counts stay the same, so allow
-      // If moving from non-paddler to paddler, check the athlete being placed
       if (fromAthlete && isPaddlerSeat(toId) && !isPaddlerSeat(fromId)) {
         if (wouldExceedGenderMax(fromAthlete, toId)) return;
+        if (isAgeIneligibleForPaddler(fromAthlete, toId)) return;
       }
       if (toAthlete && isPaddlerSeat(fromId) && !isPaddlerSeat(toId)) {
         if (wouldExceedGenderMax(toAthlete, fromId)) return;
+        if (isAgeIneligibleForPaddler(toAthlete, fromId)) return;
       }
       let next = setAthleteInSeat(layout, fromId, toAthlete);
       next = setAthleteInSeat(next, toId, fromAthlete);
@@ -194,18 +230,25 @@ export function BoatLayout({
   const handlePoolSelect = (athlete: Athlete) => {
     if (poolSeatId) {
       if (wouldExceedGenderMax(athlete.id, poolSeatId)) return;
+      if (isAgeIneligibleForPaddler(athlete.id, poolSeatId)) return;
       onLayoutChange(setAthleteInSeat(layout, poolSeatId, athlete.id));
       setPoolSeatId(null);
     }
   };
 
-  // Filter pool athletes: hide gender-maxed athletes for paddler seats
-  const poolAthletes = poolSeatId && mixedRatio && isPaddlerSeat(poolSeatId)
-    ? unassignedAthletes.filter(a => {
+  // Filter pool athletes: drummer/helm have no age restriction; paddlers respect age + gender max
+  const poolAthletes = (() => {
+    if (!poolSeatId) return unassignedAthletes;
+    const { type } = parseSeatId(poolSeatId);
+    if (type === 'drummer' || type === 'helm') return unassignedAthletesAnyAge;
+    if (mixedRatio && isPaddlerSeat(poolSeatId)) {
+      return unassignedAthletes.filter(a => {
         const count = a.gender === 'F' ? mixedRatio.womenCount : mixedRatio.menCount;
         return count < mixedRatio.maxSameGender;
-      })
-    : unassignedAthletes;
+      });
+    }
+    return unassignedAthletes;
+  })();
 
   const activeAthlete = activeItem?.athleteId ? athleteMap.get(activeItem.athleteId) : null;
 
@@ -213,8 +256,6 @@ export function BoatLayout({
     ? (race.boatType === 'standard' ? appConfig.reserves.standard : appConfig.reserves.small)
     : (race.boatType === 'standard' ? 4 : 2);
   const reservePairs = Math.ceil(reserveCount / 2);
-  // Total grid rows: 1 drummer + numRows seats + 1 helm + reservePairs reserves
-  const totalRows = 1 + race.numRows + 1 + reservePairs;
 
   // Ensure layout.reserves has enough slots
   const reserves = [...layout.reserves];
@@ -245,7 +286,7 @@ export function BoatLayout({
           <div className={`flex items-center justify-center gap-2 text-[11px] mb-1 px-1 py-0.5 rounded font-semibold ${colorClass}`}>
             <span>W:{mixedRatio.womenCount} M:{mixedRatio.menCount}</span>
             <span className="text-[10px] font-normal">
-              (need {mixedRatio.minSameGender}-{mixedRatio.maxSameGender} each)
+              (min {mixedRatio.minSameGender}, max {mixedRatio.maxSameGender} each)
             </span>
             {exceeded && <span>!</span>}
           </div>
@@ -257,18 +298,16 @@ export function BoatLayout({
         className="grid gap-x-px gap-y-1.5 bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)] overflow-hidden p-1"
         style={{
           gridTemplateColumns: '14px 1fr 18px 1fr 14px',
-          gridTemplateRows: `repeat(${totalRows}, 1fr)`,
+          gridTemplateRows: `repeat(${1 + race.numRows + 1 + reservePairs}, 1fr)`,
           height: `calc(100dvh - 180px)`,
         }}
       >
-        {/* Drummer row — seat 1 */}
+        {/* Drummer row — seat 1, centered */}
         <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">1</span></div>
-        <Seat seatId="drummer" athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} />
-        <div className="flex items-center justify-center bg-amber-50/60">
-          <span className="text-[7px] text-amber-400">DR</span>
+        <div className="col-span-3 grid" style={{ gridTemplateColumns: '1fr 2fr 1fr' }}>
+          <div /><Seat seatId="drummer" athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} hasConflict={seatHasConflict(layout.drummer)} onConflictTap={() => layout.drummer != null && onShowConflict?.(layout.drummer)} /><div />
         </div>
-        <div className="bg-amber-50/30" />
-        <div />
+        <div className="flex items-center justify-center"><span className="text-[7px] text-amber-400">DR</span></div>
 
         {/* Seat rows — left: 2..numRows+1, right: numRows+2..numRows*2+1 */}
         {Array.from({ length: race.numRows }).map((_, i) => {
@@ -282,6 +321,8 @@ export function BoatLayout({
                 athlete={layout.left[i] ? athleteMap.get(layout.left[i]!) ?? null : null}
                 showWeight={showWeights}
                 onTap={() => handleSeatTap(`left-${i}`)}
+                hasConflict={seatHasConflict(layout.left[i])}
+                onConflictTap={() => layout.left[i] != null && onShowConflict?.(layout.left[i]!)}
               />
               <div className="flex items-center justify-center bg-gray-50/80" />
               <Seat
@@ -289,19 +330,19 @@ export function BoatLayout({
                 athlete={layout.right[i] ? athleteMap.get(layout.right[i]!) ?? null : null}
                 showWeight={showWeights}
                 onTap={() => handleSeatTap(`right-${i}`)}
+                hasConflict={seatHasConflict(layout.right[i])}
+                onConflictTap={() => layout.right[i] != null && onShowConflict?.(layout.right[i]!)}
               />
               <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">{rightNum}</span></div>
             </div>
           );
         })}
 
-        {/* Helm row */}
-        <div />
-        <div className="bg-amber-50/30" />
-        <div className="flex items-center justify-center bg-amber-50/60">
-          <span className="text-[7px] text-amber-400">HM</span>
+        {/* Helm row — centered */}
+        <div className="flex items-center justify-center"><span className="text-[7px] text-amber-400">HM</span></div>
+        <div className="col-span-3 grid" style={{ gridTemplateColumns: '1fr 2fr 1fr' }}>
+          <div /><Seat seatId="helm" athlete={layout.helm ? athleteMap.get(layout.helm) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('helm')} hasConflict={seatHasConflict(layout.helm)} onConflictTap={() => layout.helm != null && onShowConflict?.(layout.helm)} /><div />
         </div>
-        <Seat seatId="helm" athlete={layout.helm ? athleteMap.get(layout.helm) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('helm')} />
         <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">{race.numRows * 2 + 2}</span></div>
 
         {/* Reserve rows */}
@@ -321,6 +362,8 @@ export function BoatLayout({
                 athlete={leftId ? athleteMap.get(leftId) ?? null : null}
                 showWeight={showWeights}
                 onTap={() => handleSeatTap(`reserve-${li}`)}
+                hasConflict={seatHasConflict(leftId)}
+                onConflictTap={() => leftId != null && onShowConflict?.(leftId)}
               />
               <div className="flex items-center justify-center bg-green-50/60">
                 <span className="text-[7px] text-green-400">R</span>
@@ -331,6 +374,8 @@ export function BoatLayout({
                   athlete={rightId ? athleteMap.get(rightId) ?? null : null}
                   showWeight={showWeights}
                   onTap={() => handleSeatTap(`reserve-${ri}`)}
+                  hasConflict={seatHasConflict(rightId)}
+                  onConflictTap={() => rightId != null && onShowConflict?.(rightId)}
                 />
               ) : (
                 <div className="bg-green-50/20" />
@@ -376,6 +421,7 @@ export function BoatLayout({
           athletes={poolAthletes}
           onSelect={handlePoolSelect}
           onClose={() => setPoolSeatId(null)}
+          appConfig={appConfig}
         />
       )}
     </DndContext>

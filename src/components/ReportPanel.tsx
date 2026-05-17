@@ -8,6 +8,7 @@ interface Props {
   layouts: Record<string, BoatLayout>;
   config: AppConfig;
   onClose: () => void;
+  onSelectRace?: (raceId: string) => void;
 }
 
 type BoatFilter = 'all' | 'standard' | 'small';
@@ -20,7 +21,7 @@ interface RoleCounts {
   reserve: number;
 }
 
-export function ReportPanel({ athletes, races, layouts, config, onClose }: Props) {
+export function ReportPanel({ athletes, races, layouts, config, onClose, onSelectRace }: Props) {
   const [boatFilter, setBoatFilter] = useState<BoatFilter>('all');
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
   const [ageFilter, setAgeFilter] = useState<string>('all');
@@ -55,24 +56,24 @@ export function ReportPanel({ athletes, races, layouts, config, onClose }: Props
   // Role counts per athlete + crew assignments
   const { rows, crewMap } = useMemo(() => {
     const counts = new Map<number, RoleCounts>();
-    const crews = new Map<number, { raceName: string; role: string }[]>();
-    const add = (id: number | null, role: keyof RoleCounts, raceName: string) => {
+    const crews = new Map<number, { raceId: string; raceName: string; role: string }[]>();
+    const add = (id: number | null, role: keyof RoleCounts, raceId: string, raceName: string) => {
       if (id === null) return;
       const cur = counts.get(id) ?? { paddle: 0, helm: 0, drummer: 0, reserve: 0 };
       cur[role]++;
       counts.set(id, cur);
       const list = crews.get(id) ?? [];
-      list.push({ raceName, role });
+      list.push({ raceId, raceName, role });
       crews.set(id, list);
     };
     for (const race of filteredRaces) {
       const layout = layouts[race.id];
       if (!layout) continue;
-      layout.left.forEach(id => add(id, 'paddle', race.name));
-      layout.right.forEach(id => add(id, 'paddle', race.name));
-      add(layout.drummer, 'drummer', race.name);
-      add(layout.helm, 'helm', race.name);
-      layout.reserves.forEach(id => add(id, 'reserve', race.name));
+      layout.left.forEach(id => add(id, 'paddle', race.id, race.name));
+      layout.right.forEach(id => add(id, 'paddle', race.id, race.name));
+      add(layout.drummer, 'drummer', race.id, race.name);
+      add(layout.helm, 'helm', race.id, race.name);
+      layout.reserves.forEach(id => add(id, 'reserve', race.id, race.name));
     }
     const r = athletes
       .filter(a => !a.isRemoved)
@@ -81,7 +82,13 @@ export function ReportPanel({ athletes, races, layouts, config, onClose }: Props
         const total = c.paddle + c.helm + c.drummer + c.reserve;
         return { athlete: a, counts: c, total };
       })
-      .sort((a, b) => b.total - a.total || a.athlete.name.localeCompare(b.athlete.name));
+      .sort((a, b) =>
+        b.counts.paddle - a.counts.paddle ||
+        b.counts.reserve - a.counts.reserve ||
+        b.counts.helm - a.counts.helm ||
+        b.counts.drummer - a.counts.drummer ||
+        a.athlete.name.localeCompare(b.athlete.name)
+      );
     return { rows: r, crewMap: crews };
   }, [athletes, filteredRaces, layouts]);
 
@@ -150,9 +157,9 @@ export function ReportPanel({ athletes, races, layouts, config, onClose }: Props
           <div className="sticky top-0 flex items-center gap-1 px-4 py-1.5 bg-[var(--bg-surface-alt)] border-b text-[10px] font-semibold text-[var(--text-muted)] uppercase">
             <div className="flex-1">Athlete</div>
             <div className="w-7 text-center" title="Paddle">Pad</div>
+            <div className="w-7 text-center" title="Reserve">Res</div>
             <div className="w-7 text-center" title="Helm">Helm</div>
             <div className="w-7 text-center" title="Drummer">Drm</div>
-            <div className="w-7 text-center" title="Reserve">Res</div>
           </div>
 
           {/* Athlete list */}
@@ -178,22 +185,27 @@ export function ReportPanel({ athletes, races, layouts, config, onClose }: Props
                       </div>
                     </div>
                     {cell(counts.paddle)}
+                    {cell(counts.reserve)}
                     {cell(counts.helm)}
                     {cell(counts.drummer)}
-                    {cell(counts.reserve)}
                   </div>
                   {isExpanded && assignments.length > 0 && (
                     <div className="px-4 py-2 bg-[var(--bg-surface)] border-t border-[var(--border-default)] space-y-1">
                       {assignments.map((a) => (
-                        <div key={`${a.raceName}-${a.role}`} className="flex items-center justify-between text-xs">
-                          <span className="text-[var(--text-primary)] truncate mr-2">{a.raceName}</span>
+                        <button
+                          key={`${a.raceId}-${a.role}`}
+                          onClick={(e) => { e.stopPropagation(); onSelectRace?.(a.raceId); }}
+                          disabled={!onSelectRace}
+                          className={`w-full flex items-center justify-between text-xs px-2 py-1 -mx-2 rounded ${onSelectRace ? 'hover:bg-[var(--bg-surface-alt)] cursor-pointer' : ''}`}
+                        >
+                          <span className="text-[var(--text-primary)] truncate mr-2 text-left">{a.raceName}</span>
                           <span className={`flex-shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                             a.role === 'paddle' ? 'bg-[var(--bg-male-strong)] text-blue-700' :
                             a.role === 'drummer' ? 'bg-amber-100 text-amber-700' :
                             a.role === 'helm' ? 'bg-amber-100 text-amber-700' :
                             'bg-[var(--bg-badge-side)] text-[var(--text-badge-side)]'
                           }`}>{a.role}</span>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}

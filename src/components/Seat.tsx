@@ -7,9 +7,11 @@ interface Props {
   showWeight?: boolean;
   onTap?: () => void;
   isDropZone?: boolean;
+  hasConflict?: boolean;
+  onConflictTap?: () => void;
 }
 
-export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) {
+export function Seat({ seatId, athlete, showWeight, onTap, isDropZone, hasConflict, onConflictTap }: Props) {
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: seatId });
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id: seatId,
@@ -33,7 +35,7 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) 
     ? 'bg-[var(--bg-male-strong)] border-[var(--border-male-strong)] shadow-sm'
     : 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] shadow-sm';
 
-  const emptyStyle = 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] border-dashed';
+  const emptyStyle = 'bg-[var(--bg-seat-empty)] border-[var(--border-seat-empty)] border-dashed';
 
   return (
     <div
@@ -44,7 +46,7 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) 
         e.stopPropagation();
         onTap?.();
       }}
-      className={`rounded-lg border flex items-center justify-center overflow-hidden transition-all px-1 ${
+      className={`relative rounded-lg border flex items-center justify-center overflow-hidden transition-all px-1 ${
         isDragging ? 'opacity-20' : ''
       } ${isOver ? 'ring-2 ring-blue-400' : ''} ${athlete ? genderBg : emptyStyle}`}
     >
@@ -55,6 +57,18 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone }: Props) 
         </span>
       ) : (
         <span className="text-[20px] text-[var(--text-muted)] font-light leading-none">+</span>
+      )}
+      {athlete && hasConflict && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onConflictTap?.(); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          className="absolute top-0.5 right-0.5 w-6 h-6 flex items-center justify-center text-yellow-600 text-[18px] leading-none"
+          title="Race conflict"
+        >
+          ⚠
+        </button>
       )}
     </div>
   );

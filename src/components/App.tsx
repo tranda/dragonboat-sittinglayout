@@ -15,6 +15,8 @@ import { DashboardPanel } from './DashboardPanel';
 import { ActivityLogPanel } from './ActivityLogPanel';
 import { PdfExportModal } from './PdfExportModal';
 import { CompetitionManager } from './CompetitionManager';
+import { ConflictModal } from './ConflictModal';
+import { computeAthleteConflicts } from '../utils/conflicts';
 import { exportToExcel } from '../utils/excelExport';
 import { getPdfToken } from '../utils/api';
 import { importFromExcel } from '../utils/excelImport';
@@ -36,6 +38,7 @@ export function App() {
   const [athletes, setAthletes] = useState<Athlete[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
   const [layouts, setLayouts] = useState<Record<string, BoatLayoutType>>({});
+  const [historyState, setHistoryState] = useState<Record<string, { canUndo: boolean; canRedo: boolean }>>({});
   const [benchFactors, setBenchFactors] = useState<Record<string, number[]>>({ standard: [], small: [] });
   const [appConfig, setAppConfig] = useState<AppConfig>(DEFAULT_CONFIG);
 
@@ -109,7 +112,15 @@ export function App() {
         category: r.category,
       }));
       setRaces(mappedRaces);
-      setLayouts(data.layouts);
+      const layoutMap: Record<string, BoatLayoutType> = {};
+      const histMap: Record<string, { canUndo: boolean; canRedo: boolean }> = {};
+      for (const [rid, l] of Object.entries(data.layouts)) {
+        const lAny = l as BoatLayoutType & { can_undo?: boolean; can_redo?: boolean };
+        layoutMap[rid] = { drummer: lAny.drummer, helm: lAny.helm, left: lAny.left, right: lAny.right, reserves: lAny.reserves };
+        histMap[rid] = { canUndo: lAny.can_undo ?? false, canRedo: lAny.can_redo ?? false };
+      }
+      setLayouts(layoutMap);
+      setHistoryState(histMap);
       setBenchFactors(data.benchFactors);
 
       if (data.config) {
@@ -174,6 +185,9 @@ export function App() {
     return map;
   }, [athletes]);
 
+  const athleteConflicts = useMemo(() => computeAthleteConflicts(races, layouts), [races, layouts]);
+  const [conflictAthleteId, setConflictAthleteId] = useState<number | null>(null);
+
   const selectedRace = races.find(r => r.id === selectedRaceId);
   const layout = layouts[selectedRaceId];
   const currentBenchFactors = selectedRace ? (benchFactors[selectedRace.boatType] || []) : [];
@@ -204,13 +218,47 @@ export function App() {
     return eligible;
   }, [activeAthletes, selectedRace, seatedIds, appConfig]);
 
+  // Drummer/helm have no age restriction — only registration + gender (per IDBF/EDBF rules)
+  const unassignedAthletesAnyAge = useMemo(() => {
+    if (!selectedRace) return [];
+    const eligible = activeAthletes.filter(a => {
+      if (seatedIds.has(a.id)) return false;
+      if (!a.isRegistered) return false;
+      if (!isEligibleForGender(a, selectedRace)) return false;
+      return true;
+    });
+    eligible.sort((a, b) => (a.isBCP ? 1 : 0) - (b.isBCP ? 1 : 0));
+    return eligible;
+  }, [activeAthletes, selectedRace, seatedIds]);
+
   // --- Handlers ---
 
   const handleLayoutChange = useCallback((newLayout: BoatLayoutType) => {
     setLayouts(prev => ({ ...prev, [selectedRaceId]: newLayout }));
-    api.saveLayout(selectedRaceId, newLayout).catch(() => {
+    setHistoryState(prev => ({ ...prev, [selectedRaceId]: { canUndo: true, canRedo: false } }));
+    api.saveLayout(selectedRaceId, newLayout).then(res => {
+      setHistoryState(prev => ({ ...prev, [selectedRaceId]: { canUndo: res.can_undo, canRedo: res.can_redo } }));
+    }).catch(() => {
       alert('Failed to save layout. Please check your connection and try again.');
     });
+  }, [selectedRaceId]);
+
+  const handleUndo = useCallback(async () => {
+    if (!selectedRaceId) return;
+    try {
+      const res = await api.undoLayout(selectedRaceId);
+      setLayouts(prev => ({ ...prev, [selectedRaceId]: { drummer: res.drummer, helm: res.helm, left: res.left, right: res.right, reserves: res.reserves } }));
+      setHistoryState(prev => ({ ...prev, [selectedRaceId]: { canUndo: res.can_undo, canRedo: res.can_redo } }));
+    } catch { /* nothing to undo */ }
+  }, [selectedRaceId]);
+
+  const handleRedo = useCallback(async () => {
+    if (!selectedRaceId) return;
+    try {
+      const res = await api.redoLayout(selectedRaceId);
+      setLayouts(prev => ({ ...prev, [selectedRaceId]: { drummer: res.drummer, helm: res.helm, left: res.left, right: res.right, reserves: res.reserves } }));
+      setHistoryState(prev => ({ ...prev, [selectedRaceId]: { canUndo: res.can_undo, canRedo: res.can_redo } }));
+    } catch { /* nothing to redo */ }
   }, [selectedRaceId]);
 
   const handleAddRace = async (name: string, boatType: 'standard' | 'small', distance: string, genderCategory?: string, ageCategory?: string) => {
@@ -338,7 +386,7 @@ export function App() {
   }
 
   return (
-    <div className="h-dvh flex flex-col bg-[var(--bg-app)] overflow-hidden max-w-lg mx-auto">
+    <div className="h-dvh flex flex-col bg-[var(--bg-app)] overflow-hidden max-w-lg mx-auto" style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}>
       {/* Header */}
       <div className="flex items-center justify-between gap-2 px-3 pt-2 pb-1 flex-shrink-0">
         <button
@@ -408,6 +456,18 @@ export function App() {
         <div className="flex items-center gap-1 flex-shrink-0">
           <span className="text-[10px] text-[var(--text-muted)]">{user?.name}</span>
           <button
+            onClick={() => loadData()}
+            disabled={loading}
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--bg-surface-alt)] text-[var(--text-secondary)]"
+            title="Refresh"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={loading ? 'animate-spin' : ''}>
+              <polyline points="23 4 23 10 17 10" />
+              <polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+          </button>
+          <button
             onClick={() => setMenuOpen(true)}
             className="w-8 h-8 flex flex-col items-center justify-center gap-[3px] rounded-lg hover:bg-[var(--bg-surface-alt)]"
           >
@@ -424,6 +484,7 @@ export function App() {
           layouts={layouts}
           athleteMap={athleteMap}
           onSelectRace={(id) => { setSelectedRaceId(id); setView('layout'); }}
+          currentAthleteId={user?.athlete_id ?? null}
         />
       ) : (
         <>
@@ -441,10 +502,13 @@ export function App() {
                 athleteMap={athleteMap}
                 benchFactors={currentBenchFactors}
                 unassignedAthletes={unassignedAthletes}
+                unassignedAthletesAnyAge={unassignedAthletesAnyAge}
                 showWeights={showWeights}
                 onLayoutChange={canEdit ? handleLayoutChange : () => {}}
                 readOnly={!canEdit}
                 appConfig={appConfig}
+                athleteConflicts={athleteConflicts}
+                onShowConflict={(id) => setConflictAthleteId(id)}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center text-[var(--text-muted)] text-sm">Select a crew</div>
@@ -457,6 +521,10 @@ export function App() {
       <HamburgerMenu
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}
+        canUndo={canEdit && !!selectedRaceId && (historyState[selectedRaceId]?.canUndo ?? false)}
+        canRedo={canEdit && !!selectedRaceId && (historyState[selectedRaceId]?.canRedo ?? false)}
+        onUndo={() => { setMenuOpen(false); handleUndo(); }}
+        onRedo={() => { setMenuOpen(false); handleRedo(); }}
         showWeights={showWeights}
         onToggleWeights={() => setShowWeights(!showWeights)}
         onExport={handleExport}
@@ -496,6 +564,7 @@ export function App() {
           onReload={loadData}
           userRole={user?.role}
           competitionId={activeCompetitionId}
+          activeTeamName={userTeams.find(t => t.id === activeTeamId)?.name ?? null}
         />
       )}
 
@@ -544,6 +613,18 @@ export function App() {
         />
       )}
 
+      {/* Conflict modal */}
+      {conflictAthleteId != null && athleteConflicts.has(conflictAthleteId) && (
+        <ConflictModal
+          athleteName={athleteMap.get(conflictAthleteId)?.name ?? ''}
+          conflicts={(athleteConflicts.get(conflictAthleteId) ?? [])
+            .filter(g => g.races.some(r => r.id === selectedRaceId))
+            .map(g => ({ ...g, races: g.races.filter(r => r.id !== selectedRaceId) }))}
+          onClose={() => setConflictAthleteId(null)}
+          onSelectRace={(raceId) => { setSelectedRaceId(raceId); setView('layout'); }}
+        />
+      )}
+
       {/* Report panel */}
       {showReport && (
         <ReportPanel
@@ -552,6 +633,7 @@ export function App() {
           layouts={layouts}
           config={appConfig}
           onClose={() => setShowReport(false)}
+          onSelectRace={(raceId) => { setSelectedRaceId(raceId); setView('layout'); setShowReport(false); }}
         />
       )}
 

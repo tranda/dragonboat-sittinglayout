@@ -120,8 +120,24 @@ export function reorderRaces(ids: string[]) {
 }
 
 // Layouts
+export interface LayoutResponse {
+  race_id: string;
+  drummer: number | null;
+  helm: number | null;
+  left: (number | null)[];
+  right: (number | null)[];
+  reserves: (number | null)[];
+  can_undo: boolean;
+  can_redo: boolean;
+}
 export function saveLayout(raceId: string, layout: { drummer: number | null; helm: number | null; left: (number | null)[]; right: (number | null)[]; reserves: (number | null)[] }) {
-  return request('PUT', `/layouts/${raceId}`, layout);
+  return request<LayoutResponse>('PUT', `/layouts/${raceId}`, layout);
+}
+export function undoLayout(raceId: string) {
+  return request<LayoutResponse>('POST', `/layouts/${raceId}/undo`);
+}
+export function redoLayout(raceId: string) {
+  return request<LayoutResponse>('POST', `/layouts/${raceId}/redo`);
 }
 
 // Config
@@ -212,8 +228,16 @@ export interface ApiTeam {
 }
 
 // Events import
-export function fetchEventsAthletes(username: string, password: string) {
-  return request<EventsAthlete[]>('POST', '/events-import/athletes', { username, password });
+export interface EventsClub {
+  id: number;
+  name: string;
+  country: string | null;
+}
+export function fetchEventsClubs(username: string, password: string) {
+  return request<EventsClub[]>('POST', '/events-import/clubs', { username, password });
+}
+export function fetchEventsAthletes(username: string, password: string, clubId?: number) {
+  return request<EventsAthlete[]>('POST', '/events-import/athletes', { username, password, club_id: clubId });
 }
 
 export interface EventsAthlete {

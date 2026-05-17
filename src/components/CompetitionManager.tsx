@@ -199,33 +199,33 @@ export function CompetitionManager({ onClose }: Props) {
               ))}
 
               {showAddComp ? (
-                <div className="border-2 border-dashed border-green-300 rounded-lg p-3 space-y-2">
+                <div className="border rounded-lg border-[var(--border-default)] p-3 space-y-2">
                   <input value={compName} onChange={e => setCompName(e.target.value)} placeholder="Competition name" className="w-full px-2 py-1.5 text-sm border rounded-lg" autoFocus />
                   <div className="flex gap-2">
-                    <input value={compYear} onChange={e => setCompYear(e.target.value)} placeholder="Year" type="number" className="flex-1 px-2 py-1.5 text-sm border rounded-lg" />
-                    <input value={compLocation} onChange={e => setCompLocation(e.target.value)} placeholder="Location" className="flex-1 px-2 py-1.5 text-sm border rounded-lg" />
+                    <input value={compYear} onChange={e => setCompYear(e.target.value)} placeholder="Year" type="number" className="flex-1 min-w-0 px-2 py-1.5 text-sm border rounded-lg" />
+                    <input value={compLocation} onChange={e => setCompLocation(e.target.value)} placeholder="Location" className="flex-1 min-w-0 px-2 py-1.5 text-sm border rounded-lg" />
                   </div>
                   {/* Reserves */}
                   <div className="text-[10px] text-[var(--text-muted)] uppercase font-semibold mt-1">Reserves</div>
                   <div className="flex gap-2 items-center">
                     <span className="text-[10px] text-[var(--text-secondary)] w-8">20p</span>
-                    <input value={stdReserves} onChange={e => setStdReserves(e.target.value)} type="number" placeholder="Reserves" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
+                    <input value={stdReserves} onChange={e => setStdReserves(e.target.value)} type="number" placeholder="Reserves" className="flex-1 min-w-0 px-2 py-1 text-sm border rounded-lg" />
                     <span className="text-[10px] text-[var(--text-secondary)] w-8">10p</span>
-                    <input value={smReserves} onChange={e => setSmReserves(e.target.value)} type="number" placeholder="Reserves" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
+                    <input value={smReserves} onChange={e => setSmReserves(e.target.value)} type="number" placeholder="Reserves" className="flex-1 min-w-0 px-2 py-1 text-sm border rounded-lg" />
                   </div>
                   {/* Mixed crew gender ratio */}
                   <div className="text-[10px] text-[var(--text-muted)] uppercase font-semibold mt-1">Mixed Crew — Min/Max same gender</div>
                   <div className="flex gap-2 items-center">
                     <span className="text-[10px] text-[var(--text-secondary)] w-8">20p</span>
-                    <input value={stdMin} onChange={e => setStdMin(e.target.value)} type="number" placeholder="Min" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
+                    <input value={stdMin} onChange={e => setStdMin(e.target.value)} type="number" placeholder="Min" className="flex-1 min-w-0 px-2 py-1 text-sm border rounded-lg" />
                     <span className="text-[var(--text-muted)]">—</span>
-                    <input value={stdMax} onChange={e => setStdMax(e.target.value)} type="number" placeholder="Max" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
+                    <input value={stdMax} onChange={e => setStdMax(e.target.value)} type="number" placeholder="Max" className="flex-1 min-w-0 px-2 py-1 text-sm border rounded-lg" />
                   </div>
                   <div className="flex gap-2 items-center">
                     <span className="text-[10px] text-[var(--text-secondary)] w-8">10p</span>
-                    <input value={smMin} onChange={e => setSmMin(e.target.value)} type="number" placeholder="Min" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
+                    <input value={smMin} onChange={e => setSmMin(e.target.value)} type="number" placeholder="Min" className="flex-1 min-w-0 px-2 py-1 text-sm border rounded-lg" />
                     <span className="text-[var(--text-muted)]">—</span>
-                    <input value={smMax} onChange={e => setSmMax(e.target.value)} type="number" placeholder="Max" className="flex-1 px-2 py-1 text-sm border rounded-lg" />
+                    <input value={smMax} onChange={e => setSmMax(e.target.value)} type="number" placeholder="Max" className="flex-1 min-w-0 px-2 py-1 text-sm border rounded-lg" />
                   </div>
                   <div className="flex gap-2">
                     <button onClick={handleSaveComp} className="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg">{editCompId ? 'Save' : 'Add'}</button>
@@ -233,7 +233,7 @@ export function CompetitionManager({ onClose }: Props) {
                   </div>
                 </div>
               ) : (
-                <button onClick={() => { clearCompForm(); setShowAddComp(true); }} className="w-full py-2 text-sm text-[var(--text-badge-side)] border-2 border-dashed border-green-300 rounded-lg hover:bg-green-50">
+                <button onClick={() => { clearCompForm(); setShowAddComp(true); }} className="w-full py-2 text-sm text-[var(--text-badge-side)] border border-dashed border-[var(--border-default)] rounded-lg hover:bg-[var(--bg-surface-alt)]">
                   + Add Competition
                 </button>
               )}
@@ -262,7 +262,7 @@ export function CompetitionManager({ onClose }: Props) {
               ))}
 
               {showAddTeam ? (
-                <div className="border-2 border-dashed border-green-300 rounded-lg p-3 space-y-2">
+                <div className="border rounded-lg border-[var(--border-default)] p-3 space-y-2">
                   <input value={teamName} onChange={e => setTeamName(e.target.value)} placeholder="Team name" className="w-full px-2 py-1.5 text-sm border rounded-lg" autoFocus />
                   <div className="flex gap-2">
                     <input value={teamCountry} onChange={e => setTeamCountry(e.target.value)} placeholder="Country" className="flex-1 px-2 py-1.5 text-sm border rounded-lg" />
@@ -277,7 +277,7 @@ export function CompetitionManager({ onClose }: Props) {
                   </div>
                 </div>
               ) : (
-                <button onClick={() => { clearTeamForm(); setShowAddTeam(true); }} className="w-full py-2 text-sm text-[var(--text-badge-side)] border-2 border-dashed border-green-300 rounded-lg hover:bg-green-50">
+                <button onClick={() => { clearTeamForm(); setShowAddTeam(true); }} className="w-full py-2 text-sm text-[var(--text-badge-side)] border border-dashed border-[var(--border-default)] rounded-lg hover:bg-[var(--bg-surface-alt)]">
                   + Add Team
                 </button>
               )}

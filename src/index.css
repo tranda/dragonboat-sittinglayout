@@ -42,6 +42,10 @@
   --bg-role-coach: #dbeafe;
   --text-role-coach: #1d4ed8;
 
+  /* Empty seat */
+  --bg-seat-empty: #f0f0f0;
+  --border-seat-empty: #c0c0c0;
+
   /* Status */
   --bg-active-tab: #2563eb;
   --text-active-tab: #ffffff;
@@ -83,6 +87,9 @@
   --bg-role-coach: #172554;
   --text-role-coach: #93c5fd;
 
+  --bg-seat-empty: #2a3548;
+  --border-seat-empty: #5a6a7e;
+
   --bg-active-tab: #3b82f6;
   --text-active-tab: #ffffff;
 }
@@ -94,6 +101,10 @@ body {
   background: var(--bg-app);
   color: var(--text-primary);
   overscroll-behavior: none;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 * {

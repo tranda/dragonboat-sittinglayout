@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import type { Athlete } from '../types';
+import type { Athlete, AppConfig } from '../types';
+import { getAthleteAgeCategory } from '../utils/policies';
 
 interface Props {
   athletes: Athlete[];
   onSelect: (athlete: Athlete) => void;
   onClose: () => void;
   title?: string;
+  appConfig?: AppConfig;
 }
 
-export function AthletePoolModal({ athletes, onSelect, onClose, title }: Props) {
+export function AthletePoolModal({ athletes, onSelect, onClose, title, appConfig }: Props) {
   const [genderTab, setGenderTab] = useState<'F' | 'M'>('F');
   const [search, setSearch] = useState('');
 
@@ -89,6 +91,12 @@ export function AthletePoolModal({ athletes, onSelect, onClose, title }: Props) 
                 >
                   <span className="font-medium flex items-center min-w-0">
                     <span className="truncate">{a.name}</span>
+                    {appConfig && (() => {
+                      const cat = getAthleteAgeCategory(a, appConfig);
+                      return cat && cat !== 'BCP' ? (
+                        <span className="ml-1 px-1 py-0.5 bg-[var(--bg-surface-alt)] text-[var(--text-secondary)] rounded text-[9px] font-semibold flex-shrink-0">{cat}</span>
+                      ) : null;
+                    })()}
                     {a.preferredSide && (
                       <span className="ml-1 px-1 py-0.5 bg-[var(--bg-badge-side)] text-[var(--text-badge-side)] rounded text-[9px] font-semibold flex-shrink-0">{a.preferredSide === 'both' ? 'L/R' : a.preferredSide === 'left' ? 'L' : 'R'}</span>
                     )}

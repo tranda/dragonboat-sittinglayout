@@ -5,30 +5,66 @@ interface Props {
   onClose: () => void;
   onImported: () => void;
   existingAthletes?: { id: number; name: string }[];
+  activeTeamName?: string | null;
 }
 
-export function ImportEventsModal({ onClose, onImported, existingAthletes = [] }: Props) {
-  const [step, setStep] = useState<'login' | 'select'>('login');
+function clubMatchesTeam(clubName: string, teamName?: string | null): boolean {
+  if (!teamName) return false;
+  const a = clubName.toLowerCase().trim();
+  const b = teamName.toLowerCase().trim();
+  if (!a || !b) return false;
+  return a === b || a.includes(b) || b.includes(a);
+}
+
+export function ImportEventsModal({ onClose, onImported, existingAthletes = [], activeTeamName }: Props) {
+  const [step, setStep] = useState<'login' | 'club' | 'select'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [clubs, setClubs] = useState<api.EventsClub[]>([]);
   const [athletes, setAthletes] = useState<api.EventsAthlete[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
+
+  const loadAthletes = async (clubId?: number) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.fetchEventsAthletes(username, password, clubId);
+      setAthletes(data);
+      setSelected(new Set(data.map(a => a.id)));
+      setStep('select');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch athletes');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!username || !password) return;
     setLoading(true);
     setError('');
     try {
-      const data = await api.fetchEventsAthletes(username, password);
-      setAthletes(data);
-      setSelected(new Set(data.map(a => a.id)));
-      setStep('select');
+      const clubList = await api.fetchEventsClubs(username, password);
+      if (clubList.length <= 1) {
+        // Regular user with single club access — skip picker
+        await loadAthletes(clubList[0]?.id);
+      } else {
+        // Sort: exact/similar matches to active team first, then alphabetical
+        const sorted = [...clubList].sort((a, b) => {
+          const am = clubMatchesTeam(a.name, activeTeamName);
+          const bm = clubMatchesTeam(b.name, activeTeamName);
+          if (am !== bm) return am ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
+        setClubs(sorted);
+        setStep('club');
+        setLoading(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to connect');
-    } finally {
       setLoading(false);
     }
   };
@@ -122,8 +158,37 @@ export function ImportEventsModal({ onClose, onImported, existingAthletes = [] }
               disabled={loading || !username || !password}
               className="w-full py-2 text-sm bg-blue-600 text-white rounded-lg disabled:opacity-50"
             >
-              {loading ? 'Connecting...' : 'Connect & Fetch Athletes'}
+              {loading ? 'Connecting...' : 'Connect & List Clubs'}
             </button>
+          </div>
+        ) : step === 'club' ? (
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            <p className="text-xs text-[var(--text-secondary)] mb-1">
+              Select a club to import athletes from{activeTeamName ? <> — matches for <b>{activeTeamName}</b> shown first</> : null}:
+            </p>
+            {clubs.map(c => {
+              const isMatch = clubMatchesTeam(c.name, activeTeamName);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => loadAthletes(c.id)}
+                  disabled={loading}
+                  className={`w-full text-left px-3 py-2 rounded-lg border disabled:opacity-50 ${
+                    isMatch
+                      ? 'border-blue-400 bg-[var(--bg-male)] hover:bg-[var(--bg-male-strong)]'
+                      : 'border-[var(--border-default)] hover:bg-[var(--bg-surface-alt)]'
+                  }`}
+                >
+                  <div className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
+                    <span>{c.name}</span>
+                    {isMatch && <span className="text-[9px] px-1.5 py-0.5 bg-blue-600 text-white rounded-full">match</span>}
+                  </div>
+                  {c.country && <div className="text-[10px] text-[var(--text-muted)]">{c.country}</div>}
+                </button>
+              );
+            })}
+            {error && <div className="text-xs text-red-600">{error}</div>}
+            {loading && <div className="text-xs text-[var(--text-muted)] text-center py-2">Loading athletes...</div>}
           </div>
         ) : (
           <>

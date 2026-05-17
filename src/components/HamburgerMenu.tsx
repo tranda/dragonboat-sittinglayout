@@ -34,6 +34,10 @@ function ThemeToggle() {
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
+  onUndo?: () => void;
+  onRedo?: () => void;
   showWeights: boolean;
   onToggleWeights: () => void;
   onExport: () => void;
@@ -61,7 +65,7 @@ interface Props {
 }
 
 export function HamburgerMenu({
-  isOpen, onClose, showWeights, onToggleWeights,
+  isOpen, onClose, canUndo, canRedo, onUndo, onRedo, showWeights, onToggleWeights,
   onExport, onResetCurrent, onResetAll,
   selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport: _onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onManageCompetitions, onActivityLog, onManageUsers, onLogout, userRole,
 }: Props) {
@@ -105,6 +109,28 @@ export function HamburgerMenu({
 
         <div className="flex-1 overflow-y-auto p-4 space-y-1">
           {(userRole === 'admin' || userRole === 'coach') && (<>
+          {/* Undo / Redo */}
+          {(onUndo || onRedo) && (
+            <>
+              <div className="flex gap-2">
+                <button
+                  onClick={onUndo}
+                  disabled={!canUndo}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium ${canUndo ? 'bg-[var(--bg-male)] text-[var(--text-male)] hover:bg-[var(--bg-male-strong)]' : 'bg-[var(--bg-surface-alt)] text-[var(--text-muted)] cursor-not-allowed'}`}
+                >
+                  <span>↶</span><span>Undo</span>
+                </button>
+                <button
+                  onClick={onRedo}
+                  disabled={!canRedo}
+                  className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium ${canRedo ? 'bg-[var(--bg-male)] text-[var(--text-male)] hover:bg-[var(--bg-male-strong)]' : 'bg-[var(--bg-surface-alt)] text-[var(--text-muted)] cursor-not-allowed'}`}
+                >
+                  <span>↷</span><span>Redo</span>
+                </button>
+              </div>
+              <hr className="my-2" />
+            </>
+          )}
           {/* Toggle weights */}
           <button
             onClick={() => { onToggleWeights(); }}
@@ -338,6 +364,14 @@ export function HamburgerMenu({
           {/* Theme toggle — visible to all roles */}
           <hr className="my-2" />
           <ThemeToggle />
+
+          {/* About */}
+          <hr className="my-2" />
+          <div className="px-3 py-2 text-[10px] text-[var(--text-muted)] leading-relaxed">
+            <div className="font-semibold text-[var(--text-secondary)] mb-0.5">About</div>
+            <div>Dragon Boat Crews v{__APP_VERSION__}</div>
+            <div>by Zoran Trandafilović</div>
+          </div>
 
           {onLogout && (
             <>

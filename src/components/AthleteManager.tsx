@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Athlete, AppConfig } from '../types';
 import { getAthleteAgeCategory } from '../utils/policies';
 import { ImportEventsModal } from './ImportEventsModal';
+import { ImportCsvModal } from './ImportCsvModal';
 import * as api from '../utils/api';
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
   onReload?: () => void;
   userRole?: string;
   competitionId?: number | null;
+  activeTeamName?: string | null;
 }
 
 function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F' | 'M') => void }) {
@@ -24,8 +26,8 @@ function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F'
       <button
         type="button"
         onClick={() => onChange('F')}
-        className={`flex-1 py-2 text-sm font-semibold rounded-lg border-2 ${
-          value === 'F' ? 'bg-[var(--bg-female-strong)] border-[var(--border-female-strong)] text-[var(--text-female)]' : 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] text-[var(--text-muted)]'
+        className={`flex-1 py-2 text-sm font-semibold rounded-lg border ${
+          value === 'F' ? 'bg-[var(--bg-female-strong)] border-[var(--border-female)] text-[var(--text-female)]' : 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] text-[var(--text-muted)]'
         }`}
       >
         Female
@@ -33,8 +35,8 @@ function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F'
       <button
         type="button"
         onClick={() => onChange('M')}
-        className={`flex-1 py-2 text-sm font-semibold rounded-lg border-2 ${
-          value === 'M' ? 'bg-[var(--bg-male-strong)] border-[var(--border-male-strong)] text-blue-700' : 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] text-[var(--text-muted)]'
+        className={`flex-1 py-2 text-sm font-semibold rounded-lg border ${
+          value === 'M' ? 'bg-[var(--bg-male-strong)] border-[var(--border-male)] text-[var(--text-male)]' : 'bg-[var(--bg-surface-alt)] border-[var(--border-default)] text-[var(--text-muted)]'
         }`}
       >
         Male
@@ -43,9 +45,10 @@ function GenderToggle({ value, onChange }: { value: 'F' | 'M'; onChange: (v: 'F'
   );
 }
 
-export function AthleteManager({ config, athletes, removedIds, onRemove, onRestore, onAdd, onEdit, onClose, onReload, userRole, competitionId }: Props) {
+export function AthleteManager({ config, athletes, removedIds, onRemove, onRestore, onAdd, onEdit, onClose, onReload, userRole, competitionId, activeTeamName }: Props) {
   const [tab, setTab] = useState<'active' | 'removed'>('active');
   const [showImportEvents, setShowImportEvents] = useState(false);
+  const [showImportCsv, setShowImportCsv] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newName, setNewName] = useState('');
@@ -245,14 +248,14 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
                 onChange={e => setNewWeight(e.target.value)}
                 placeholder="Weight (kg)"
                 type="number"
-                className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
+                className="flex-1 min-w-0 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
               />
               <input
                 value={newYearOfBirth}
                 onChange={e => setNewYearOfBirth(e.target.value)}
-                placeholder="Year of birth"
+                placeholder="Born (year)"
                 type="number"
-                className="flex-1 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
+                className="flex-1 min-w-0 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
               />
             </div>
             <textarea
@@ -305,12 +308,20 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
               + Add Athlete
             </button>
             {userRole === 'admin' && (
-              <button
-                onClick={() => setShowImportEvents(true)}
-                className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium"
-              >
-                Import
-              </button>
+              <>
+                <button
+                  onClick={() => setShowImportEvents(true)}
+                  className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium"
+                >
+                  Events
+                </button>
+                <button
+                  onClick={() => setShowImportCsv(true)}
+                  className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium"
+                >
+                  CSV
+                </button>
+              </>
             )}
           </div>
         )}
@@ -321,6 +332,16 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
           onClose={() => setShowImportEvents(false)}
           onImported={() => { setShowImportEvents(false); onReload?.(); }}
           existingAthletes={athletes.map(a => ({ id: a.id, name: a.name }))}
+          activeTeamName={activeTeamName}
+        />
+      )}
+
+      {showImportCsv && (
+        <ImportCsvModal
+          onClose={() => setShowImportCsv(false)}
+          onImported={() => { setShowImportCsv(false); onReload?.(); }}
+          existingAthletes={athletes.map(a => ({ id: a.id, name: a.name }))}
+          activeTeamName={activeTeamName}
         />
       )}
     </div>
