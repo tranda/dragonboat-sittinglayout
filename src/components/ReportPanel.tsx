@@ -76,7 +76,7 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
       layout.reserves.forEach(id => add(id, 'reserve', race.id, race.name));
     }
     const r = athletes
-      .filter(a => !a.isRemoved)
+      .filter(a => !a.isRemoved && a.isRegistered)
       .map(a => {
         const c = counts.get(a.id) ?? { paddle: 0, helm: 0, drummer: 0, reserve: 0 };
         const total = c.paddle + c.helm + c.drummer + c.reserve;
