@@ -3,6 +3,7 @@ import type { Athlete, AppConfig } from '../types';
 import { getAthleteAgeCategory } from '../utils/policies';
 import { ImportEventsModal } from './ImportEventsModal';
 import { ImportCsvModal } from './ImportCsvModal';
+import { ExportAthletesModal } from './ExportAthletesModal';
 import * as api from '../utils/api';
 
 interface Props {
@@ -49,6 +50,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
   const [tab, setTab] = useState<'active' | 'removed'>('active');
   const [showImportEvents, setShowImportEvents] = useState(false);
   const [showImportCsv, setShowImportCsv] = useState(false);
+  const [showExport, setShowExport] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [newName, setNewName] = useState('');
@@ -307,6 +309,15 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
             >
               + Add Athlete
             </button>
+            {competitionId && (
+              <button
+                onClick={() => setShowExport(true)}
+                className="px-3 py-2 text-sm bg-[var(--bg-surface-alt)] text-[var(--text-secondary)] border border-[var(--border-default)] rounded-lg font-medium"
+                title="Export registered competitors"
+              >
+                Export
+              </button>
+            )}
             {userRole === 'admin' && (
               <>
                 <button
@@ -342,6 +353,14 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
           onImported={() => { setShowImportCsv(false); onReload?.(); }}
           existingAthletes={athletes.map(a => ({ id: a.id, name: a.name }))}
           activeTeamName={activeTeamName}
+        />
+      )}
+
+      {showExport && (
+        <ExportAthletesModal
+          athletes={athletes}
+          teamName={activeTeamName}
+          onClose={() => setShowExport(false)}
         />
       )}
     </div>
