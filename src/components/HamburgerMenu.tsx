@@ -60,7 +60,6 @@ interface Props {
   onManageCompetitions?: () => void;
   onActivityLog?: () => void;
   onManageUsers?: () => void;
-  onShowMyRaces?: () => void;
   onLogout?: () => void;
   userRole?: string;
 }
@@ -68,7 +67,7 @@ interface Props {
 export function HamburgerMenu({
   isOpen, onClose, canUndo, canRedo, onUndo, onRedo, showWeights, onToggleWeights,
   onExport, onResetCurrent, onResetAll,
-  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport: _onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onManageCompetitions, onActivityLog, onManageUsers, onShowMyRaces, onLogout, userRole,
+  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport: _onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onManageCompetitions, onActivityLog, onManageUsers, onLogout, userRole,
 }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBoatType, setNewBoatType] = useState<'standard' | 'small'>('standard');
@@ -149,15 +148,6 @@ export function HamburgerMenu({
           >
             Manage Athletes
           </button>
-
-          {onShowReport && (
-            <button
-              onClick={() => { onShowReport(); onClose(); }}
-              className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[var(--bg-surface-alt)] text-sm font-medium"
-            >
-              Report
-            </button>
-          )}
 
           {onPdfExport && (
             <button
@@ -362,13 +352,13 @@ export function HamburgerMenu({
           )}
           </>)}
 
-          {/* My Races — visible to all roles */}
-          {onShowMyRaces && (
+          {/* Report — visible to all roles */}
+          {onShowReport && (
             <button
-              onClick={() => { onShowMyRaces(); onClose(); }}
+              onClick={() => { onShowReport(); onClose(); }}
               className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[var(--bg-surface-alt)] text-sm font-medium"
             >
-              My Races
+              Report
             </button>
           )}
 
