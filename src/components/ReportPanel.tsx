@@ -28,6 +28,7 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
   const [distanceFilter, setDistanceFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [nameQuery, setNameQuery] = useState('');
 
   // Unique values derived from actual races (so filters match what's in the data)
   const distances = useMemo(() => {
@@ -92,8 +93,15 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
     return { rows: r, crewMap: crews };
   }, [athletes, filteredRaces, layouts]);
 
-  const totalAssignments = rows.reduce((s, r) => s + r.total, 0);
-  const activeCount = rows.filter(r => r.total > 0).length;
+  // Diacritic-insensitive: "c" matches "č"/"ć", "s" matches "š", etc.
+  // NFD strips most accents via combining marks; đ/Đ don't decompose so map them.
+  const normalize = (s: string) =>
+    s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+  const q = normalize(nameQuery.trim());
+  const visibleRows = q ? rows.filter(r => normalize(r.athlete.name).includes(q)) : rows;
+
+  const totalAssignments = visibleRows.reduce((s, r) => s + r.total, 0);
+  const activeCount = visibleRows.filter(r => r.total > 0).length;
 
   const cell = (n: number) => (
     <div className={`w-7 text-center text-xs tabular-nums ${n === 0 ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] font-semibold'}`}>
@@ -108,6 +116,27 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-bold text-[var(--text-primary)]">Report</h2>
           <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] text-xl px-1">&times;</button>
+        </div>
+
+        {/* Name search */}
+        <div className="p-3 border-b">
+          <div className="relative">
+            <input
+              value={nameQuery}
+              onChange={e => setNameQuery(e.target.value)}
+              placeholder="Search name…"
+              className="w-full pl-3 pr-8 py-2 text-sm border rounded-lg bg-[var(--bg-surface)] outline-none focus:border-[var(--border-male-strong)]"
+            />
+            {nameQuery && (
+              <button
+                onClick={() => setNameQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-secondary)] text-lg px-1"
+                aria-label="Clear search"
+              >
+                &times;
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Content */}
@@ -164,7 +193,7 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
 
           {/* Athlete list */}
           <div className="divide-y">
-            {rows.map(({ athlete, counts }) => {
+            {visibleRows.map(({ athlete, counts }) => {
               const ageCat = getAthleteAgeCategory(athlete, config);
               const isExpanded = expandedId === athlete.id;
               const assignments = crewMap.get(athlete.id) ?? [];
@@ -212,8 +241,8 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
                 </div>
               );
             })}
-            {rows.length === 0 && (
-              <div className="text-center text-[var(--text-muted)] py-8 text-sm">No athletes</div>
+            {visibleRows.length === 0 && (
+              <div className="text-center text-[var(--text-muted)] py-8 text-sm">{q ? 'No matching names' : 'No athletes'}</div>
             )}
           </div>
         </div>
