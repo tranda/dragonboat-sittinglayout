@@ -10,6 +10,7 @@ import { LoginScreen } from './LoginScreen';
 import { UserManager } from './UserManager';
 import { RaceReorderModal } from './RaceReorderModal';
 import { ReportPanel } from './ReportPanel';
+import { MyRacesModal } from './MyRacesModal';
 import { CrewCompareModal } from './CrewCompareModal';
 import { DashboardPanel } from './DashboardPanel';
 import { ActivityLogPanel } from './ActivityLogPanel';
@@ -52,6 +53,7 @@ export function App() {
   const [showUsers, setShowUsers] = useState(false);
   const [showReorderRaces, setShowReorderRaces] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  const [showMyRaces, setShowMyRaces] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [view, setView] = useState<'layout' | 'dashboard'>(() => (localStorage.getItem('dragonboat-view') as 'layout' | 'dashboard') ?? 'dashboard');
   const [showActivityLog, setShowActivityLog] = useState(false);
@@ -546,6 +548,7 @@ export function App() {
         onManageCompetitions={user?.role === 'admin' ? () => { setMenuOpen(false); setShowCompetitions(true); } : undefined}
         onActivityLog={user?.role === 'admin' ? () => { setMenuOpen(false); setShowActivityLog(true); } : undefined}
         onManageUsers={user?.role === 'admin' ? () => { setMenuOpen(false); setShowUsers(true); } : undefined}
+        onShowMyRaces={() => { setMenuOpen(false); setShowMyRaces(true); }}
         onLogout={() => { handleLogout(); setMenuOpen(false); }}
         userRole={user?.role}
       />
@@ -634,6 +637,18 @@ export function App() {
           config={appConfig}
           onClose={() => setShowReport(false)}
           onSelectRace={(raceId) => { setSelectedRaceId(raceId); setView('layout'); setShowReport(false); }}
+        />
+      )}
+
+      {/* My Races modal — available to all roles */}
+      {showMyRaces && (
+        <MyRacesModal
+          athleteId={user?.athlete_id ?? null}
+          athleteName={user?.name}
+          races={races}
+          layouts={layouts}
+          onClose={() => setShowMyRaces(false)}
+          onSelectRace={(raceId) => { setSelectedRaceId(raceId); setView('layout'); setShowMyRaces(false); }}
         />
       )}
 

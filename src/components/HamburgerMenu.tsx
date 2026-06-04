@@ -60,6 +60,7 @@ interface Props {
   onManageCompetitions?: () => void;
   onActivityLog?: () => void;
   onManageUsers?: () => void;
+  onShowMyRaces?: () => void;
   onLogout?: () => void;
   userRole?: string;
 }
@@ -67,7 +68,7 @@ interface Props {
 export function HamburgerMenu({
   isOpen, onClose, canUndo, canRedo, onUndo, onRedo, showWeights, onToggleWeights,
   onExport, onResetCurrent, onResetAll,
-  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport: _onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onManageCompetitions, onActivityLog, onManageUsers, onLogout, userRole,
+  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport: _onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onManageCompetitions, onActivityLog, onManageUsers, onShowMyRaces, onLogout, userRole,
 }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBoatType, setNewBoatType] = useState<'standard' | 'small'>('standard');
@@ -360,6 +361,16 @@ export function HamburgerMenu({
             </button>
           )}
           </>)}
+
+          {/* My Races — visible to all roles */}
+          {onShowMyRaces && (
+            <button
+              onClick={() => { onShowMyRaces(); onClose(); }}
+              className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[var(--bg-surface-alt)] text-sm font-medium"
+            >
+              My Races
+            </button>
+          )}
 
           {/* Theme toggle — visible to all roles */}
           <hr className="my-2" />
