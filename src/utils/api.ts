@@ -262,6 +262,10 @@ export function fetchActivityLog(limit = 50) {
 export interface ActivityLogEntry {
   id: number;
   user_name: string | null;
+  team_id: number | null;
+  competition_id: number | null;
+  team_name: string | null;
+  competition_name: string | null;
   action: string;
   entity_type: string;
   entity_name: string | null;

@@ -73,7 +73,10 @@ export function ActivityLogPanel({ onClose }: Props) {
                     {e.entity_name && <span className="font-medium">{e.entity_name}</span>}
                     {e.details && <span className="text-[var(--text-secondary)] ml-1 text-xs">({e.details})</span>}
                   </div>
-                  <div className="text-[10px] text-[var(--text-muted)]">by {e.user_name ?? 'system'}</div>
+                  <div className="text-[10px] text-[var(--text-muted)]">
+                    by {e.user_name ?? 'system'}
+                    {e.competition_name && <span className="ml-1">· {e.competition_name}</span>}
+                  </div>
                 </div>
               ))}
             </div>
