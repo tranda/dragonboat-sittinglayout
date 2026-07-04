@@ -549,6 +549,37 @@ export function App() {
             <RaceSelector races={races} selectedRaceId={selectedRaceId} onSelect={setSelectedRaceId} />
           </div>
 
+          {/* Team's next race across all crews */}
+          {(() => {
+            let best: { raceId: string; name: string; stage: string; t: number } | null = null;
+            for (const r of races) {
+              for (const e of r.schedule ?? []) {
+                if (!e.time) continue;
+                const t = new Date(e.time).getTime();
+                if (Number.isNaN(t) || t < Date.now()) continue;
+                if (!best || t < best.t) best = { raceId: r.id, name: r.name, stage: e.stage, t };
+              }
+            }
+            if (!best) return null;
+            return (
+              <div className="px-3 pb-1 flex-shrink-0">
+                <button
+                  onClick={() => setSelectedRaceId(best!.raceId)}
+                  className="w-full flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[var(--bg-surface-alt)] text-[11px] text-[var(--text-secondary)] hover:bg-[var(--bg-male)]"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 text-[var(--text-badge-side)]">
+                    <circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" />
+                  </svg>
+                  <span className="font-semibold text-[var(--text-badge-side)] flex-shrink-0">Next up</span>
+                  <span className="truncate">{best.name}{best.stage ? ` · ${best.stage}` : ''}</span>
+                  <span className="ml-auto whitespace-nowrap font-medium text-[var(--text-primary)]">
+                    {new Date(best.t).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </button>
+              </div>
+            );
+          })()}
+
           {/* Boat layout */}
           <div className="flex-1 px-2 pb-1 min-h-0 flex flex-col">
             {selectedRace && layout ? (
