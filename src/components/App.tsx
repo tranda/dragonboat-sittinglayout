@@ -473,6 +473,20 @@ export function App() {
             <div className="text-sm font-bold text-[var(--text-primary)] leading-tight truncate">
               {view === 'dashboard' ? 'Crews Dashboard' : (selectedRace?.name ?? 'No crew selected')}
             </div>
+            {view === 'layout' && selectedRace && (() => {
+              const upcoming = (selectedRace.schedule ?? [])
+                .filter(e => e.time)
+                .map(e => ({ stage: e.stage, t: new Date(e.time).getTime() }))
+                .filter(e => !Number.isNaN(e.t))
+                .sort((a, b) => a.t - b.t);
+              const next = upcoming.find(e => e.t >= Date.now());
+              if (!next) return null;
+              return (
+                <div className="text-[10px] text-[var(--text-badge-side)] font-semibold leading-tight truncate">
+                  Next: {next.stage || 'Race'} · {new Date(next.t).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
+                </div>
+              );
+            })()}
           </div>
           {view === 'layout' && selectedRace && layout && (
             <button
