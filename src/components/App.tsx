@@ -24,6 +24,7 @@ import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '.
 import * as api from '../utils/api';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
 import { CrewScheduleModal } from './CrewScheduleModal';
+import { getNow } from '../utils/now';
 import { beginWrite, endWrite } from '../utils/sync';
 
 export function App() {
@@ -479,7 +480,7 @@ export function App() {
                 .map(e => ({ stage: e.stage, t: new Date(e.time).getTime() }))
                 .filter(e => !Number.isNaN(e.t))
                 .sort((a, b) => a.t - b.t);
-              const next = upcoming.find(e => e.t >= Date.now());
+              const next = upcoming.find(e => e.t >= getNow());
               if (!next) return null;
               return (
                 <div className="text-[10px] text-[var(--text-badge-side)] font-semibold leading-tight truncate">
@@ -556,7 +557,7 @@ export function App() {
               for (const e of r.schedule ?? []) {
                 if (!e.time) continue;
                 const t = new Date(e.time).getTime();
-                if (Number.isNaN(t) || t < Date.now()) continue;
+                if (Number.isNaN(t) || t < getNow()) continue;
                 if (!best || t < best.t) best = { raceId: r.id, name: r.name, stage: e.stage, t };
               }
             }
