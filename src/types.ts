@@ -24,6 +24,7 @@ export const RACE_STAGES = [
   'Heat 1', 'Heat 2', 'Heat 3', 'Heat 4',
   'Repechage', 'Repechage 1', 'Repechage 2', 'Repechage 3', 'Repechage 4',
   'Semifinal', 'Semifinal 1', 'Semifinal 2', 'Semifinal 3', 'Semifinal 4',
+  'Round 1', 'Round 2', 'Round 3', 'Round 4',
   'Minor Final', 'Grand Final', 'Final',
 ] as const;
 export type RaceStage = (typeof RACE_STAGES)[number];
