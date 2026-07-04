@@ -2,7 +2,7 @@ import type { Race, BoatLayout } from '../types';
 
 export interface ConflictGroup {
   sessionLabel: string; // fixed label, e.g. "Too close in time"
-  races: { id: string; name: string; scheduledTime: string | null }[];
+  races: { id: string; name: string; stage: string; scheduledTime: string }[];
 }
 
 export interface ConflictOptions {
@@ -17,9 +17,10 @@ export const DEFAULT_CONFLICT_OPTIONS: ConflictOptions = {
 
 const TOO_CLOSE_LABEL = 'Too close in time';
 
-// Warn when an athlete is entered in two races whose scheduled times are closer together
-// than `minGapMinutes` — they can't physically get out of one boat and into the next in time.
-// Races without a scheduled time are ignored (they can't be timed against anything).
+// Warn when an athlete is entered in two DIFFERENT crews whose scheduled rounds fall closer
+// together than `minGapMinutes` — they can't be in two boats on the water at once. Each crew
+// can have several scheduled rounds (Heat, Repechage, Final...); every round is considered.
+// Rounds of the same crew never conflict with each other.
 export function computeAthleteConflicts(
   races: Race[],
   layouts: Record<string, BoatLayout>,
@@ -30,14 +31,12 @@ export function computeAthleteConflicts(
 
   const gapMs = Math.max(0, options.minGapMinutes) * 60_000;
 
-  // athleteId → list of the timed races they are entered in
-  type TimedRace = { id: string; name: string; time: number; scheduledTime: string };
-  const perAthlete = new Map<number, TimedRace[]>();
+  // athleteId → every scheduled round they are entered in (across all their crews)
+  type Entry = { raceId: string; name: string; stage: string; iso: string; time: number };
+  const perAthlete = new Map<number, Entry[]>();
 
   for (const race of races) {
-    if (!race.scheduledTime) continue;
-    const time = new Date(race.scheduledTime).getTime();
-    if (Number.isNaN(time)) continue;
+    if (!race.schedule || race.schedule.length === 0) continue;
     const layout = layouts[race.id];
     if (!layout) continue;
 
@@ -47,38 +46,43 @@ export function computeAthleteConflicts(
     if (layout.drummer !== null) ids.add(layout.drummer);
     if (layout.helm !== null) ids.add(layout.helm);
     layout.reserves.forEach(id => id !== null && ids.add(id));
+    if (ids.size === 0) continue;
 
-    const entry = { id: race.id, name: race.name, time, scheduledTime: race.scheduledTime };
-    for (const athleteId of ids) {
-      const list = perAthlete.get(athleteId);
-      if (list) list.push(entry);
-      else perAthlete.set(athleteId, [entry]);
+    for (const slot of race.schedule) {
+      if (!slot.time) continue;
+      const time = new Date(slot.time).getTime();
+      if (Number.isNaN(time)) continue;
+      const entry: Entry = { raceId: race.id, name: race.name, stage: slot.stage, iso: slot.time, time };
+      for (const athleteId of ids) {
+        const list = perAthlete.get(athleteId);
+        if (list) list.push(entry);
+        else perAthlete.set(athleteId, [entry]);
+      }
     }
   }
 
-  for (const [athleteId, timedRaces] of perAthlete) {
-    if (timedRaces.length < 2) continue;
-    // Sort by time, then cluster races whose neighbour gap is under the threshold.
-    timedRaces.sort((a, b) => a.time - b.time);
+  for (const [athleteId, entries] of perAthlete) {
+    if (entries.length < 2) continue;
+    entries.sort((a, b) => a.time - b.time);
 
     const groups: ConflictGroup[] = [];
-    let cluster: TimedRace[] = [timedRaces[0]];
+    let cluster: Entry[] = [entries[0]];
     const flush = () => {
-      if (cluster.length > 1) {
+      // A conflict needs rounds from at least two DIFFERENT crews within the window.
+      const distinctRaces = new Set(cluster.map(e => e.raceId));
+      if (distinctRaces.size > 1) {
         groups.push({
           sessionLabel: TOO_CLOSE_LABEL,
-          races: cluster.map(r => ({ id: r.id, name: r.name, scheduledTime: r.scheduledTime })),
+          races: cluster.map(e => ({ id: e.raceId, name: e.name, stage: e.stage, scheduledTime: e.iso })),
         });
       }
     };
-    for (let i = 1; i < timedRaces.length; i++) {
-      const prev = timedRaces[i - 1];
-      const cur = timedRaces[i];
-      if (cur.time - prev.time < gapMs) {
-        cluster.push(cur);
+    for (let i = 1; i < entries.length; i++) {
+      if (entries[i].time - entries[i - 1].time < gapMs) {
+        cluster.push(entries[i]);
       } else {
         flush();
-        cluster = [cur];
+        cluster = [entries[i]];
       }
     }
     flush();

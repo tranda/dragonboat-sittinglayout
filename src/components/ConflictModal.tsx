@@ -26,18 +26,18 @@ export function ConflictModal({ athleteName, conflicts, onClose, onSelectRace }:
             <div key={i} className="space-y-1">
               <div className="text-[10px] font-semibold uppercase text-[var(--text-muted)]">{c.sessionLabel}</div>
               <div className="space-y-1">
-                {c.races.map(r => (
+                {c.races.map((r, ri) => (
                   <button
-                    key={r.id}
+                    key={`${r.id}-${ri}`}
                     onClick={() => { onSelectRace?.(r.id); onClose(); }}
                     disabled={!onSelectRace}
                     className={`w-full text-left px-2 py-1.5 rounded text-sm bg-[var(--bg-surface-alt)] ${onSelectRace ? 'hover:bg-[var(--bg-male)]' : ''}`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span>{r.name}</span>
+                      <span>{r.name}{r.stage ? ` — ${r.stage}` : ''}</span>
                       {r.scheduledTime && (
                         <span className="text-[10px] text-[var(--text-muted)] whitespace-nowrap">
-                          {new Date(r.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(r.scheduledTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                         </span>
                       )}
                     </div>

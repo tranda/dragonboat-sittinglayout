@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import type { Athlete, Race, BoatLayout as BoatLayoutType, AppConfig } from '../types';
+import type { Athlete, Race, BoatLayout as BoatLayoutType, AppConfig, ScheduleEntry } from '../types';
 import { RaceSelector } from './RaceSelector';
 import { BoatLayout } from './BoatLayout';
 import { HamburgerMenu } from './HamburgerMenu';
@@ -123,8 +123,7 @@ export function App() {
         genderCategory: r.genderCategory as 'Open' | 'Women' | 'Mixed',
         ageCategory: r.ageCategory as Race['ageCategory'],
         category: r.category,
-        stage: r.stage ?? null,
-        scheduledTime: r.scheduledTime ?? null,
+        schedule: Array.isArray(r.schedule) ? r.schedule : [],
       }));
       setRaces(mappedRaces);
       const layoutMap: Record<string, BoatLayoutType> = {};
@@ -324,11 +323,10 @@ export function App() {
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   };
 
-  const handleEditRace = async (fields: { name?: string; stage?: string | null; scheduledTime?: string | null }) => {
+  const handleEditRace = async (fields: { name?: string; schedule?: ScheduleEntry[] }) => {
     const payload: Record<string, unknown> = {};
     if (fields.name !== undefined) payload.name = fields.name;
-    if (fields.stage !== undefined) payload.stage = fields.stage || null;
-    if (fields.scheduledTime !== undefined) payload.scheduled_at = fields.scheduledTime || null;
+    if (fields.schedule !== undefined) payload.schedule = fields.schedule;
     try {
       await api.updateRace(selectedRaceId, payload);
       await loadData();

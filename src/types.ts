@@ -28,6 +28,12 @@ export const RACE_STAGES = [
 ] as const;
 export type RaceStage = (typeof RACE_STAGES)[number];
 
+// One scheduled round for a crew, e.g. { stage: "Repechage", time: "2026-07-04T14:30:00Z" }.
+export interface ScheduleEntry {
+  stage: string;
+  time: string; // ISO 8601 datetime
+}
+
 export interface Race {
   id: string;
   name: string;
@@ -37,8 +43,7 @@ export interface Race {
   genderCategory: GenderCategory;
   ageCategory: AgeCategory;
   category: string; // legacy, can be derived
-  stage?: string | null; // race round/stage label, e.g. "Semi Final" (from RACE_STAGES)
-  scheduledTime?: string | null; // ISO 8601 datetime of the race, or null if unscheduled
+  schedule?: ScheduleEntry[]; // rounds this crew races, each with its own time
 }
 
 export interface BoatLayout {

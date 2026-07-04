@@ -336,8 +336,7 @@ export interface ApiInitData {
     genderCategory: string;
     ageCategory: string;
     category: string;
-    stage?: string | null;
-    scheduledTime?: string | null;
+    schedule?: { stage: string; time: string }[] | null;
   }>;
   layouts: Record<string, {
     drummer: number | null;

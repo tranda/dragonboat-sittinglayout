@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Race, GenderCategory, AgeCategory } from '../types';
+import type { Race, GenderCategory, AgeCategory, ScheduleEntry } from '../types';
 import { RACE_STAGES } from '../types';
 import { useTheme } from '../hooks/useTheme';
 
@@ -69,7 +69,7 @@ interface Props {
   onAddRace: (name: string, boatType: 'standard' | 'small', distance: string, genderCategory: GenderCategory, ageCategory: AgeCategory) => void;
   onRemoveRace: () => void;
   onDuplicateRace: () => void;
-  onEditRace: (fields: { name?: string; stage?: string | null; scheduledTime?: string | null }) => void;
+  onEditRace: (fields: { name?: string; schedule?: ScheduleEntry[] }) => void;
   onManageAthletes: () => void;
   onImport?: () => void;
   onSettings: () => void;
@@ -98,8 +98,8 @@ export function HamburgerMenu({
   const [newAgeCat, setNewAgeCat] = useState<AgeCategory>('Senior B');
   const [showEdit, setShowEdit] = useState(false);
   const [editName, setEditName] = useState('');
-  const [editStage, setEditStage] = useState('');
-  const [editTime, setEditTime] = useState('');
+  // Each row edits with a datetime-local string; converted to/from ISO on open/save.
+  const [editSchedule, setEditSchedule] = useState<{ stage: string; time: string }[]>([]);
 
   if (!isOpen) return null;
 
@@ -113,14 +113,23 @@ export function HamburgerMenu({
 
   const openEdit = () => {
     setEditName(selectedRace?.name ?? '');
-    setEditStage(selectedRace?.stage ?? '');
-    setEditTime(isoToLocalInput(selectedRace?.scheduledTime));
+    setEditSchedule((selectedRace?.schedule ?? []).map(e => ({ stage: e.stage, time: isoToLocalInput(e.time) })));
     setShowEdit(true);
   };
 
+  const addScheduleRow = () => setEditSchedule(rows => [...rows, { stage: '', time: '' }]);
+  const updateScheduleRow = (i: number, patch: Partial<{ stage: string; time: string }>) =>
+    setEditSchedule(rows => rows.map((r, idx) => idx === i ? { ...r, ...patch } : r));
+  const removeScheduleRow = (i: number) => setEditSchedule(rows => rows.filter((_, idx) => idx !== i));
+
   const handleEdit = () => {
     if (!editName.trim()) return;
-    onEditRace({ name: editName.trim(), stage: editStage || null, scheduledTime: localInputToIso(editTime) });
+    // Keep only rows with a valid time; store time as ISO.
+    const schedule: ScheduleEntry[] = editSchedule
+      .map(r => ({ stage: r.stage, iso: localInputToIso(r.time) }))
+      .filter((r): r is { stage: string; iso: string } => r.iso !== null)
+      .map(r => ({ stage: r.stage, time: r.iso }));
+    onEditRace({ name: editName.trim(), schedule });
     setShowEdit(false);
     onClose();
   };
@@ -227,11 +236,8 @@ export function HamburgerMenu({
           {selectedRace && (
             <div className="text-xs text-[var(--text-secondary)] px-3 pb-1">
               {selectedRace.name}
-              {(selectedRace.stage || selectedRace.scheduledTime) && (
-                <span className="text-[var(--text-muted)]">
-                  {' · '}
-                  {[selectedRace.stage, selectedRace.scheduledTime ? new Date(selectedRace.scheduledTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : null].filter(Boolean).join(' · ')}
-                </span>
+              {(selectedRace.schedule?.length ?? 0) > 0 && (
+                <span className="text-[var(--text-muted)]"> · {selectedRace.schedule!.length} scheduled</span>
               )}
             </div>
           )}
@@ -252,24 +258,46 @@ export function HamburgerMenu({
                 className="w-full px-2 py-1.5 text-sm border rounded-lg"
                 autoFocus
               />
-              <select
-                value={editStage}
-                onChange={e => setEditStage(e.target.value)}
-                className="w-full px-2 py-1.5 text-sm border rounded-lg"
+
+              <div className="text-[10px] font-semibold text-[var(--text-muted)] uppercase pt-1">Race times</div>
+              {editSchedule.length === 0 && (
+                <div className="text-xs text-[var(--text-muted)] italic">No race times yet.</div>
+              )}
+              {editSchedule.map((row, i) => (
+                <div key={i} className="space-y-1 border rounded-lg p-2">
+                  <div className="flex gap-1">
+                    <select
+                      value={row.stage}
+                      onChange={e => updateScheduleRow(i, { stage: e.target.value })}
+                      className="flex-1 px-2 py-1.5 text-sm border rounded-lg"
+                    >
+                      <option value="">No stage</option>
+                      {RACE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <button
+                      onClick={() => removeScheduleRow(i)}
+                      className="px-2 text-red-600 text-sm"
+                      title="Remove time"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <input
+                    type="datetime-local"
+                    value={row.time}
+                    onChange={e => updateScheduleRow(i, { time: e.target.value })}
+                    className="w-full px-2 py-1.5 text-sm border rounded-lg"
+                  />
+                </div>
+              ))}
+              <button
+                onClick={addScheduleRow}
+                className="w-full py-1 text-xs bg-[var(--bg-surface-alt)] rounded-lg text-[var(--text-secondary)]"
               >
-                <option value="">No stage</option>
-                {RACE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <div>
-                <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase">Race time</label>
-                <input
-                  type="datetime-local"
-                  value={editTime}
-                  onChange={e => setEditTime(e.target.value)}
-                  className="w-full px-2 py-1.5 text-sm border rounded-lg"
-                />
-              </div>
-              <div className="flex gap-2">
+                + Add race time
+              </button>
+
+              <div className="flex gap-2 pt-1">
                 <button onClick={handleEdit} className="flex-1 py-1 text-xs bg-blue-600 text-white rounded-lg">Save</button>
                 <button onClick={() => setShowEdit(false)} className="px-3 py-1 text-xs bg-[var(--bg-surface-alt)] rounded-lg">Cancel</button>
               </div>
