@@ -22,11 +22,14 @@ function SortableRow({ race }: { race: Race }) {
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="flex items-center gap-3 px-3 py-3 bg-[var(--bg-surface)] border rounded-lg cursor-grab active:cursor-grabbing touch-none"
+      className="flex items-center gap-3 px-3 py-3 bg-[var(--bg-surface)] border rounded-lg"
     >
-      <div className="flex flex-col gap-0.5 text-[var(--text-muted)]">
+      <div
+        {...attributes}
+        {...listeners}
+        className="flex flex-col gap-0.5 text-[var(--text-muted)] cursor-grab active:cursor-grabbing touch-none -my-3 py-3 -ml-1 pl-1 pr-2"
+        aria-label="Drag to reorder"
+      >
         <div className="w-4 h-0.5 bg-current rounded" />
         <div className="w-4 h-0.5 bg-current rounded" />
         <div className="w-4 h-0.5 bg-current rounded" />
