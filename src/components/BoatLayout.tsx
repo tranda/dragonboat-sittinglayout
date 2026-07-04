@@ -31,6 +31,7 @@ interface Props {
   appConfig: AppConfig;
   athleteConflicts?: Map<number, import('../utils/conflicts').ConflictGroup[]>;
   onShowConflict?: (athleteId: number) => void;
+  onShowSchedule?: () => void;
 }
 
 function parseSeatId(id: string): { type: string; index?: number } {
@@ -92,7 +93,7 @@ function UnseatZone({ id, side }: { id: string; side: 'left' | 'right' }) {
 export function BoatLayout({
   race, layout, athleteMap, benchFactors, unassignedAthletes, unassignedAthletesAnyAge,
   showWeights, onLayoutChange, readOnly = false, appConfig,
-  athleteConflicts, onShowConflict,
+  athleteConflicts, onShowConflict, onShowSchedule,
 }: Props) {
   const conflictedInThisRace = (() => {
     const set = new Set<number>();
@@ -313,7 +314,22 @@ export function BoatLayout({
         {/* Drummer row — seat 1, centered */}
         <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">1</span></div>
         <div className="col-span-3 grid" style={{ gridTemplateColumns: '1fr 2fr 1fr' }}>
-          <div /><Seat seatId="drummer" athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} hasConflict={seatHasConflict(layout.drummer)} onConflictTap={() => layout.drummer != null && onShowConflict?.(layout.drummer)} /><div />
+          <div className="flex items-center justify-end pr-1">
+            <button
+              onClick={onShowSchedule}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--bg-surface-alt)] text-[var(--text-secondary)] relative"
+              title="Race times"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <polyline points="12 7 12 12 15 14" />
+              </svg>
+              {(race.schedule?.length ?? 0) > 0 && (
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[var(--text-badge-side)]" />
+              )}
+            </button>
+          </div>
+          <Seat seatId="drummer" athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} hasConflict={seatHasConflict(layout.drummer)} onConflictTap={() => layout.drummer != null && onShowConflict?.(layout.drummer)} /><div />
         </div>
         <div className="flex items-center justify-center"><span className="text-[7px] text-amber-400">DR</span></div>
 
