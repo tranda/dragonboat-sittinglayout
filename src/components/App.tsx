@@ -22,6 +22,8 @@ import { getPdfToken } from '../utils/api';
 import { importFromExcel } from '../utils/excelImport';
 import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
 import * as api from '../utils/api';
+import { useRealtimeSync } from '../hooks/useRealtimeSync';
+import { beginWrite, endWrite } from '../utils/sync';
 
 export function App() {
   const [loading, setLoading] = useState(true);
@@ -65,10 +67,13 @@ export function App() {
   // Role checks
   const canEdit = user?.role === 'admin' || user?.role === 'coach';
 
-  // Load all data from API
-  const loadData = useCallback(async () => {
+  // Load all data from API. `silent` is used by the background realtime sync:
+  // it refreshes state without the full-screen loader and without logging the
+  // user out on a transient network error.
+  const loadData = useCallback(async (opts?: { silent?: boolean }) => {
+    const silent = opts?.silent ?? false;
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = await api.fetchInit();
       setUser(data.user);
       setUserTeams(data.teams ?? []);
@@ -142,11 +147,14 @@ export function App() {
         setSelectedRaceId(prev => prev || mappedRaces[0].id);
       }
     } catch {
-      // Token expired or invalid
-      api.logout();
-      setLoggedIn(false);
+      // A background refresh failing is transient — keep the current state.
+      // Only treat a foreground failure as an expired/invalid token.
+      if (!silent) {
+        api.logout();
+        setLoggedIn(false);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
@@ -174,6 +182,19 @@ export function App() {
     setLoading(true);
     loadData();
   }, [loadData]);
+
+  // Realtime sync: poll the change feed and silently refresh when another user
+  // changes data in the active scope. Deferred automatically while dragging or
+  // while a local write is in flight (see utils/sync).
+  const handleRemoteChange = useCallback(() => {
+    loadData({ silent: true });
+  }, [loadData]);
+
+  useRealtimeSync({
+    enabled: loggedIn && !loading,
+    onChange: handleRemoteChange,
+    scopeKey: `${activeTeamId ?? ''}:${activeCompetitionId ?? ''}`,
+  });
 
   // Athlete helpers
   const activeAthletes = useMemo(() => athletes.filter(a => !a.isRemoved), [athletes]);
@@ -236,29 +257,32 @@ export function App() {
   const handleLayoutChange = useCallback((newLayout: BoatLayoutType) => {
     setLayouts(prev => ({ ...prev, [selectedRaceId]: newLayout }));
     setHistoryState(prev => ({ ...prev, [selectedRaceId]: { canUndo: true, canRedo: false } }));
+    beginWrite();
     api.saveLayout(selectedRaceId, newLayout).then(res => {
       setHistoryState(prev => ({ ...prev, [selectedRaceId]: { canUndo: res.can_undo, canRedo: res.can_redo } }));
     }).catch(() => {
       alert('Failed to save layout. Please check your connection and try again.');
-    });
+    }).finally(endWrite);
   }, [selectedRaceId]);
 
   const handleUndo = useCallback(async () => {
     if (!selectedRaceId) return;
+    beginWrite();
     try {
       const res = await api.undoLayout(selectedRaceId);
       setLayouts(prev => ({ ...prev, [selectedRaceId]: { drummer: res.drummer, helm: res.helm, left: res.left, right: res.right, reserves: res.reserves } }));
       setHistoryState(prev => ({ ...prev, [selectedRaceId]: { canUndo: res.can_undo, canRedo: res.can_redo } }));
-    } catch { /* nothing to undo */ }
+    } catch { /* nothing to undo */ } finally { endWrite(); }
   }, [selectedRaceId]);
 
   const handleRedo = useCallback(async () => {
     if (!selectedRaceId) return;
+    beginWrite();
     try {
       const res = await api.redoLayout(selectedRaceId);
       setLayouts(prev => ({ ...prev, [selectedRaceId]: { drummer: res.drummer, helm: res.helm, left: res.left, right: res.right, reserves: res.reserves } }));
       setHistoryState(prev => ({ ...prev, [selectedRaceId]: { canUndo: res.can_undo, canRedo: res.can_redo } }));
-    } catch { /* nothing to redo */ }
+    } catch { /* nothing to redo */ } finally { endWrite(); }
   }, [selectedRaceId]);
 
   const handleAddRace = async (name: string, boatType: 'standard' | 'small', distance: string, genderCategory?: string, ageCategory?: string) => {
@@ -334,7 +358,8 @@ export function App() {
     if (!source || !selectedRaceId) return;
     const copied = { ...source, left: [...source.left], right: [...source.right], reserves: [...source.reserves] };
     setLayouts(prev => ({ ...prev, [selectedRaceId]: copied }));
-    api.saveLayout(selectedRaceId, copied).catch(console.error);
+    beginWrite();
+    api.saveLayout(selectedRaceId, copied).catch(console.error).finally(endWrite);
   }, [layouts, selectedRaceId]);
 
   const handleExport = () => exportToExcel(races, layouts, athleteMap);

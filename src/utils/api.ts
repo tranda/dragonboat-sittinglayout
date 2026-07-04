@@ -254,6 +254,15 @@ export interface EventsAthlete {
   category: string | null;
 }
 
+// Realtime sync — lightweight change feed for polling
+export interface ChangesResponse {
+  cursor: number;
+  changed: string[];
+}
+export function getChanges(since: number) {
+  return request<ChangesResponse>('GET', `/changes?since=${since}`);
+}
+
 // Activity log
 export function fetchActivityLog(limit = 50) {
   return request<ActivityLogEntry[]>('GET', `/activity-log?limit=${limit}`);

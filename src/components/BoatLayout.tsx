@@ -16,6 +16,7 @@ import { AthleteChip } from './AthleteChip';
 import { AthletePoolModal } from './AthletePoolModal';
 import { calcWeightStats } from '../utils/weightCalc';
 import { validateMixedRatio, isEligibleForAgeCategory } from '../utils/policies';
+import { setDragging } from '../utils/sync';
 
 interface Props {
   race: Race;
@@ -136,6 +137,7 @@ export function BoatLayout({
       : getAthleteFromSeat(layout, seatId);
     setActiveItem({ seatId, athleteId });
     setIsDragging(true);
+    setDragging(true); // defer background realtime refresh while dragging
   };
 
   // Check if adding an athlete to a paddler seat would exceed the gender max
@@ -168,6 +170,7 @@ export function BoatLayout({
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveItem(null);
     setIsDragging(false);
+    setDragging(false);
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
@@ -262,7 +265,12 @@ export function BoatLayout({
   while (reserves.length < reserveCount) reserves.push(null);
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => { setActiveItem(null); setIsDragging(false); setDragging(false); }}
+    >
       {/* Remove zones on screen edges (visible only while dragging) */}
       {isDragging && (
         <>
