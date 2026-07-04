@@ -20,7 +20,7 @@ export function ConflictModal({ athleteName, conflicts, onClose, onSelectRace }:
         </div>
         <div className="p-3 space-y-3">
           <div className="text-xs text-[var(--text-secondary)]">
-            <b className="text-[var(--text-primary)]">{athleteName}</b> is in multiple races scheduled in the same session:
+            <b className="text-[var(--text-primary)]">{athleteName}</b> is entered in back-to-back races (consecutive in the running order):
           </div>
           {conflicts.map((c, i) => (
             <div key={i} className="space-y-1">
