@@ -23,6 +23,7 @@ import { importFromExcel } from '../utils/excelImport';
 import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
 import * as api from '../utils/api';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
+import { CrewScheduleModal } from './CrewScheduleModal';
 import { beginWrite, endWrite } from '../utils/sync';
 
 export function App() {
@@ -48,6 +49,7 @@ export function App() {
   const [selectedRaceId, setSelectedRaceId] = useState(() => localStorage.getItem('dragonboat-race') ?? '');
   const [menuOpen, setMenuOpen] = useState(false);
   const [showWeights, setShowWeights] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
   // Conflict-detection settings (local to this device)
   const [conflictEnabled, setConflictEnabled] = useState(() => localStorage.getItem('dragonboat-conflict-enabled') !== 'false');
   const [conflictMinGap, setConflictMinGap] = useState(() => {
@@ -472,6 +474,21 @@ export function App() {
               {view === 'dashboard' ? 'Crews Dashboard' : (selectedRace?.name ?? 'No crew selected')}
             </div>
           </div>
+          {view === 'layout' && selectedRace && (
+            <button
+              onClick={() => setShowSchedule(true)}
+              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[var(--bg-surface-alt)] text-[var(--text-muted)] flex-shrink-0 relative"
+              title="Race times"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="9" />
+                <polyline points="12 7 12 12 15 14" />
+              </svg>
+              {(selectedRace.schedule?.length ?? 0) > 0 && (
+                <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-[var(--text-badge-side)]" />
+              )}
+            </button>
+          )}
           {view === 'layout' && selectedRace && layout && (
             <button
               onClick={() => {
@@ -666,6 +683,15 @@ export function App() {
             .map(g => ({ ...g, races: g.races.filter(r => r.id !== selectedRaceId) }))}
           onClose={() => setConflictAthleteId(null)}
           onSelectRace={(raceId) => { setSelectedRaceId(raceId); setView('layout'); }}
+        />
+      )}
+
+      {/* Crew schedule (race times) modal */}
+      {showSchedule && selectedRace && (
+        <CrewScheduleModal
+          crewName={selectedRace.name}
+          schedule={selectedRace.schedule ?? []}
+          onClose={() => setShowSchedule(false)}
         />
       )}
 
