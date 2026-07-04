@@ -1,6 +1,22 @@
 import { useState } from 'react';
 import type { Race, GenderCategory, AgeCategory } from '../types';
+import { RACE_STAGES } from '../types';
 import { useTheme } from '../hooks/useTheme';
+
+// Convert an ISO datetime to the value a <input type="datetime-local"> expects (local time).
+function isoToLocalInput(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function localInputToIso(local: string): string | null {
+  if (!local) return null;
+  const d = new Date(local);
+  return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
 
 function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -40,6 +56,11 @@ interface Props {
   onRedo?: () => void;
   showWeights: boolean;
   onToggleWeights: () => void;
+  // Conflict detection settings (local device)
+  conflictEnabled: boolean;
+  onToggleConflict: () => void;
+  conflictMinGap: number;
+  onChangeConflictMinGap: (minutes: number) => void;
   onExport: () => void;
   onResetCurrent: () => void;
   onResetAll: () => void;
@@ -48,7 +69,7 @@ interface Props {
   onAddRace: (name: string, boatType: 'standard' | 'small', distance: string, genderCategory: GenderCategory, ageCategory: AgeCategory) => void;
   onRemoveRace: () => void;
   onDuplicateRace: () => void;
-  onRenameRace: (name: string) => void;
+  onEditRace: (fields: { name?: string; stage?: string | null; scheduledTime?: string | null }) => void;
   onManageAthletes: () => void;
   onImport?: () => void;
   onSettings: () => void;
@@ -66,16 +87,19 @@ interface Props {
 
 export function HamburgerMenu({
   isOpen, onClose, canUndo, canRedo, onUndo, onRedo, showWeights, onToggleWeights,
+  conflictEnabled, onToggleConflict, conflictMinGap, onChangeConflictMinGap,
   onExport, onResetCurrent, onResetAll,
-  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onRenameRace, onManageAthletes, onImport: _onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onManageCompetitions, onActivityLog, onManageUsers, onLogout, userRole,
+  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onEditRace, onManageAthletes, onImport: _onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onManageCompetitions, onActivityLog, onManageUsers, onLogout, userRole,
 }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBoatType, setNewBoatType] = useState<'standard' | 'small'>('standard');
   const [newDistance, setNewDistance] = useState('200m');
   const [newGenderCat, setNewGenderCat] = useState<GenderCategory>('Open');
   const [newAgeCat, setNewAgeCat] = useState<AgeCategory>('Senior B');
-  const [showRename, setShowRename] = useState(false);
-  const [renameName, setRenameName] = useState('');
+  const [showEdit, setShowEdit] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editStage, setEditStage] = useState('');
+  const [editTime, setEditTime] = useState('');
 
   if (!isOpen) return null;
 
@@ -87,12 +111,18 @@ export function HamburgerMenu({
     onClose();
   };
 
-  const handleRename = () => {
-    if (renameName.trim()) {
-      onRenameRace(renameName.trim());
-      setShowRename(false);
-      onClose();
-    }
+  const openEdit = () => {
+    setEditName(selectedRace?.name ?? '');
+    setEditStage(selectedRace?.stage ?? '');
+    setEditTime(isoToLocalInput(selectedRace?.scheduledTime));
+    setShowEdit(true);
+  };
+
+  const handleEdit = () => {
+    if (!editName.trim()) return;
+    onEditRace({ name: editName.trim(), stage: editStage || null, scheduledTime: localInputToIso(editTime) });
+    setShowEdit(false);
+    onClose();
   };
 
   return (
@@ -142,6 +172,29 @@ export function HamburgerMenu({
             </div>
           </button>
 
+          {/* Conflict detection */}
+          <button
+            onClick={onToggleConflict}
+            className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[var(--bg-surface-alt)] text-sm"
+          >
+            <span>Race Conflicts</span>
+            <div className={`w-10 h-5 rounded-full transition-colors ${conflictEnabled ? 'bg-[var(--bg-male)]0' : 'bg-[var(--border-default)]'}`}>
+              <div className={`w-5 h-5 bg-[var(--bg-surface)] rounded-full shadow transition-transform ${conflictEnabled ? 'translate-x-5' : ''}`} />
+            </div>
+          </button>
+          {conflictEnabled && (
+            <div className="flex items-center justify-between px-3 py-1.5 text-sm">
+              <span className="text-[var(--text-secondary)]">Min gap (min)</span>
+              <input
+                type="number"
+                min={1}
+                value={conflictMinGap}
+                onChange={e => { const v = parseInt(e.target.value, 10); if (Number.isFinite(v) && v > 0) onChangeConflictMinGap(v); }}
+                className="w-16 px-2 py-1 text-sm border rounded-lg text-right"
+              />
+            </div>
+          )}
+
           <button
             onClick={onManageAthletes}
             className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-[var(--bg-surface-alt)] text-sm font-medium"
@@ -172,27 +225,53 @@ export function HamburgerMenu({
           {/* Race management */}
           <div className="text-xs font-semibold text-[var(--text-muted)] uppercase px-3 pt-2">Current Crew</div>
           {selectedRace && (
-            <div className="text-xs text-[var(--text-secondary)] px-3 pb-1">{selectedRace.name}</div>
+            <div className="text-xs text-[var(--text-secondary)] px-3 pb-1">
+              {selectedRace.name}
+              {(selectedRace.stage || selectedRace.scheduledTime) && (
+                <span className="text-[var(--text-muted)]">
+                  {' · '}
+                  {[selectedRace.stage, selectedRace.scheduledTime ? new Date(selectedRace.scheduledTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : null].filter(Boolean).join(' · ')}
+                </span>
+              )}
+            </div>
           )}
 
           <button
-            onClick={() => { setShowRename(true); setRenameName(selectedRace?.name ?? ''); }}
+            onClick={openEdit}
             className="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-surface-alt)] text-sm"
           >
-            Rename Crew
+            Edit Crew
           </button>
 
-          {showRename && (
+          {showEdit && (
             <div className="px-3 py-2 space-y-2">
               <input
-                value={renameName}
-                onChange={e => setRenameName(e.target.value)}
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                placeholder="Crew name"
                 className="w-full px-2 py-1.5 text-sm border rounded-lg"
                 autoFocus
               />
+              <select
+                value={editStage}
+                onChange={e => setEditStage(e.target.value)}
+                className="w-full px-2 py-1.5 text-sm border rounded-lg"
+              >
+                <option value="">No stage</option>
+                {RACE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <div>
+                <label className="text-[10px] font-semibold text-[var(--text-muted)] uppercase">Race time</label>
+                <input
+                  type="datetime-local"
+                  value={editTime}
+                  onChange={e => setEditTime(e.target.value)}
+                  className="w-full px-2 py-1.5 text-sm border rounded-lg"
+                />
+              </div>
               <div className="flex gap-2">
-                <button onClick={handleRename} className="flex-1 py-1 text-xs bg-blue-600 text-white rounded-lg">Save</button>
-                <button onClick={() => setShowRename(false)} className="px-3 py-1 text-xs bg-[var(--bg-surface-alt)] rounded-lg">Cancel</button>
+                <button onClick={handleEdit} className="flex-1 py-1 text-xs bg-blue-600 text-white rounded-lg">Save</button>
+                <button onClick={() => setShowEdit(false)} className="px-3 py-1 text-xs bg-[var(--bg-surface-alt)] rounded-lg">Cancel</button>
               </div>
             </div>
           )}

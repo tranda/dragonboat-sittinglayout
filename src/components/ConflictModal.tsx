@@ -20,7 +20,7 @@ export function ConflictModal({ athleteName, conflicts, onClose, onSelectRace }:
         </div>
         <div className="p-3 space-y-3">
           <div className="text-xs text-[var(--text-secondary)]">
-            <b className="text-[var(--text-primary)]">{athleteName}</b> is entered in back-to-back races (consecutive in the running order):
+            <b className="text-[var(--text-primary)]">{athleteName}</b> is entered in races scheduled too close together in time:
           </div>
           {conflicts.map((c, i) => (
             <div key={i} className="space-y-1">
@@ -33,7 +33,14 @@ export function ConflictModal({ athleteName, conflicts, onClose, onSelectRace }:
                     disabled={!onSelectRace}
                     className={`w-full text-left px-2 py-1.5 rounded text-sm bg-[var(--bg-surface-alt)] ${onSelectRace ? 'hover:bg-[var(--bg-male)]' : ''}`}
                   >
-                    {r.name}
+                    <div className="flex items-center justify-between gap-2">
+                      <span>{r.name}</span>
+                      {r.scheduledTime && (
+                        <span className="text-[10px] text-[var(--text-muted)] whitespace-nowrap">
+                          {new Date(r.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      )}
+                    </div>
                   </button>
                 ))}
               </div>

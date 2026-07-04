@@ -1,26 +1,46 @@
 import type { Race, BoatLayout } from '../types';
 
 export interface ConflictGroup {
-  sessionLabel: string; // fixed label, e.g. "Back-to-back races"
-  races: { id: string; name: string }[];
+  sessionLabel: string; // fixed label, e.g. "Too close in time"
+  races: { id: string; name: string; scheduledTime: string | null }[];
 }
 
-const BACK_TO_BACK_LABEL = 'Back-to-back races';
+export interface ConflictOptions {
+  enabled: boolean;      // master on/off toggle
+  minGapMinutes: number; // two races closer than this (in minutes) are a conflict
+}
 
-// Warn when an athlete is entered in two CONSECUTIVE races, in the order the user has
-// arranged them (drag-to-reorder). The `races` array is already in that display order, so
-// "consecutive" means adjacent positions in the array — the athlete has no time to get out
-// of one boat and into the next.
+export const DEFAULT_CONFLICT_OPTIONS: ConflictOptions = {
+  enabled: true,
+  minGapMinutes: 30,
+};
+
+const TOO_CLOSE_LABEL = 'Too close in time';
+
+// Warn when an athlete is entered in two races whose scheduled times are closer together
+// than `minGapMinutes` — they can't physically get out of one boat and into the next in time.
+// Races without a scheduled time are ignored (they can't be timed against anything).
 export function computeAthleteConflicts(
   races: Race[],
-  layouts: Record<string, BoatLayout>
+  layouts: Record<string, BoatLayout>,
+  options: ConflictOptions = DEFAULT_CONFLICT_OPTIONS
 ): Map<number, ConflictGroup[]> {
-  // athleteId → sorted list of race indices (positions in the ordered races array)
-  const positions = new Map<number, number[]>();
+  const result = new Map<number, ConflictGroup[]>();
+  if (!options.enabled) return result;
 
-  races.forEach((race, index) => {
+  const gapMs = Math.max(0, options.minGapMinutes) * 60_000;
+
+  // athleteId → list of the timed races they are entered in
+  type TimedRace = { id: string; name: string; time: number; scheduledTime: string };
+  const perAthlete = new Map<number, TimedRace[]>();
+
+  for (const race of races) {
+    if (!race.scheduledTime) continue;
+    const time = new Date(race.scheduledTime).getTime();
+    if (Number.isNaN(time)) continue;
     const layout = layouts[race.id];
-    if (!layout) return;
+    if (!layout) continue;
+
     const ids = new Set<number>();
     layout.left.forEach(id => id !== null && ids.add(id));
     layout.right.forEach(id => id !== null && ids.add(id));
@@ -28,37 +48,42 @@ export function computeAthleteConflicts(
     if (layout.helm !== null) ids.add(layout.helm);
     layout.reserves.forEach(id => id !== null && ids.add(id));
 
-    for (const id of ids) {
-      const list = positions.get(id);
-      if (list) list.push(index);
-      else positions.set(id, [index]);
+    const entry = { id: race.id, name: race.name, time, scheduledTime: race.scheduledTime };
+    for (const athleteId of ids) {
+      const list = perAthlete.get(athleteId);
+      if (list) list.push(entry);
+      else perAthlete.set(athleteId, [entry]);
     }
-  });
+  }
 
-  const result = new Map<number, ConflictGroup[]>();
-  for (const [athleteId, indices] of positions) {
-    // indices are already ascending (races iterated in order)
+  for (const [athleteId, timedRaces] of perAthlete) {
+    if (timedRaces.length < 2) continue;
+    // Sort by time, then cluster races whose neighbour gap is under the threshold.
+    timedRaces.sort((a, b) => a.time - b.time);
+
     const groups: ConflictGroup[] = [];
-    let run: number[] = [];
+    let cluster: TimedRace[] = [timedRaces[0]];
     const flush = () => {
-      if (run.length > 1) {
+      if (cluster.length > 1) {
         groups.push({
-          sessionLabel: BACK_TO_BACK_LABEL,
-          races: run.map(i => ({ id: races[i].id, name: races[i].name })),
+          sessionLabel: TOO_CLOSE_LABEL,
+          races: cluster.map(r => ({ id: r.id, name: r.name, scheduledTime: r.scheduledTime })),
         });
       }
-      run = [];
     };
-    for (const idx of indices) {
-      if (run.length === 0 || idx === run[run.length - 1] + 1) {
-        run.push(idx);
+    for (let i = 1; i < timedRaces.length; i++) {
+      const prev = timedRaces[i - 1];
+      const cur = timedRaces[i];
+      if (cur.time - prev.time < gapMs) {
+        cluster.push(cur);
       } else {
         flush();
-        run.push(idx);
+        cluster = [cur];
       }
     }
     flush();
     if (groups.length > 0) result.set(athleteId, groups);
   }
+
   return result;
 }

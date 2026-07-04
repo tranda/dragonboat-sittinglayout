@@ -19,6 +19,15 @@ export interface Athlete {
 export type GenderCategory = 'Open' | 'Women' | 'Mixed';
 export type AgeCategory = '18U' | '24U' | 'Premier' | 'Senior A' | 'Senior B' | 'Senior C' | 'Senior D' | 'BCP';
 
+// Fixed list of race stages/rounds, shown in the per-race edit dropdown.
+export const RACE_STAGES = [
+  'Heat 1', 'Heat 2', 'Heat 3', 'Heat 4',
+  'Repechage', 'Repechage 1', 'Repechage 2', 'Repechage 3', 'Repechage 4',
+  'Semifinal', 'Semifinal 1', 'Semifinal 2', 'Semifinal 3', 'Semifinal 4',
+  'Minor Final', 'Grand Final', 'Final',
+] as const;
+export type RaceStage = (typeof RACE_STAGES)[number];
+
 export interface Race {
   id: string;
   name: string;
@@ -28,6 +37,8 @@ export interface Race {
   genderCategory: GenderCategory;
   ageCategory: AgeCategory;
   category: string; // legacy, can be derived
+  stage?: string | null; // race round/stage label, e.g. "Semi Final" (from RACE_STAGES)
+  scheduledTime?: string | null; // ISO 8601 datetime of the race, or null if unscheduled
 }
 
 export interface BoatLayout {

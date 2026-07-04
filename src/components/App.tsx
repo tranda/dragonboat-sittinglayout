@@ -48,6 +48,14 @@ export function App() {
   const [selectedRaceId, setSelectedRaceId] = useState(() => localStorage.getItem('dragonboat-race') ?? '');
   const [menuOpen, setMenuOpen] = useState(false);
   const [showWeights, setShowWeights] = useState(false);
+  // Conflict-detection settings (local to this device)
+  const [conflictEnabled, setConflictEnabled] = useState(() => localStorage.getItem('dragonboat-conflict-enabled') !== 'false');
+  const [conflictMinGap, setConflictMinGap] = useState(() => {
+    const v = parseInt(localStorage.getItem('dragonboat-conflict-mingap') ?? '', 10);
+    return Number.isFinite(v) && v > 0 ? v : 30;
+  });
+  useEffect(() => { localStorage.setItem('dragonboat-conflict-enabled', String(conflictEnabled)); }, [conflictEnabled]);
+  useEffect(() => { localStorage.setItem('dragonboat-conflict-mingap', String(conflictMinGap)); }, [conflictMinGap]);
   const [showAthleteManager, setShowAthleteManager] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
@@ -115,6 +123,8 @@ export function App() {
         genderCategory: r.genderCategory as 'Open' | 'Women' | 'Mixed',
         ageCategory: r.ageCategory as Race['ageCategory'],
         category: r.category,
+        stage: r.stage ?? null,
+        scheduledTime: r.scheduledTime ?? null,
       }));
       setRaces(mappedRaces);
       const layoutMap: Record<string, BoatLayoutType> = {};
@@ -206,7 +216,10 @@ export function App() {
     return map;
   }, [athletes]);
 
-  const athleteConflicts = useMemo(() => computeAthleteConflicts(races, layouts), [races, layouts]);
+  const athleteConflicts = useMemo(
+    () => computeAthleteConflicts(races, layouts, { enabled: conflictEnabled, minGapMinutes: conflictMinGap }),
+    [races, layouts, conflictEnabled, conflictMinGap]
+  );
   const [conflictAthleteId, setConflictAthleteId] = useState<number | null>(null);
 
   const selectedRace = races.find(r => r.id === selectedRaceId);
@@ -311,9 +324,13 @@ export function App() {
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   };
 
-  const handleRenameRace = async (name: string) => {
+  const handleEditRace = async (fields: { name?: string; stage?: string | null; scheduledTime?: string | null }) => {
+    const payload: Record<string, unknown> = {};
+    if (fields.name !== undefined) payload.name = fields.name;
+    if (fields.stage !== undefined) payload.stage = fields.stage || null;
+    if (fields.scheduledTime !== undefined) payload.scheduled_at = fields.scheduledTime || null;
     try {
-      await api.updateRace(selectedRaceId, { name });
+      await api.updateRace(selectedRaceId, payload);
       await loadData();
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   };
@@ -559,7 +576,11 @@ export function App() {
         onAddRace={canEdit ? handleAddRace : () => {}}
         onRemoveRace={canEdit ? handleRemoveRace : () => {}}
         onDuplicateRace={canEdit ? handleDuplicate : () => {}}
-        onRenameRace={canEdit ? handleRenameRace : () => {}}
+        onEditRace={canEdit ? handleEditRace : () => {}}
+        conflictEnabled={conflictEnabled}
+        onToggleConflict={() => setConflictEnabled(v => !v)}
+        conflictMinGap={conflictMinGap}
+        onChangeConflictMinGap={setConflictMinGap}
         onManageAthletes={() => { setMenuOpen(false); setShowAthleteManager(true); }}
         onImport={canEdit ? () => { setMenuOpen(false); setShowImport(true); } : () => {}}
         onSettings={() => { setMenuOpen(false); setShowConfig(true); }}

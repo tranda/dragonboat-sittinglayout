@@ -65,7 +65,7 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone, hasConfli
           onMouseDown={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
           className="absolute top-0.5 right-0.5 w-6 h-6 flex items-center justify-center text-yellow-600 text-[18px] leading-none"
-          title="Back-to-back race"
+          title="Race scheduled too close to another"
         >
           ⚠
         </button>
