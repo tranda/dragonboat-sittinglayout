@@ -565,14 +565,14 @@ export function App() {
               <div className="px-3 pb-1 flex-shrink-0">
                 <button
                   onClick={() => setSelectedRaceId(best!.raceId)}
-                  className="w-full flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[var(--bg-surface-alt)] text-[11px] text-[var(--text-secondary)] hover:bg-[var(--bg-male)]"
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-orange-500 text-white text-[11px] shadow-sm hover:bg-orange-600"
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 text-[var(--text-badge-side)]">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                     <circle cx="12" cy="12" r="9" /><polyline points="12 7 12 12 15 14" />
                   </svg>
-                  <span className="font-semibold text-[var(--text-badge-side)] flex-shrink-0">Next up</span>
-                  <span className="truncate">{best.name}{best.stage ? ` · ${best.stage}` : ''}</span>
-                  <span className="ml-auto whitespace-nowrap font-medium text-[var(--text-primary)]">
+                  <span className="font-bold uppercase tracking-wide flex-shrink-0">Next up</span>
+                  <span className="truncate font-medium">{best.name}{best.stage ? ` · ${best.stage}` : ''}</span>
+                  <span className="ml-auto whitespace-nowrap font-bold">
                     {new Date(best.t).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </button>
