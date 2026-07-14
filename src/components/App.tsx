@@ -631,6 +631,7 @@ export function App() {
       <HamburgerMenu
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}
+        canEdit={canEdit}
         canUndo={canEdit && !!selectedRaceId && (historyState[selectedRaceId]?.canUndo ?? false)}
         canRedo={canEdit && !!selectedRaceId && (historyState[selectedRaceId]?.canRedo ?? false)}
         onUndo={() => { setMenuOpen(false); handleUndo(); }}

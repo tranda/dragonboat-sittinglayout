@@ -50,6 +50,7 @@ function ThemeToggle() {
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  canEdit?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
   onUndo?: () => void;
@@ -86,7 +87,7 @@ interface Props {
 }
 
 export function HamburgerMenu({
-  isOpen, onClose, canUndo, canRedo, onUndo, onRedo, showWeights, onToggleWeights,
+  isOpen, onClose, canEdit = true, canUndo, canRedo, onUndo, onRedo, showWeights, onToggleWeights,
   conflictEnabled, onToggleConflict, conflictMinGap, onChangeConflictMinGap,
   onExport, onResetCurrent, onResetAll,
   selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onEditRace, onManageAthletes, onImport: _onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onManageCompetitions, onActivityLog, onManageUsers, onLogout, userRole,
@@ -242,6 +243,13 @@ export function HamburgerMenu({
             </div>
           )}
 
+          {!canEdit && (
+            <div className="mx-3 my-1 flex items-center gap-1.5 rounded-md bg-amber-100 border border-amber-300 px-2.5 py-1.5 text-xs font-semibold text-amber-800">
+              <span>🔒</span><span>Competition locked — view only</span>
+            </div>
+          )}
+
+          {canEdit && <>
           <button
             onClick={openEdit}
             className="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-surface-alt)] text-sm"
@@ -393,6 +401,7 @@ export function HamburgerMenu({
               <button onClick={handleAdd} className="w-full py-1.5 text-sm bg-green-600 text-white rounded-lg">Add</button>
             </div>
           )}
+          </>}
 
           <hr className="my-2" />
 
@@ -406,17 +415,19 @@ export function HamburgerMenu({
                 Export to Excel
               </button>
 
-              <button
-                onClick={() => {
-                  if (confirm('Reset ALL layouts to original?')) {
-                    onResetAll();
-                    onClose();
-                  }
-                }}
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 text-sm text-red-600"
-              >
-                Reset All
-              </button>
+              {canEdit && (
+                <button
+                  onClick={() => {
+                    if (confirm('Reset ALL layouts to original?')) {
+                      onResetAll();
+                      onClose();
+                    }
+                  }}
+                  className="w-full text-left px-3 py-2 rounded-lg hover:bg-red-50 text-sm text-red-600"
+                >
+                  Reset All
+                </button>
+              )}
 
               <hr className="my-2" />
             </>
