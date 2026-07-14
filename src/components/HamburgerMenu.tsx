@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Race, GenderCategory, AgeCategory, ScheduleEntry } from '../types';
-import { RACE_STAGES } from '../types';
+import type { Race, GenderCategory, AgeCategory, ScheduleEntry, Medal } from '../types';
+import { RACE_STAGES, MEDAL_EMOJI } from '../types';
 import { useTheme } from '../hooks/useTheme';
 
 // Convert an ISO datetime to the value a <input type="datetime-local"> expects (local time).
@@ -70,7 +70,7 @@ interface Props {
   onAddRace: (name: string, boatType: 'standard' | 'small', distance: string, genderCategory: GenderCategory, ageCategory: AgeCategory) => void;
   onRemoveRace: () => void;
   onDuplicateRace: () => void;
-  onEditRace: (fields: { name?: string; schedule?: ScheduleEntry[] }) => void;
+  onEditRace: (fields: { name?: string; schedule?: ScheduleEntry[]; medal?: Medal | null }) => void;
   onManageAthletes: () => void;
   onImport?: () => void;
   onSettings: () => void;
@@ -99,6 +99,7 @@ export function HamburgerMenu({
   const [newAgeCat, setNewAgeCat] = useState<AgeCategory>('Senior B');
   const [showEdit, setShowEdit] = useState(false);
   const [editName, setEditName] = useState('');
+  const [editMedal, setEditMedal] = useState<Medal | ''>('');
   // Each row edits with a datetime-local string; converted to/from ISO on open/save.
   const [editSchedule, setEditSchedule] = useState<{ stage: string; time: string }[]>([]);
 
@@ -114,6 +115,7 @@ export function HamburgerMenu({
 
   const openEdit = () => {
     setEditName(selectedRace?.name ?? '');
+    setEditMedal(selectedRace?.medal ?? '');
     setEditSchedule((selectedRace?.schedule ?? []).map(e => ({ stage: e.stage, time: isoToLocalInput(e.time) })));
     setShowEdit(true);
   };
@@ -130,7 +132,7 @@ export function HamburgerMenu({
       .map(r => ({ stage: r.stage, iso: localInputToIso(r.time) }))
       .filter((r): r is { stage: string; iso: string } => r.iso !== null)
       .map(r => ({ stage: r.stage, time: r.iso }));
-    onEditRace({ name: editName.trim(), schedule });
+    onEditRace({ name: editName.trim(), schedule, medal: editMedal || null });
     setShowEdit(false);
     onClose();
   };
@@ -266,6 +268,21 @@ export function HamburgerMenu({
                 className="w-full px-2 py-1.5 text-sm border rounded-lg"
                 autoFocus
               />
+
+              {/* Medal result */}
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase">Medal</span>
+                <select
+                  value={editMedal}
+                  onChange={e => setEditMedal(e.target.value as Medal | '')}
+                  className="flex-1 px-2 py-1.5 text-sm border rounded-lg"
+                >
+                  <option value="">No medal</option>
+                  <option value="gold">{MEDAL_EMOJI.gold} Gold</option>
+                  <option value="silver">{MEDAL_EMOJI.silver} Silver</option>
+                  <option value="bronze">{MEDAL_EMOJI.bronze} Bronze</option>
+                </select>
+              </div>
 
               <div className="text-[10px] font-semibold text-[var(--text-muted)] uppercase pt-1">Race times</div>
               {editSchedule.length === 0 && (

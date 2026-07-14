@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import type { Athlete, Race, BoatLayout } from '../types';
+import { MEDAL_EMOJI } from '../types';
 
 interface Props {
   races: Race[];
@@ -86,7 +87,10 @@ export function DashboardPanel({ races, layouts, athleteMap, onSelectRace, curre
               }`}
             >
               <div className="flex items-center justify-between mb-1">
-                <div className="text-sm font-semibold text-[var(--text-primary)] truncate mr-2">{race.name}</div>
+                <div className="text-sm font-semibold text-[var(--text-primary)] truncate mr-2">
+                  {race.medal && <span className="mr-1" title={`${race.medal} medal`}>{MEDAL_EMOJI[race.medal]}</span>}
+                  {race.name}
+                </div>
                 <span className={`text-xs font-bold flex-shrink-0 ${
                   isFull ? 'text-green-600' : pct >= 80 ? 'text-yellow-600' : 'text-red-600'
                 }`}>

@@ -11,6 +11,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import type { Athlete, BoatLayout as BoatLayoutType, Race, AppConfig } from '../types';
+import { MEDAL_EMOJI } from '../types';
 import { Seat } from './Seat';
 import { AthleteChip } from './AthleteChip';
 import { AthletePoolModal } from './AthletePoolModal';
@@ -314,7 +315,9 @@ export function BoatLayout({
         {/* Drummer row — seat 1, centered */}
         <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">1</span></div>
         <div className="col-span-3 grid" style={{ gridTemplateColumns: '1fr 2fr 1fr' }}>
-          <div />
+          <div className="flex items-center justify-start pl-1">
+            {race.medal && <span className="text-xl leading-none" title={`${race.medal} medal`}>{MEDAL_EMOJI[race.medal]}</span>}
+          </div>
           <Seat seatId="drummer" athlete={layout.drummer ? athleteMap.get(layout.drummer) ?? null : null} showWeight={showWeights} onTap={() => handleSeatTap('drummer')} hasConflict={seatHasConflict(layout.drummer)} onConflictTap={() => layout.drummer != null && onShowConflict?.(layout.drummer)} />
           <div className="flex items-center justify-between pl-1">
             <span className="text-[7px] text-amber-400">DR</span>

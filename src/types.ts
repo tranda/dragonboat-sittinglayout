@@ -35,6 +35,10 @@ export interface ScheduleEntry {
   time: string; // ISO 8601 datetime
 }
 
+// Result medal a crew won in its race. null = no medal.
+export type Medal = 'gold' | 'silver' | 'bronze';
+export const MEDAL_EMOJI: Record<Medal, string> = { gold: '🥇', silver: '🥈', bronze: '🥉' };
+
 export interface Race {
   id: string;
   name: string;
@@ -45,6 +49,7 @@ export interface Race {
   ageCategory: AgeCategory;
   category: string; // legacy, can be derived
   schedule?: ScheduleEntry[]; // rounds this crew races, each with its own time
+  medal?: Medal | null; // result medal for this crew, once known
 }
 
 export interface BoatLayout {

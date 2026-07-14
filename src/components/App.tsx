@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import type { Athlete, Race, BoatLayout as BoatLayoutType, AppConfig, ScheduleEntry } from '../types';
+import type { Athlete, Race, BoatLayout as BoatLayoutType, AppConfig, ScheduleEntry, Medal } from '../types';
 import { RaceSelector } from './RaceSelector';
 import { BoatLayout } from './BoatLayout';
 import { HamburgerMenu } from './HamburgerMenu';
@@ -129,6 +129,7 @@ export function App() {
         ageCategory: r.ageCategory as Race['ageCategory'],
         category: r.category,
         schedule: Array.isArray(r.schedule) ? r.schedule : [],
+        medal: (r.medal as Race['medal']) ?? null,
       }));
       setRaces(mappedRaces);
       const layoutMap: Record<string, BoatLayoutType> = {};
@@ -338,10 +339,11 @@ export function App() {
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   };
 
-  const handleEditRace = async (fields: { name?: string; schedule?: ScheduleEntry[] }) => {
+  const handleEditRace = async (fields: { name?: string; schedule?: ScheduleEntry[]; medal?: Medal | null }) => {
     const payload: Record<string, unknown> = {};
     if (fields.name !== undefined) payload.name = fields.name;
     if (fields.schedule !== undefined) payload.schedule = fields.schedule;
+    if (fields.medal !== undefined) payload.medal = fields.medal;
     try {
       await api.updateRace(selectedRaceId, payload);
       await loadData();

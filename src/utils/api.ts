@@ -339,6 +339,7 @@ export interface ApiInitData {
     ageCategory: string;
     category: string;
     schedule?: { stage: string; time: string }[] | null;
+    medal?: 'gold' | 'silver' | 'bronze' | null;
   }>;
   layouts: Record<string, {
     drummer: number | null;

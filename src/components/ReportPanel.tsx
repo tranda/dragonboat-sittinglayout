@@ -1,6 +1,9 @@
 import { useState, useMemo } from 'react';
-import type { Athlete, Race, BoatLayout, GenderCategory, AppConfig } from '../types';
+import type { Athlete, Race, BoatLayout, GenderCategory, AppConfig, Medal } from '../types';
+import { MEDAL_EMOJI } from '../types';
 import { getAthleteAgeCategory } from '../utils/policies';
+
+interface MedalCounts { gold: number; silver: number; bronze: number; }
 
 interface Props {
   athletes: Athlete[];
@@ -54,9 +57,13 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
     });
   }, [races, boatFilter, genderFilter, ageFilter, distanceFilter]);
 
-  // Role counts per athlete + crew assignments
+  // Medal for each race id (for showing on expanded crew rows).
+  const medalByRace = useMemo(() => new Map(races.map(r => [r.id, r.medal ?? null])), [races]);
+
+  // Role counts + medal tallies per athlete + crew assignments
   const { rows, crewMap } = useMemo(() => {
     const counts = new Map<number, RoleCounts>();
+    const medals = new Map<number, MedalCounts>();
     const crews = new Map<number, { raceId: string; raceName: string; role: string }[]>();
     const add = (id: number | null, role: keyof RoleCounts, raceId: string, raceName: string) => {
       if (id === null) return;
@@ -67,6 +74,12 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
       list.push({ raceId, raceName, role });
       crews.set(id, list);
     };
+    const addMedal = (id: number | null, medal: Medal) => {
+      if (id === null) return;
+      const cur = medals.get(id) ?? { gold: 0, silver: 0, bronze: 0 };
+      cur[medal]++;
+      medals.set(id, cur);
+    };
     for (const race of filteredRaces) {
       const layout = layouts[race.id];
       if (!layout) continue;
@@ -75,13 +88,19 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
       add(layout.drummer, 'drummer', race.id, race.name);
       add(layout.helm, 'helm', race.id, race.name);
       layout.reserves.forEach(id => add(id, 'reserve', race.id, race.name));
+      // Medal credit: everyone on the crew, including reserves.
+      if (race.medal) {
+        [...layout.left, ...layout.right, layout.drummer, layout.helm, ...layout.reserves]
+          .forEach(id => addMedal(id, race.medal!));
+      }
     }
     const r = athletes
       .filter(a => !a.isRemoved && a.isRegistered)
       .map(a => {
         const c = counts.get(a.id) ?? { paddle: 0, helm: 0, drummer: 0, reserve: 0 };
+        const m = medals.get(a.id) ?? { gold: 0, silver: 0, bronze: 0 };
         const total = c.paddle + c.helm + c.drummer + c.reserve;
-        return { athlete: a, counts: c, total };
+        return { athlete: a, counts: c, medals: m, total };
       })
       .sort((a, b) =>
         b.counts.paddle - a.counts.paddle ||
@@ -102,6 +121,7 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
 
   const totalAssignments = visibleRows.reduce((s, r) => s + r.total, 0);
   const activeCount = visibleRows.filter(r => r.total > 0).length;
+  const totalMedals = visibleRows.reduce((s, r) => s + r.medals.gold + r.medals.silver + r.medals.bronze, 0);
 
   const cell = (n: number) => (
     <div className={`w-7 text-center text-xs tabular-nums ${n === 0 ? 'text-[var(--text-muted)]' : 'text-[var(--text-primary)] font-semibold'}`}>
@@ -180,6 +200,7 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
           <div className="px-4 py-2 flex items-center gap-3 text-[11px] text-[var(--text-secondary)] border-b bg-[var(--bg-surface)]">
             <span><b className="text-[var(--text-primary)]">{activeCount}</b> athletes racing</span>
             <span><b className="text-[var(--text-primary)]">{totalAssignments}</b> total assignments</span>
+            {totalMedals > 0 && <span><b className="text-[var(--text-primary)]">{totalMedals}</b> medals</span>}
           </div>
 
           {/* Column headers */}
@@ -193,8 +214,9 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
 
           {/* Athlete list */}
           <div className="divide-y">
-            {visibleRows.map(({ athlete, counts }) => {
+            {visibleRows.map(({ athlete, counts, medals }) => {
               const ageCat = getAthleteAgeCategory(athlete, config);
+              const medalTotal = medals.gold + medals.silver + medals.bronze;
               const isExpanded = expandedId === athlete.id;
               const assignments = crewMap.get(athlete.id) ?? [];
               return (
@@ -212,6 +234,13 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
                         {athlete.preferredSide && <span className="ml-1 px-1 py-0.5 bg-[var(--bg-badge-side)] text-[var(--text-badge-side)] rounded text-[9px] font-semibold">{athlete.preferredSide === 'both' ? 'L/R' : athlete.preferredSide === 'left' ? 'L' : 'R'}</span>}
                         {athlete.isBCP && <span className="ml-1 px-1 py-0.5 bg-[var(--bg-badge-bcp)] text-[var(--text-badge-bcp)] rounded text-[9px] font-semibold">BCP</span>}
                       </div>
+                      {medalTotal > 0 && (
+                        <div className="flex gap-2 mt-0.5 text-xs tabular-nums">
+                          {medals.gold > 0 && <span title="Gold">{MEDAL_EMOJI.gold} {medals.gold}</span>}
+                          {medals.silver > 0 && <span title="Silver">{MEDAL_EMOJI.silver} {medals.silver}</span>}
+                          {medals.bronze > 0 && <span title="Bronze">{MEDAL_EMOJI.bronze} {medals.bronze}</span>}
+                        </div>
+                      )}
                     </div>
                     {cell(counts.paddle)}
                     {cell(counts.reserve)}
@@ -227,7 +256,10 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
                           disabled={!onSelectRace}
                           className={`w-full flex items-center justify-between text-xs px-2 py-1 -mx-2 rounded ${onSelectRace ? 'hover:bg-[var(--bg-surface-alt)] cursor-pointer' : ''}`}
                         >
-                          <span className="text-[var(--text-primary)] truncate mr-2 text-left">{a.raceName}</span>
+                          <span className="text-[var(--text-primary)] truncate mr-2 text-left">
+                            {(() => { const md = medalByRace.get(a.raceId); return md ? <span className="mr-1">{MEDAL_EMOJI[md]}</span> : null; })()}
+                            {a.raceName}
+                          </span>
                           <span className={`flex-shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                             a.role === 'paddle' ? 'bg-[var(--bg-male-strong)] text-blue-700' :
                             a.role === 'drummer' ? 'bg-amber-100 text-amber-700' :
