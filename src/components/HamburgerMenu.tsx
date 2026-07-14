@@ -246,8 +246,12 @@ export function HamburgerMenu({
           )}
 
           {!canEdit && (
-            <div className="mx-3 my-1 flex items-center gap-1.5 rounded-md bg-amber-100 border border-amber-300 px-2.5 py-1.5 text-xs font-semibold text-amber-800">
-              <span>🔒</span><span>Competition locked. No changes allowed.</span>
+            <div className="mx-3 my-1 flex items-start gap-1.5 rounded-md bg-amber-100 border border-amber-300 px-2.5 py-1.5 text-xs font-semibold text-amber-800">
+              <span>🔒</span>
+              <span className="flex flex-col leading-tight">
+                <span>Competition locked.</span>
+                <span>No changes allowed.</span>
+              </span>
             </div>
           )}
 
