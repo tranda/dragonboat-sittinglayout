@@ -197,6 +197,16 @@ export function App() {
     loadData();
   }, [loadData]);
 
+  // A deactivated competition must never stay selected: if the current one is
+  // inactive, fall back to the first active competition automatically.
+  useEffect(() => {
+    const current = competitions.find(c => c.id === activeCompetitionId);
+    if (current && !current.isActive) {
+      const firstActive = competitions.find(c => c.isActive);
+      if (firstActive) handleSwitchCompetition(firstActive.id);
+    }
+  }, [competitions, activeCompetitionId, handleSwitchCompetition]);
+
   // Realtime sync: poll the change feed and silently refresh when another user
   // changes data in the active scope. Deferred automatically while dragging or
   // while a local write is in flight (see utils/sync).
@@ -467,8 +477,8 @@ export function App() {
                   onChange={e => handleSwitchCompetition(Number(e.target.value))}
                   className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer max-w-[45%]"
                 >
-                  {/* Hide deactivated competitions, but keep the current one visible so the selector never dangles. */}
-                  {competitions.filter(c => c.isActive || c.id === activeCompetitionId).map(c => <option key={c.id} value={c.id}>{c.name}{!c.isActive ? ' · inactive' : ''}</option>)}
+                  {/* Only active competitions are selectable; deactivated ones are hidden entirely. */}
+                  {competitions.filter(c => c.isActive).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               ) : (
                 <span>{competitions[0]?.name ?? ''}</span>
