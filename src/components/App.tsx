@@ -467,7 +467,8 @@ export function App() {
                   onChange={e => handleSwitchCompetition(Number(e.target.value))}
                   className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer max-w-[45%]"
                 >
-                  {competitions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {/* Hide deactivated competitions, but keep the current one visible so the selector never dangles. */}
+                  {competitions.filter(c => c.isActive || c.id === activeCompetitionId).map(c => <option key={c.id} value={c.id}>{c.name}{!c.isActive ? ' · inactive' : ''}</option>)}
                 </select>
               ) : (
                 <span>{competitions[0]?.name ?? ''}</span>
