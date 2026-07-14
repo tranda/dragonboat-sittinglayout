@@ -600,7 +600,7 @@ export function App() {
           {activeCompetitionLocked && (
             <div className="mx-2 mb-1 flex items-center gap-2 rounded-md bg-amber-100 border border-amber-300 px-3 py-1.5 text-xs font-semibold text-amber-800">
               <span>🔒</span>
-              <span>This competition is locked — view only.</span>
+              <span>This competition is locked. No changes allowed.</span>
             </div>
           )}
 
