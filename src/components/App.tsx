@@ -686,7 +686,7 @@ export function App() {
 
       {/* Competitions & Teams */}
       {showCompetitions && (
-        <CompetitionManager onClose={() => setShowCompetitions(false)} />
+        <CompetitionManager onClose={() => { setShowCompetitions(false); loadData({ silent: true }); }} />
       )}
 
       {/* PDF export */}
