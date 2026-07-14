@@ -194,6 +194,7 @@ export interface ApiCompetitionFull {
   year: number;
   location: string | null;
   is_active: boolean;
+  is_locked: boolean;
   gender_policy?: {
     mixedRatio: {
       standard: { minSameGender: number; maxSameGender: number };
@@ -299,6 +300,7 @@ export interface ApiCompetition {
   year: number;
   location: string | null;
   isActive: boolean;
+  isLocked: boolean;
   genderPolicy?: {
     mixedRatio: {
       standard: { minSameGender: number; maxSameGender: number };
