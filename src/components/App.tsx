@@ -76,7 +76,9 @@ export function App() {
   useEffect(() => { if (selectedRaceId) localStorage.setItem('dragonboat-race', selectedRaceId); }, [selectedRaceId]);
 
   // Role checks
-  const canEdit = user?.role === 'admin' || user?.role === 'coach';
+  const activeCompetitionLocked = competitions.find(c => c.id === activeCompetitionId)?.isLocked ?? false;
+  // A locked competition is read-only for everyone, regardless of role.
+  const canEdit = (user?.role === 'admin' || user?.role === 'coach') && !activeCompetitionLocked;
 
   // Load all data from API. `silent` is used by the background realtime sync:
   // it refreshes state without the full-screen loader and without logging the
@@ -580,6 +582,14 @@ export function App() {
               </div>
             );
           })()}
+
+          {/* Locked-competition read-only banner */}
+          {activeCompetitionLocked && (
+            <div className="mx-2 mb-1 flex items-center gap-2 rounded-md bg-amber-100 border border-amber-300 px-3 py-1.5 text-xs font-semibold text-amber-800">
+              <span>🔒</span>
+              <span>This competition is locked — view only. Unlock it in Competitions &amp; Teams to make changes.</span>
+            </div>
+          )}
 
           {/* Boat layout */}
           <div className="flex-1 px-2 pb-1 min-h-0 flex flex-col">

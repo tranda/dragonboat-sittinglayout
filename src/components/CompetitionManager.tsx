@@ -78,6 +78,13 @@ export function CompetitionManager({ onClose }: Props) {
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   };
 
+  const handleToggleLock = async (id: number, isLocked: boolean) => {
+    try {
+      await api.updateCompetition(id, { is_locked: !isLocked });
+      await load();
+    } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
+  };
+
   const handleDeleteComp = async (id: number, name: string) => {
     if (!confirm(`Delete competition "${name}"?`)) return;
     try { await api.deleteCompetition(id); await load(); }
@@ -140,18 +147,25 @@ export function CompetitionManager({ onClose }: Props) {
           ) : tab === 'competitions' ? (
             <>
               {competitions.map(c => (
-                <div key={c.id} className={`border rounded-lg p-3 ${!c.is_active ? 'opacity-50' : ''}`}>
-                  <div className="flex items-center justify-between mb-1">
+                <div key={c.id} className={`border rounded-lg p-3 ${!c.is_active ? 'opacity-50' : ''} ${c.is_locked ? 'border-amber-300 bg-amber-50/40' : ''}`}>
+                  <div className="flex items-start justify-between mb-1 gap-2">
                     <div>
-                      <div className="text-sm font-semibold text-[var(--text-primary)]">{c.name}</div>
+                      <div className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+                        {c.name}
+                        {c.is_locked && <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[10px] font-semibold">🔒 Locked</span>}
+                      </div>
                       <div className="text-xs text-[var(--text-muted)]">{c.year}{c.location ? ` · ${c.location}` : ''}</div>
                     </div>
-                    <div className="flex gap-1">
-                      <button onClick={() => handleToggleActive(c.id, c.is_active)}
-                        className={`px-2 py-1 text-xs rounded ${c.is_active ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'}`}>
+                    <div className="flex flex-wrap justify-end gap-1">
+                      <button onClick={() => handleToggleLock(c.id, c.is_locked)}
+                        className={`px-2 py-1 text-xs rounded ${c.is_locked ? 'text-amber-700 bg-amber-100 hover:bg-amber-200' : 'text-[var(--text-muted)] hover:bg-[var(--bg-surface-alt)]'}`}>
+                        {c.is_locked ? 'Unlock' : 'Lock'}
+                      </button>
+                      <button onClick={() => handleToggleActive(c.id, c.is_active)} disabled={c.is_locked}
+                        className={`px-2 py-1 text-xs rounded ${c.is_locked ? 'opacity-40 cursor-not-allowed text-[var(--text-muted)]' : c.is_active ? 'text-yellow-600 hover:bg-yellow-50' : 'text-green-600 hover:bg-green-50'}`}>
                         {c.is_active ? 'Deactivate' : 'Activate'}
                       </button>
-                      <button onClick={() => {
+                      <button disabled={c.is_locked} onClick={() => {
                         setEditCompId(c.id); setCompName(c.name); setCompYear(String(c.year)); setCompLocation(c.location ?? '');
                         setStdMin(String(c.gender_policy?.mixedRatio?.standard?.minSameGender ?? 8));
                         setStdMax(String(c.gender_policy?.mixedRatio?.standard?.maxSameGender ?? 12));
@@ -161,9 +175,9 @@ export function CompetitionManager({ onClose }: Props) {
                         setSmReserves(String(c.reserves?.small ?? 2));
                         setShowAddComp(true);
                       }}
-                        className="px-2 py-1 text-xs text-blue-600 hover:bg-[var(--bg-male)] rounded">Edit</button>
-                      <button onClick={() => handleDeleteComp(c.id, c.name)}
-                        className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded">Delete</button>
+                        className={`px-2 py-1 text-xs rounded ${c.is_locked ? 'opacity-40 cursor-not-allowed text-[var(--text-muted)]' : 'text-blue-600 hover:bg-[var(--bg-male)]'}`}>Edit</button>
+                      <button onClick={() => handleDeleteComp(c.id, c.name)} disabled={c.is_locked}
+                        className={`px-2 py-1 text-xs rounded ${c.is_locked ? 'opacity-40 cursor-not-allowed text-[var(--text-muted)]' : 'text-red-600 hover:bg-red-50'}`}>Delete</button>
                     </div>
                   </div>
                   {/* Competition settings summary */}
@@ -179,11 +193,11 @@ export function CompetitionManager({ onClose }: Props) {
                       {(c.teams ?? []).map(t => (
                         <span key={t.id} className="inline-flex items-center gap-1 px-2 py-0.5 bg-[var(--bg-male)] text-blue-700 rounded-full text-[10px] font-medium">
                           {t.name}
-                          <button onClick={() => handleRemoveTeamFromComp(c.id, t.id)} className="text-blue-400 hover:text-red-500">&times;</button>
+                          {!c.is_locked && <button onClick={() => handleRemoveTeamFromComp(c.id, t.id)} className="text-blue-400 hover:text-red-500">&times;</button>}
                         </span>
                       ))}
                       {/* Add team dropdown */}
-                      <select
+                      {!c.is_locked && <select
                         value=""
                         onChange={e => { if (e.target.value) handleAddTeamToComp(c.id, Number(e.target.value)); }}
                         className="px-1.5 py-0.5 text-[10px] border rounded-full bg-[var(--bg-surface)] text-[var(--text-secondary)]"
@@ -192,7 +206,7 @@ export function CompetitionManager({ onClose }: Props) {
                         {teams.filter(t => !(c.teams ?? []).find(ct => ct.id === t.id)).map(t => (
                           <option key={t.id} value={t.id}>{t.name}</option>
                         ))}
-                      </select>
+                      </select>}
                     </div>
                   </div>
                 </div>
