@@ -265,6 +265,20 @@ export function fetchEventsAthletes(username: string, password: string, clubId?:
   return request<EventsAthlete[]>('POST', '/events-import/athletes', { username, password, club_id: clubId });
 }
 
+// Club member sync — backfill membership numbers from club.motion.rs by name.
+export interface ClubSyncReport {
+  dryRun: boolean;
+  totalMembers: number;
+  matchedCount: number;
+  matched: { membership_number: number; name: string }[];
+  membersWithoutAthlete: { membership_number: number; name: string }[];
+  athletesWithoutMember: { id: number; name: string }[];
+  ambiguous: { membership_number: number; name: string }[];
+}
+export function syncClubMembers(email: string, password: string, dryRun: boolean) {
+  return request<ClubSyncReport>('POST', '/club-import/sync', { email, password, dry_run: dryRun });
+}
+
 export interface EventsAthlete {
   id: number;
   first_name: string;
@@ -345,6 +359,7 @@ export interface ApiAthlete {
   isHelm?: boolean;
   isDrummer?: boolean;
   edbfId?: string | null;
+  memberId?: number | null;
   notes?: string | null;
   isRemoved?: boolean;
   isRegistered?: boolean;

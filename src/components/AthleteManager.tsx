@@ -3,6 +3,7 @@ import type { Athlete, AppConfig } from '../types';
 import { getAthleteAgeCategory } from '../utils/policies';
 import { ImportEventsModal } from './ImportEventsModal';
 import { ImportCsvModal } from './ImportCsvModal';
+import { SyncClubModal } from './SyncClubModal';
 import { ExportAthletesModal } from './ExportAthletesModal';
 import * as api from '../utils/api';
 
@@ -50,6 +51,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
   const [tab, setTab] = useState<'active' | 'removed'>('active');
   const [showImportEvents, setShowImportEvents] = useState(false);
   const [showImportCsv, setShowImportCsv] = useState(false);
+  const [showSyncClub, setShowSyncClub] = useState(false);
   const [showExport, setShowExport] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -332,6 +334,13 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
                 >
                   CSV
                 </button>
+                <button
+                  onClick={() => setShowSyncClub(true)}
+                  className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg font-medium"
+                  title="Fill membership numbers from club.motion.rs"
+                >
+                  Club
+                </button>
               </>
             )}
           </div>
@@ -353,6 +362,13 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
           onImported={() => { setShowImportCsv(false); onReload?.(); }}
           existingAthletes={athletes.map(a => ({ id: a.id, name: a.name }))}
           activeTeamName={activeTeamName}
+        />
+      )}
+
+      {showSyncClub && (
+        <SyncClubModal
+          onClose={() => setShowSyncClub(false)}
+          onSynced={() => { setShowSyncClub(false); onReload?.(); }}
         />
       )}
 
