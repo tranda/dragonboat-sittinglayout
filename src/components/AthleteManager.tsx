@@ -14,7 +14,7 @@ interface Props {
   onRemove: (id: number) => void;
   onRestore: (id: number) => void;
   onAdd: (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean, preferredSide?: 'left' | 'right' | 'both' | null) => void;
-  onEdit: (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide' | 'notes'>>) => void;
+  onEdit: (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide' | 'memberId' | 'notes'>>) => void;
   onClose: () => void;
   onReload?: () => void;
   userRole?: string;
