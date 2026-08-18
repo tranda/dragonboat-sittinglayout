@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import type { Athlete, Race, BoatLayout, GenderCategory, AppConfig, Medal } from '../types';
 import { MEDAL_EMOJI } from '../types';
 import { getAthleteAgeCategory } from '../utils/policies';
+import { exportReportCsv } from '../utils/api';
 
 interface MedalCounts { gold: number; silver: number; bronze: number; }
 
@@ -10,6 +11,10 @@ interface Props {
   races: Race[];
   layouts: Record<string, BoatLayout>;
   config: AppConfig;
+  teams: { id: number; name: string }[];
+  activeTeamId: number | null;
+  activeCompetitionId: number | null;
+  canExport: boolean;
   onClose: () => void;
   onSelectRace?: (raceId: string) => void;
 }
@@ -24,8 +29,25 @@ interface RoleCounts {
   reserve: number;
 }
 
-export function ReportPanel({ athletes, races, layouts, config, onClose, onSelectRace }: Props) {
+export function ReportPanel({ athletes, races, layouts, config, teams, activeTeamId, activeCompetitionId, canExport, onClose, onSelectRace }: Props) {
   const [boatFilter, setBoatFilter] = useState<BoatFilter>('all');
+  const [exportTeamId, setExportTeamId] = useState<number | null>(activeTeamId);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handleExport = async () => {
+    if (!activeCompetitionId || !exportTeamId) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      await exportReportCsv(activeCompetitionId, exportTeamId);
+    } catch (e) {
+      setExportError(e instanceof Error ? e.message : 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const [genderFilter, setGenderFilter] = useState<GenderFilter>('all');
   const [ageFilter, setAgeFilter] = useState<string>('all');
   const [distanceFilter, setDistanceFilter] = useState<string>('all');
@@ -137,6 +159,36 @@ export function ReportPanel({ athletes, races, layouts, config, onClose, onSelec
           <h2 className="text-lg font-bold text-[var(--text-primary)]">Report</h2>
           <button onClick={onClose} className="text-[var(--text-muted)] hover:text-[var(--text-secondary)] text-xl px-1">&times;</button>
         </div>
+
+        {/* CSV export — per-member medal matrix for one event + club */}
+        {canExport && (
+        <div className="p-3 border-b bg-gray-50/50">
+          <div className="flex items-center gap-2">
+            {teams.length > 1 ? (
+              <select
+                value={exportTeamId ?? ''}
+                onChange={e => setExportTeamId(e.target.value ? Number(e.target.value) : null)}
+                className="flex-1 min-w-0 px-2 py-1.5 text-xs border rounded-lg bg-[var(--bg-surface)]"
+                aria-label="Club to export"
+              >
+                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+            ) : (
+              <span className="flex-1 min-w-0 truncate text-xs text-[var(--text-secondary)]">
+                {teams[0]?.name ?? 'No club'}
+              </span>
+            )}
+            <button
+              onClick={handleExport}
+              disabled={exporting || !activeCompetitionId || !exportTeamId}
+              className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium bg-[var(--bg-male-strong)] text-blue-700 hover:opacity-90 disabled:opacity-50"
+            >
+              {exporting ? 'Exporting…' : 'Export CSV'}
+            </button>
+          </div>
+          {exportError && <div className="mt-1.5 text-[11px] text-red-600">{exportError}</div>}
+        </div>
+        )}
 
         {/* Name search */}
         <div className="p-3 border-b">

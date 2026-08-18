@@ -758,6 +758,10 @@ export function App() {
           races={races}
           layouts={layouts}
           config={appConfig}
+          teams={userTeams}
+          activeTeamId={activeTeamId}
+          activeCompetitionId={activeCompetitionId}
+          canExport={user?.role === 'admin' || user?.role === 'coach'}
           onClose={() => setShowReport(false)}
           onSelectRace={(raceId) => { setSelectedRaceId(raceId); setView('layout'); setShowReport(false); }}
         />

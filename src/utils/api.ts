@@ -162,6 +162,30 @@ export function deleteUser(id: number) {
   return request('DELETE', `/users/${id}`);
 }
 
+// Report CSV export — per-member achievements pivot for one event + club.
+// Fetches with auth headers and triggers a browser download of the streamed file.
+export async function exportReportCsv(competitionId: number, teamId: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/report/export?competition_id=${competitionId}&team_id=${teamId}`, {
+    headers: headers(),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || err.message || 'Export failed');
+  }
+  const blob = await res.blob();
+  const cd = res.headers.get('Content-Disposition') ?? '';
+  const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cd);
+  const filename = match ? decodeURIComponent(match[1]) : 'report.csv';
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 // PDF token
 export async function getPdfToken(): Promise<string> {
   const data = await request<{ token: string }>('POST', '/pdf-token');
