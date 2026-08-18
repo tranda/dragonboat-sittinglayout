@@ -62,6 +62,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
   const [newIsBCP, setNewIsBCP] = useState(false);
   const [newPreferredSide, setNewPreferredSide] = useState<'left' | 'right' | 'both' | ''>('');
   const [newNotes, setNewNotes] = useState('');
+  const [newMemberId, setNewMemberId] = useState('');
   const [search, setSearch] = useState('');
 
   const active = athletes
@@ -93,6 +94,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
     setNewIsBCP(!!a.isBCP);
     setNewPreferredSide(a.preferredSide || '');
     setNewNotes(a.notes || '');
+    setNewMemberId(a.memberId != null ? String(a.memberId) : '');
     setShowAddForm(false);
   };
 
@@ -108,6 +110,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
       isBCP: newIsBCP || undefined,
       preferredSide: newPreferredSide || null,
       notes: newNotes.trim() || null,
+      memberId: newMemberId.trim() ? (parseInt(newMemberId, 10) || null) : null,
     });
     clearForm();
   };
@@ -122,6 +125,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
     setNewIsBCP(false);
     setNewPreferredSide('');
     setNewNotes('');
+    setNewMemberId('');
   };
 
   const isEditing = editingId !== null;
@@ -175,7 +179,10 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
             onClick={() => tab === 'active' && startEdit(a)}
           >
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">{a.name}</div>
+              <div className="text-sm font-medium truncate">
+                {a.memberId != null && <span className="mr-1.5 px-1.5 py-0.5 bg-[var(--bg-male-strong)] text-blue-700 rounded text-[10px] font-semibold tabular-nums align-middle">#{a.memberId}</span>}
+                {a.name}
+              </div>
               <div className="text-xs text-[var(--text-muted)]">
                 {a.weight ? `${a.weight} kg` : 'no weight'} · {a.gender === 'F' ? 'W' : 'M'}
                 {a.yearOfBirth ? ` · ${a.yearOfBirth}` : ''}
@@ -262,6 +269,15 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
                 className="flex-1 min-w-0 px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
               />
             </div>
+            {isEditing && (
+              <input
+                value={newMemberId}
+                onChange={e => setNewMemberId(e.target.value)}
+                placeholder="Member ID (club.motion.rs)"
+                type="number"
+                className="w-full px-3 py-1.5 text-sm border rounded-lg outline-none focus:border-[var(--border-male-strong)]"
+              />
+            )}
             <textarea
               value={newNotes}
               onChange={e => setNewNotes(e.target.value)}

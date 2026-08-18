@@ -9,6 +9,7 @@ export interface Athlete {
   isHelm?: boolean;
   isDrummer?: boolean;
   edbfId?: string | null;
+  memberId?: number | null; // club.motion.rs membership number
   notes?: string | null;
   isRemoved?: boolean;
   isRegistered?: boolean;

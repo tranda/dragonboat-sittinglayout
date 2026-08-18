@@ -112,6 +112,7 @@ export function App() {
         isHelm: a.isHelm ?? false,
         isDrummer: a.isDrummer ?? false,
         edbfId: a.edbfId ?? null,
+        memberId: a.memberId ?? null,
         notes: a.notes ?? null,
         isRemoved: a.isRemoved ?? false,
         isRegistered: a.isRegistered ?? false,
@@ -364,13 +365,13 @@ export function App() {
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
   }, []);
 
-  const handleEditAthlete = useCallback(async (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide' | 'isHelm' | 'isDrummer' | 'edbfId' | 'notes'>>) => {
+  const handleEditAthlete = useCallback(async (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide' | 'isHelm' | 'isDrummer' | 'edbfId' | 'memberId' | 'notes'>>) => {
     try {
       await api.updateAthlete(id, {
         name: updates.name, weight: updates.weight, gender: updates.gender,
         year_of_birth: updates.yearOfBirth, is_bcp: updates.isBCP,
         preferred_side: updates.preferredSide, is_helm: updates.isHelm,
-        is_drummer: updates.isDrummer, edbf_id: updates.edbfId, notes: updates.notes,
+        is_drummer: updates.isDrummer, edbf_id: updates.edbfId, member_id: updates.memberId, notes: updates.notes,
       });
       setAthletes(prev => prev.map(a => a.id === id ? { ...a, ...updates } : a));
     } catch (err) { alert('Failed: ' + (err instanceof Error ? err.message : '')); }
