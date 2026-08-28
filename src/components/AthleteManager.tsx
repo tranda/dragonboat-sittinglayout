@@ -16,7 +16,7 @@ interface Props {
   onAdd: (name: string, weight: number, gender: 'M' | 'F', yearOfBirth?: number, isBCP?: boolean, preferredSide?: 'left' | 'right' | 'both' | null) => void;
   onEdit: (id: number, updates: Partial<Pick<Athlete, 'name' | 'weight' | 'gender' | 'yearOfBirth' | 'isBCP' | 'preferredSide' | 'memberId' | 'notes'>>) => void;
   onClose: () => void;
-  onReload?: () => void;
+  onReload?: (opts?: { silent?: boolean }) => void;
   userRole?: string;
   competitionId?: number | null;
   activeTeamName?: string | null;
@@ -199,7 +199,7 @@ export function AthleteManager({ config, athletes, removedIds, onRemove, onResto
                     e.stopPropagation();
                     if (a.isRegistered) await api.unregisterAthlete(a.id, competitionId);
                     else await api.registerAthlete(a.id, competitionId);
-                    onReload?.();
+                    onReload?.({ silent: true });
                   }}
                   className={`px-2 py-1 text-[10px] font-semibold rounded-lg ${
                     a.isRegistered
