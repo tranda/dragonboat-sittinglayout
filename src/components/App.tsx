@@ -481,10 +481,10 @@ export function App() {
                   className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer max-w-[45%]"
                 >
                   {/* Only active competitions are selectable; deactivated ones are hidden entirely. */}
-                  {competitions.filter(c => c.isActive).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {competitions.filter(c => c.isActive).map(c => <option key={c.id} value={c.id}>{c.name} ({c.year})</option>)}
                 </select>
               ) : (
-                <span>{competitions[0]?.name ?? ''}</span>
+                <span>{competitions[0] ? `${competitions[0].name} (${competitions[0].year})` : ''}</span>
               )}
             </div>
             <div className="text-sm font-bold text-[var(--text-primary)] leading-tight truncate">
