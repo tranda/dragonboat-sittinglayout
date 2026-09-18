@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import * as api from '../utils/api';
-import type { Race } from '../types';
+import type { Race, Medal } from '../types';
+import { MEDAL_EMOJI } from '../types';
 
 interface Props {
   onClose: () => void;
@@ -52,10 +53,20 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
     return () => { cancelled = true; };
   }, []);
 
-  const existingKeys = new Set(existingRaces.map(r => raceKey(r)));
-  const isExisting = (r: api.EventsRace) => existingKeys.has(raceKey({
+  // Map each incoming race to a local one (by identity) to decide the action:
+  //   create — no local match → make a new race (with medal, if finished)
+  //   update — local match whose medal differs from the event's → set the medal
+  //   skip   — local match, nothing to change
+  const localByKey = new Map(existingRaces.map(r => [raceKey(r), r] as const));
+  const localFor = (r: api.EventsRace): Race | undefined => localByKey.get(raceKey({
     boatType: r.boat_type, distance: r.distance, genderCategory: r.gender_category, ageCategory: r.age_category,
   }));
+  const actionFor = (r: api.EventsRace): 'create' | 'update' | 'skip' => {
+    const local = localFor(r);
+    if (!local) return 'create';
+    if (r.medal && r.medal !== (local.medal ?? null)) return 'update';
+    return 'skip';
+  };
 
   const pickEvent = (id: number) => {
     setEventId(id);
@@ -70,8 +81,8 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
     try {
       const data = await api.fetchEventsRaces(eventId, clubId);
       setRaces(data);
-      // Pre-select only races not already present — skip the rest.
-      setSelected(new Set(data.filter(r => !isExisting(r)).map(r => r.discipline_id)));
+      // Pre-select everything actionable — new races and medal updates.
+      setSelected(new Set(data.filter(r => actionFor(r) !== 'skip').map(r => r.discipline_id)));
       setStep('select');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load races');
@@ -96,33 +107,44 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
     return a.name.localeCompare(b.name);
   });
 
-  const newRaces = races.filter(r => !isExisting(r));
-  const skippedCount = races.length - newRaces.length;
+  const createCount = races.filter(r => actionFor(r) === 'create').length;
+  const updateCount = races.filter(r => actionFor(r) === 'update').length;
+  const skippedCount = races.filter(r => actionFor(r) === 'skip').length;
 
   const handleImport = async () => {
     setImporting(true);
     try {
       const toImport = races.filter(r => selected.has(r.discipline_id));
-      let created = 0;
+      let created = 0, updated = 0;
       for (let i = 0; i < toImport.length; i++) {
         const r = toImport[i];
-        const id = r.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') + '_' + Date.now() + '_' + i;
-        await api.createRace({
-          id,
-          name: r.name,
-          boat_type: r.boat_type,
-          num_rows: r.num_rows,
-          distance: r.distance,
-          gender_category: r.gender_category,
-          age_category: r.age_category,
-          category: r.category,
-          schedule: r.schedule,
-        });
-        created++;
+        const action = actionFor(r);
+        if (action === 'update') {
+          await api.updateRace(localFor(r)!.id, { medal: r.medal });
+          updated++;
+        } else if (action === 'create') {
+          const id = r.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') + '_' + Date.now() + '_' + i;
+          await api.createRace({
+            id,
+            name: r.name,
+            boat_type: r.boat_type,
+            num_rows: r.num_rows,
+            distance: r.distance,
+            gender_category: r.gender_category,
+            age_category: r.age_category,
+            category: r.category,
+            schedule: r.schedule,
+            medal: r.medal,
+          });
+          created++;
+        }
       }
       onImported();
       onClose();
-      alert(`${created} race${created === 1 ? '' : 's'} imported${skippedCount ? `, ${skippedCount} already existed (skipped)` : ''}`);
+      const parts = [`${created} imported`];
+      if (updated) parts.push(`${updated} medal${updated === 1 ? '' : 's'} updated`);
+      if (skippedCount) parts.push(`${skippedCount} unchanged`);
+      alert(parts.join(', '));
     } catch (err) {
       alert('Import failed: ' + (err instanceof Error ? err.message : ''));
     } finally {
@@ -193,28 +215,31 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
         ) : (
           <>
             <div className="px-4 py-2 border-b text-xs text-[var(--text-muted)]">
-              {newRaces.length} new · {skippedCount} already exist (skipped)
+              {createCount} new{updateCount ? ` · ${updateCount} medal update${updateCount === 1 ? '' : 's'}` : ''} · {skippedCount} unchanged
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-1">
               {races.map(r => {
-                const existing = isExisting(r);
+                const action = actionFor(r);
+                const skip = action === 'skip';
                 return (
                   <label
                     key={r.discipline_id}
                     className={`flex items-center gap-3 px-3 py-2 rounded-lg ${
-                      existing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      skip ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                     } ${selected.has(r.discipline_id) ? 'bg-[var(--bg-male)]' : 'hover:bg-[var(--bg-surface-alt)]'}`}
                   >
                     <input
                       type="checkbox"
                       checked={selected.has(r.discipline_id)}
-                      disabled={existing}
+                      disabled={skip}
                       onChange={() => toggle(r.discipline_id)}
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-[var(--text-primary)] truncate">
-                        {r.name}
-                        {existing && <span className="ml-2 text-[9px] px-1.5 py-0.5 bg-[var(--bg-surface-alt)] text-[var(--text-muted)] rounded-full">exists</span>}
+                      <div className="text-sm font-medium text-[var(--text-primary)] truncate flex items-center gap-2">
+                        <span className="truncate">{r.name}</span>
+                        {r.medal && <span>{MEDAL_EMOJI[r.medal as Medal]}</span>}
+                        {action === 'update' && <span className="text-[9px] px-1.5 py-0.5 bg-amber-500 text-white rounded-full">medal</span>}
+                        {skip && <span className="text-[9px] px-1.5 py-0.5 bg-[var(--bg-surface-alt)] text-[var(--text-muted)] rounded-full">exists</span>}
                       </div>
                       <div className="text-[10px] text-[var(--text-muted)]">
                         {r.boat_type === 'small' ? '10s' : '20s'} · {r.gender_category} · {r.age_category}

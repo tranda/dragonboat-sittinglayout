@@ -283,6 +283,7 @@ export interface EventsRace {
   age_category: string;
   category: string;
   schedule: { stage: string; time: string }[];
+  medal: 'gold' | 'silver' | 'bronze' | null;
 }
 export function fetchEventsList() {
   return request<EventsListItem[]>('GET', '/events-import/events');
