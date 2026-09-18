@@ -6,6 +6,7 @@ interface Props {
   onClose: () => void;
   onImported: () => void;
   existingRaces: Race[];
+  activeTeamName?: string | null;
 }
 
 // A race's identity for skip-existing dedup: boat + distance + gender + age.
@@ -16,7 +17,15 @@ function raceKey(parts: { boatType: string; distance: string; genderCategory: st
     .join('|');
 }
 
-export function ImportEventRacesModal({ onClose, onImported, existingRaces }: Props) {
+function clubMatchesTeam(clubName: string, teamName?: string | null): boolean {
+  if (!teamName) return false;
+  const a = clubName.toLowerCase().trim();
+  const b = teamName.toLowerCase().trim();
+  if (!a || !b) return false;
+  return a === b || a.includes(b) || b.includes(a);
+}
+
+export function ImportEventRacesModal({ onClose, onImported, existingRaces, activeTeamName }: Props) {
   const [step, setStep] = useState<'event' | 'club' | 'select'>('event');
   const [events, setEvents] = useState<api.EventsListItem[]>([]);
   const [clubs, setClubs] = useState<api.EventsClub[]>([]);
@@ -78,6 +87,14 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces }: Pr
       return next;
     });
   };
+
+  // Clubs matching the active team first, then alphabetical.
+  const sortedClubs = [...clubs].sort((a, b) => {
+    const am = clubMatchesTeam(a.name, activeTeamName);
+    const bm = clubMatchesTeam(b.name, activeTeamName);
+    if (am !== bm) return am ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
 
   const newRaces = races.filter(r => !isExisting(r));
   const skippedCount = races.length - newRaces.length;
@@ -144,18 +161,30 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces }: Pr
           </div>
         ) : step === 'club' ? (
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            <p className="text-xs text-[var(--text-secondary)] mb-1">Select the club to import races for:</p>
-            {clubs.map(c => (
-              <button
-                key={c.id}
-                onClick={() => loadRaces(c.id)}
-                disabled={loading}
-                className="w-full text-left px-3 py-2 rounded-lg border border-[var(--border-default)] hover:bg-[var(--bg-surface-alt)] disabled:opacity-50"
-              >
-                <div className="text-sm font-medium text-[var(--text-primary)]">{c.name}</div>
-                {c.country && <div className="text-[10px] text-[var(--text-muted)]">{c.country}</div>}
-              </button>
-            ))}
+            <p className="text-xs text-[var(--text-secondary)] mb-1">
+              Select the club to import races for{activeTeamName ? <> — matches for <b>{activeTeamName}</b> shown first</> : null}:
+            </p>
+            {sortedClubs.map(c => {
+              const isMatch = clubMatchesTeam(c.name, activeTeamName);
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => loadRaces(c.id)}
+                  disabled={loading}
+                  className={`w-full text-left px-3 py-2 rounded-lg border disabled:opacity-50 ${
+                    isMatch
+                      ? 'border-blue-400 bg-[var(--bg-male)] hover:bg-[var(--bg-male-strong)]'
+                      : 'border-[var(--border-default)] hover:bg-[var(--bg-surface-alt)]'
+                  }`}
+                >
+                  <div className="text-sm font-medium text-[var(--text-primary)] flex items-center gap-2">
+                    <span>{c.name}</span>
+                    {isMatch && <span className="text-[9px] px-1.5 py-0.5 bg-blue-600 text-white rounded-full">match</span>}
+                  </div>
+                  {c.country && <div className="text-[10px] text-[var(--text-muted)]">{c.country}</div>}
+                </button>
+              );
+            })}
             {clubs.length === 0 && <div className="text-center text-[var(--text-muted)] py-8">No clubs found</div>}
             {error && <div className="text-xs text-red-600">{error}</div>}
             {loading && <div className="text-xs text-[var(--text-muted)] text-center py-2">Loading races…</div>}

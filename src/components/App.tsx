@@ -794,6 +794,7 @@ export function App() {
       {showImportRaces && canEdit && (
         <ImportEventRacesModal
           existingRaces={races}
+          activeTeamName={userTeams.find(t => t.id === activeTeamId)?.name ?? null}
           onClose={() => setShowImportRaces(false)}
           onImported={loadData}
         />
