@@ -9,6 +9,7 @@ import { ConfigPanel } from './ConfigPanel';
 import { LoginScreen } from './LoginScreen';
 import { UserManager } from './UserManager';
 import { RaceReorderModal } from './RaceReorderModal';
+import { ImportEventRacesModal } from './ImportEventRacesModal';
 import { ReportPanel } from './ReportPanel';
 import { CrewCompareModal } from './CrewCompareModal';
 import { DashboardPanel } from './DashboardPanel';
@@ -64,6 +65,7 @@ export function App() {
   const [showConfig, setShowConfig] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
   const [showReorderRaces, setShowReorderRaces] = useState(false);
+  const [showImportRaces, setShowImportRaces] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [view, setView] = useState<'layout' | 'dashboard'>(() => (localStorage.getItem('dragonboat-view') as 'layout' | 'dashboard') ?? 'dashboard');
@@ -658,6 +660,7 @@ export function App() {
         onSettings={() => { setMenuOpen(false); setShowConfig(true); }}
         onCompareCrew={canEdit && selectedRace ? () => { setMenuOpen(false); setShowCompare(true); } : undefined}
         onReorderRaces={canEdit ? () => { setMenuOpen(false); setShowReorderRaces(true); } : undefined}
+        onImportRaces={canEdit ? () => { setMenuOpen(false); setShowImportRaces(true); } : undefined}
         onShowReport={() => { setMenuOpen(false); setShowReport(true); }}
         onShowDashboard={canEdit ? () => { setMenuOpen(false); setView('dashboard'); } : undefined}
         onPdfExport={() => { setMenuOpen(false); setShowPdfExport(true); }}
@@ -785,6 +788,15 @@ export function App() {
       {/* Import dialog */}
       {showImport && canEdit && (
         <ImportDialog onImport={handleImport} onClose={() => setShowImport(false)} />
+      )}
+
+      {/* Import races from events.motion.rs */}
+      {showImportRaces && canEdit && (
+        <ImportEventRacesModal
+          existingRaces={races}
+          onClose={() => setShowImportRaces(false)}
+          onImported={loadData}
+        />
       )}
     </div>
   );

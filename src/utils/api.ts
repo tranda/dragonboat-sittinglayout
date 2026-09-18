@@ -265,6 +265,35 @@ export function fetchEventsAthletes(username: string, password: string, clubId?:
   return request<EventsAthlete[]>('POST', '/events-import/athletes', { username, password, club_id: clubId });
 }
 
+// Race import from events.motion.rs — list events, then pull one event's
+// race program for this club (auth is a server-side races.read API key).
+export interface EventsListItem {
+  id: number;
+  name: string;
+  year: number | null;
+  location: string | null;
+}
+export interface EventsRace {
+  discipline_id: number;
+  name: string;
+  boat_type: 'standard' | 'small';
+  num_rows: number;
+  distance: string;
+  gender_category: 'Open' | 'Women' | 'Mixed';
+  age_category: string;
+  category: string;
+  schedule: { stage: string; time: string }[];
+}
+export function fetchEventsList() {
+  return request<EventsListItem[]>('GET', '/events-import/events');
+}
+export function fetchEventsRaceClubs() {
+  return request<EventsClub[]>('GET', '/events-import/race-clubs');
+}
+export function fetchEventsRaces(eventId: number, clubId: number) {
+  return request<EventsRace[]>('GET', `/events-import/races?event_id=${eventId}&club_id=${clubId}`);
+}
+
 // Club member sync — backfill membership numbers from club.motion.rs by name.
 export interface ClubSyncReport {
   dryRun: boolean;

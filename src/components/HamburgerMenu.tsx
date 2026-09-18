@@ -73,6 +73,7 @@ interface Props {
   onEditRace: (fields: { name?: string; schedule?: ScheduleEntry[]; medal?: Medal | null }) => void;
   onManageAthletes: () => void;
   onImport?: () => void;
+  onImportRaces?: () => void;
   onSettings: () => void;
   onCompareCrew?: () => void;
   onReorderRaces?: () => void;
@@ -90,7 +91,7 @@ export function HamburgerMenu({
   isOpen, onClose, canEdit = true, canUndo, canRedo, onUndo, onRedo, showWeights, onToggleWeights,
   conflictEnabled, onToggleConflict, conflictMinGap, onChangeConflictMinGap,
   onExport, onResetCurrent, onResetAll,
-  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onEditRace, onManageAthletes, onImport: _onImport, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onManageCompetitions, onActivityLog, onManageUsers, onLogout, userRole,
+  selectedRace, onAddRace, onRemoveRace, onDuplicateRace, onEditRace, onManageAthletes, onImport: _onImport, onImportRaces, onSettings, onCompareCrew, onReorderRaces, onShowReport, onShowDashboard, onPdfExport, onManageCompetitions, onActivityLog, onManageUsers, onLogout, userRole,
 }: Props) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newBoatType, setNewBoatType] = useState<'standard' | 'small'>('standard');
@@ -376,6 +377,15 @@ export function HamburgerMenu({
               className="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-surface-alt)] text-sm"
             >
               Reorder Crews
+            </button>
+          )}
+
+          {onImportRaces && (
+            <button
+              onClick={() => { onImportRaces(); onClose(); }}
+              className="w-full text-left px-3 py-2 rounded-lg hover:bg-[var(--bg-surface-alt)] text-sm"
+            >
+              Import races from event
             </button>
           )}
 
