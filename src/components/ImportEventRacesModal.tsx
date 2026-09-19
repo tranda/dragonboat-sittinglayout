@@ -10,12 +10,12 @@ interface Props {
   activeTeamName?: string | null;
 }
 
-// A race's identity for skip-existing dedup: boat + distance + gender + age.
-// Re-running the import then never re-creates a race already in this competition.
-function raceKey(parts: { boatType: string; distance: string; genderCategory: string; ageCategory: string }): string {
-  return [parts.boatType, parts.distance, parts.genderCategory, parts.ageCategory]
-    .map(p => String(p).toLowerCase().trim())
-    .join('|');
+// A race's identity for dedup is its name (e.g. "Small Mixed Senior A 200m").
+// Both sides build the name the same way from the event discipline, so it stays
+// stable even if boat_type was mis-stored — unlike a boat+distance+gender+age
+// key, where a wrong boat_type would collide Small with Standard.
+function nameKey(name: string): string {
+  return name.toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
 function clubMatchesTeam(clubName: string, teamName?: string | null): boolean {
@@ -79,10 +79,8 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
   //   create — no local match → make a new race (with schedule + medal)
   //   update — local match whose medal (or, if "sync times" is on, schedule) differs
   //   skip   — local match, nothing to change
-  const localByKey = new Map(existingRaces.map(r => [raceKey(r), r] as const));
-  const localFor = (r: api.EventsRace): Race | undefined => localByKey.get(raceKey({
-    boatType: r.boat_type, distance: r.distance, genderCategory: r.gender_category, ageCategory: r.age_category,
-  }));
+  const localByKey = new Map(existingRaces.map(r => [nameKey(r.name), r] as const));
+  const localFor = (r: api.EventsRace): Race | undefined => localByKey.get(nameKey(r.name));
   // What a re-import would change on an existing race, given the sync-times flag.
   const changesFor = (r: api.EventsRace, sync = syncTimes) => {
     const local = localFor(r);
