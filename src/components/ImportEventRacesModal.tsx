@@ -26,6 +26,18 @@ function clubMatchesTeam(clubName: string, teamName?: string | null): boolean {
   return a === b || a.includes(b) || b.includes(a);
 }
 
+// events.motion.rs stores race_time as a wall-clock time labelled UTC (its app
+// timezone is UTC and its own UI shows it unconverted). Reinterpret the Y-M-D H:M
+// as local wall-clock so our schedule UI (which converts ISO→browser-local) shows
+// the same clock time the organizer set, matching manually-entered schedules.
+function eventsTimeToLocalIso(t: string): string {
+  const m = /(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(t);
+  if (!m) return t;
+  const [, y, mo, d, h, mi, s] = m;
+  const dt = new Date(+y, +mo - 1, +d, +h, +mi, s ? +s : 0);
+  return Number.isNaN(dt.getTime()) ? t : dt.toISOString();
+}
+
 // Order-independent signature of a schedule, comparing times by instant (not
 // string) so format differences (ms vs µs, offset vs Z) don't read as changes.
 function schedSig(schedule?: { stage: string; time: string }[]): string {
@@ -97,9 +109,15 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
     setError('');
     try {
       const data = await api.fetchEventsRaces(eventId, clubId);
-      setRaces(data);
+      // Normalize each race_time from the platform's wall-clock-labelled-UTC to a
+      // local instant, so times display correctly in our schedule UI.
+      const fixed = data.map(r => ({
+        ...r,
+        schedule: r.schedule.map(s => ({ stage: s.stage, time: eventsTimeToLocalIso(s.time) })),
+      }));
+      setRaces(fixed);
       // Pre-select everything actionable — new races and medal updates.
-      setSelected(new Set(data.filter(r => actionFor(r) !== 'skip').map(r => r.discipline_id)));
+      setSelected(new Set(fixed.filter(r => actionFor(r) !== 'skip').map(r => r.discipline_id)));
       setStep('select');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load races');
