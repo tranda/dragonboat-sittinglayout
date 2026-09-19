@@ -26,6 +26,15 @@ function clubMatchesTeam(clubName: string, teamName?: string | null): boolean {
   return a === b || a.includes(b) || b.includes(a);
 }
 
+// Order-independent signature of a schedule, comparing times by instant (not
+// string) so format differences (ms vs µs, offset vs Z) don't read as changes.
+function schedSig(schedule?: { stage: string; time: string }[]): string {
+  return (schedule ?? [])
+    .map(s => `${s.stage}@${Number.isNaN(Date.parse(s.time)) ? s.time : Date.parse(s.time)}`)
+    .sort()
+    .join('|');
+}
+
 export function ImportEventRacesModal({ onClose, onImported, existingRaces, activeTeamName }: Props) {
   const [step, setStep] = useState<'event' | 'club' | 'select'>('event');
   const [events, setEvents] = useState<api.EventsListItem[]>([]);
@@ -33,6 +42,7 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
   const [eventId, setEventId] = useState<number | null>(null);
   const [races, setRaces] = useState<api.EventsRace[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [syncTimes, setSyncTimes] = useState(false);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [error, setError] = useState('');
@@ -54,18 +64,25 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
   }, []);
 
   // Map each incoming race to a local one (by identity) to decide the action:
-  //   create — no local match → make a new race (with medal, if finished)
-  //   update — local match whose medal differs from the event's → set the medal
+  //   create — no local match → make a new race (with schedule + medal)
+  //   update — local match whose medal (or, if "sync times" is on, schedule) differs
   //   skip   — local match, nothing to change
   const localByKey = new Map(existingRaces.map(r => [raceKey(r), r] as const));
   const localFor = (r: api.EventsRace): Race | undefined => localByKey.get(raceKey({
     boatType: r.boat_type, distance: r.distance, genderCategory: r.gender_category, ageCategory: r.age_category,
   }));
-  const actionFor = (r: api.EventsRace): 'create' | 'update' | 'skip' => {
+  // What a re-import would change on an existing race, given the sync-times flag.
+  const changesFor = (r: api.EventsRace, sync = syncTimes) => {
     const local = localFor(r);
-    if (!local) return 'create';
-    if (r.medal && r.medal !== (local.medal ?? null)) return 'update';
-    return 'skip';
+    if (!local) return { local: undefined, medal: false, times: false };
+    const medal = !!r.medal && r.medal !== (local.medal ?? null);
+    const times = sync && r.schedule.length > 0 && schedSig(r.schedule) !== schedSig(local.schedule);
+    return { local, medal, times };
+  };
+  const actionFor = (r: api.EventsRace, sync = syncTimes): 'create' | 'update' | 'skip' => {
+    const c = changesFor(r, sync);
+    if (!c.local) return 'create';
+    return c.medal || c.times ? 'update' : 'skip';
   };
 
   const pickEvent = (id: number) => {
@@ -99,6 +116,15 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
     });
   };
 
+  // Toggling "sync times" changes which races are actionable — re-select all of them.
+  const toggleSyncTimes = () => {
+    setSyncTimes(prev => {
+      const next = !prev;
+      setSelected(new Set(races.filter(r => actionFor(r, next) !== 'skip').map(r => r.discipline_id)));
+      return next;
+    });
+  };
+
   // Clubs matching the active team first, then alphabetical.
   const sortedClubs = [...clubs].sort((a, b) => {
     const am = clubMatchesTeam(a.name, activeTeamName);
@@ -120,7 +146,11 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
         const r = toImport[i];
         const action = actionFor(r);
         if (action === 'update') {
-          await api.updateRace(localFor(r)!.id, { medal: r.medal });
+          const c = changesFor(r);
+          const patch: Record<string, unknown> = {};
+          if (c.medal) patch.medal = r.medal;
+          if (c.times) patch.schedule = r.schedule;
+          await api.updateRace(c.local!.id, patch);
           updated++;
         } else if (action === 'create') {
           const id = r.name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') + '_' + Date.now() + '_' + i;
@@ -142,7 +172,7 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
       onImported();
       onClose();
       const parts = [`${created} imported`];
-      if (updated) parts.push(`${updated} medal${updated === 1 ? '' : 's'} updated`);
+      if (updated) parts.push(`${updated} updated`);
       if (skippedCount) parts.push(`${skippedCount} unchanged`);
       alert(parts.join(', '));
     } catch (err) {
@@ -214,11 +244,18 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
           </div>
         ) : (
           <>
-            <div className="px-4 py-2 border-b text-xs text-[var(--text-muted)]">
-              {createCount} new{updateCount ? ` · ${updateCount} medal update${updateCount === 1 ? '' : 's'}` : ''} · {skippedCount} unchanged
+            <div className="px-4 py-2 border-b space-y-2">
+              <label className="flex items-center gap-2 text-xs text-[var(--text-secondary)] cursor-pointer">
+                <input type="checkbox" checked={syncTimes} onChange={toggleSyncTimes} />
+                <span>Sync start times — overwrite existing races' schedule when it changed on the event</span>
+              </label>
+              <div className="text-xs text-[var(--text-muted)]">
+                {createCount} new{updateCount ? ` · ${updateCount} update${updateCount === 1 ? '' : 's'}` : ''} · {skippedCount} unchanged
+              </div>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-1">
               {races.map(r => {
+                const c = changesFor(r);
                 const action = actionFor(r);
                 const skip = action === 'skip';
                 return (
@@ -238,7 +275,8 @@ export function ImportEventRacesModal({ onClose, onImported, existingRaces, acti
                       <div className="text-sm font-medium text-[var(--text-primary)] truncate flex items-center gap-2">
                         <span className="truncate">{r.name}</span>
                         {r.medal && <span>{MEDAL_EMOJI[r.medal as Medal]}</span>}
-                        {action === 'update' && <span className="text-[9px] px-1.5 py-0.5 bg-amber-500 text-white rounded-full">medal</span>}
+                        {c.medal && <span className="text-[9px] px-1.5 py-0.5 bg-amber-500 text-white rounded-full">medal</span>}
+                        {c.times && <span className="text-[9px] px-1.5 py-0.5 bg-blue-600 text-white rounded-full">time</span>}
                         {skip && <span className="text-[9px] px-1.5 py-0.5 bg-[var(--bg-surface-alt)] text-[var(--text-muted)] rounded-full">exists</span>}
                       </div>
                       <div className="text-[10px] text-[var(--text-muted)]">
