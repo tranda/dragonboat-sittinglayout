@@ -24,6 +24,7 @@ export function CompetitionManager({ onClose }: Props) {
   const [stdReserves, setStdReserves] = useState('4');
   const [smReserves, setSmReserves] = useState('2');
   const [youngerAllowance, setYoungerAllowance] = useState('0');
+  const [helmAnyGender, setHelmAnyGender] = useState(false);
 
   // Team form
   const [showAddTeam, setShowAddTeam] = useState(false);
@@ -47,7 +48,7 @@ export function CompetitionManager({ onClose }: Props) {
   useEffect(() => { load(); }, [load]);
 
   // Competition handlers
-  const clearCompForm = () => { setShowAddComp(false); setEditCompId(null); setCompName(''); setCompYear(String(new Date().getFullYear())); setCompLocation(''); setStdMin('8'); setStdMax('12'); setSmMin('4'); setSmMax('6'); setStdReserves('4'); setSmReserves('2'); setYoungerAllowance('0'); };
+  const clearCompForm = () => { setShowAddComp(false); setEditCompId(null); setCompName(''); setCompYear(String(new Date().getFullYear())); setCompLocation(''); setStdMin('8'); setStdMax('12'); setSmMin('4'); setSmMax('6'); setStdReserves('4'); setSmReserves('2'); setYoungerAllowance('0'); setHelmAnyGender(false); };
 
   const handleSaveComp = async () => {
     if (!compName.trim()) return;
@@ -64,9 +65,9 @@ export function CompetitionManager({ onClose }: Props) {
     const younger_allowance = Math.max(0, parseInt(youngerAllowance) || 0);
     try {
       if (editCompId) {
-        await api.updateCompetition(editCompId, { name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, gender_policy: genderPolicy, reserves, younger_allowance });
+        await api.updateCompetition(editCompId, { name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, gender_policy: genderPolicy, reserves, younger_allowance, helm_any_gender: helmAnyGender });
       } else {
-        await api.createCompetition({ name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, is_active: true, gender_policy: genderPolicy, reserves, younger_allowance });
+        await api.createCompetition({ name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, is_active: true, gender_policy: genderPolicy, reserves, younger_allowance, helm_any_gender: helmAnyGender });
       }
       clearCompForm();
       await load();
@@ -176,6 +177,7 @@ export function CompetitionManager({ onClose }: Props) {
                         setStdReserves(String(c.reserves?.standard ?? 4));
                         setSmReserves(String(c.reserves?.small ?? 2));
                         setYoungerAllowance(String(c.younger_allowance ?? 0));
+                        setHelmAnyGender(!!c.helm_any_gender);
                         setShowAddComp(true);
                       }}
                         className={`px-2 py-1 text-xs rounded ${c.is_locked ? 'opacity-40 cursor-not-allowed text-[var(--text-muted)]' : 'text-blue-600 hover:bg-[var(--bg-male)]'}`}>Edit</button>
@@ -189,6 +191,7 @@ export function CompetitionManager({ onClose }: Props) {
                     {c.reserves && c.gender_policy?.mixedRatio && <> · </>}
                     {c.gender_policy?.mixedRatio && <>Mixed: 20p {c.gender_policy.mixedRatio.standard.minSameGender}–{c.gender_policy.mixedRatio.standard.maxSameGender}, 10p {c.gender_policy.mixedRatio.small.minSameGender}–{c.gender_policy.mixedRatio.small.maxSameGender} per gender</>}
                     {c.younger_allowance != null && <> · Younger exception: {c.younger_allowance}/crew</>}
+                    {c.helm_any_gender && <> · Any-gender helm</>}
                   </div>
                   {/* Teams in this competition */}
                   <div className="mt-2">
@@ -251,6 +254,11 @@ export function CompetitionManager({ onClose }: Props) {
                     <input value={youngerAllowance} onChange={e => setYoungerAllowance(e.target.value)} type="number" min="0" placeholder="0" className="w-20 px-2 py-1 text-sm border rounded-lg" />
                     <span className="text-[10px] text-[var(--text-muted)]">0 = none allowed</span>
                   </div>
+                  {/* Any-gender helm */}
+                  <label className="flex items-center gap-2 mt-1 text-sm text-[var(--text-secondary)] cursor-pointer">
+                    <input type="checkbox" checked={helmAnyGender} onChange={e => setHelmAnyGender(e.target.checked)} />
+                    <span>Allow any-gender helm (e.g. male helm in a Women's crew)</span>
+                  </label>
                   <div className="flex gap-2">
                     <button onClick={handleSaveComp} className="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg">{editCompId ? 'Save' : 'Add'}</button>
                     <button onClick={clearCompForm} className="px-3 py-1.5 text-xs bg-[var(--bg-surface-alt)] rounded-lg">Cancel</button>

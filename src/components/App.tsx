@@ -159,6 +159,7 @@ export function App() {
           genderPolicy,
           reserves: activeComp?.reserves ?? undefined,
           youngerAllowance: activeComp?.youngerAllowance ?? DEFAULT_CONFIG.youngerAllowance,
+          helmAnyGender: activeComp?.helmAnyGender ?? DEFAULT_CONFIG.helmAnyGender,
         });
       }
 
@@ -286,6 +287,21 @@ export function App() {
     eligible.sort((a, b) => (a.isBCP ? 1 : 0) - (b.isBCP ? 1 : 0));
     return eligible;
   }, [activeAthletes, selectedRace, seatedIds]);
+
+  // Helm pool: like the any-age pool, but when the competition allows an
+  // any-gender helm, the gender restriction (e.g. Women-only) is lifted too.
+  const unassignedAthletesHelm = useMemo(() => {
+    if (!selectedRace) return [];
+    const anyGender = !!appConfig.helmAnyGender;
+    const eligible = activeAthletes.filter(a => {
+      if (seatedIds.has(a.id)) return false;
+      if (!a.isRegistered) return false;
+      if (!anyGender && !isEligibleForGender(a, selectedRace)) return false;
+      return true;
+    });
+    eligible.sort((a, b) => (a.isBCP ? 1 : 0) - (b.isBCP ? 1 : 0));
+    return eligible;
+  }, [activeAthletes, selectedRace, seatedIds, appConfig.helmAnyGender]);
 
   // --- Handlers ---
 
@@ -621,6 +637,7 @@ export function App() {
                 benchFactors={currentBenchFactors}
                 unassignedAthletes={unassignedAthletes}
                 unassignedAthletesAnyAge={unassignedAthletesAnyAge}
+                unassignedAthletesHelm={unassignedAthletesHelm}
                 showWeights={showWeights}
                 onLayoutChange={canEdit ? handleLayoutChange : () => {}}
                 readOnly={!canEdit}

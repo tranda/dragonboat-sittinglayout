@@ -107,4 +107,6 @@ export interface AppConfig {
   // Max younger (adjacent-band) paddlers allowed per crew in an older age
   // category, per organizer discretion. Default 1. 0 = none allowed.
   youngerAllowance?: number;
+  // When true, the helm may be any gender even in a Women's race. Default false.
+  helmAnyGender?: boolean;
 }

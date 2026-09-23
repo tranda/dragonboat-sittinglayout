@@ -19,6 +19,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     },
   },
   youngerAllowance: 0,
+  helmAnyGender: false,
 };
 
 const CONFIG_KEY = 'dragonboat-config';

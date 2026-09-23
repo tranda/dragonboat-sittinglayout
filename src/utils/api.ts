@@ -227,6 +227,7 @@ export interface ApiCompetitionFull {
   } | null;
   reserves?: { standard: number; small: number } | null;
   younger_allowance?: number | null;
+  helm_any_gender?: boolean | null;
   teams?: { id: number; name: string }[];
 }
 
@@ -378,6 +379,7 @@ export interface ApiCompetition {
   } | null;
   reserves?: { standard: number; small: number } | null;
   youngerAllowance?: number | null;
+  helmAnyGender?: boolean | null;
 }
 
 export interface ApiAthlete {

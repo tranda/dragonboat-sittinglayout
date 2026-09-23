@@ -26,6 +26,7 @@ interface Props {
   benchFactors: number[];
   unassignedAthletes: Athlete[];
   unassignedAthletesAnyAge: Athlete[];
+  unassignedAthletesHelm: Athlete[];
   showWeights: boolean;
   onLayoutChange: (layout: BoatLayoutType) => void;
   readOnly?: boolean;
@@ -92,7 +93,7 @@ function UnseatZone({ id, side }: { id: string; side: 'left' | 'right' }) {
 }
 
 export function BoatLayout({
-  race, layout, athleteMap, benchFactors, unassignedAthletes, unassignedAthletesAnyAge,
+  race, layout, athleteMap, benchFactors, unassignedAthletes, unassignedAthletesAnyAge, unassignedAthletesHelm,
   showWeights, onLayoutChange, readOnly = false, appConfig,
   athleteConflicts, onShowConflict, onShowSchedule,
 }: Props) {
@@ -274,7 +275,8 @@ export function BoatLayout({
   const poolAthletes = (() => {
     if (!poolSeatId) return unassignedAthletes;
     const { type } = parseSeatId(poolSeatId);
-    if (type === 'drummer' || type === 'helm') return unassignedAthletesAnyAge;
+    if (type === 'helm') return unassignedAthletesHelm;
+    if (type === 'drummer') return unassignedAthletesAnyAge;
     // Paddler seat: hide anyone age-ineligible (incl. exhausted younger-exception
     // slots) and anyone that would exceed the mixed gender max.
     return unassignedAthletes.filter(a => {
