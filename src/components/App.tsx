@@ -485,7 +485,7 @@ export function App() {
           </svg>
         </button>
         <div className="min-w-0 flex-1 flex items-center gap-1">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-[10px] text-[var(--text-muted)] leading-tight truncate">
               {userTeams.length > 1 ? (
                 <select
