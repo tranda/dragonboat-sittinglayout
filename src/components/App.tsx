@@ -203,13 +203,16 @@ export function App() {
     loadData();
   }, [loadData]);
 
-  // A deactivated competition must never stay selected: if the current one is
-  // inactive, fall back to the first active competition automatically.
+  // Preselect the first active competition when nothing valid+active is
+  // selected — on a fresh open (no/None stored selection), or when the current
+  // one was deactivated or removed. A valid active selection is left alone so
+  // the user can still switch between active competitions.
   useEffect(() => {
+    if (competitions.length === 0) return;
     const current = competitions.find(c => c.id === activeCompetitionId);
-    if (current && !current.isActive) {
+    if (!current || !current.isActive) {
       const firstActive = competitions.find(c => c.isActive);
-      if (firstActive) handleSwitchCompetition(firstActive.id);
+      if (firstActive && firstActive.id !== activeCompetitionId) handleSwitchCompetition(firstActive.id);
     }
   }, [competitions, activeCompetitionId, handleSwitchCompetition]);
 
