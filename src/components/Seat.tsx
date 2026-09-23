@@ -9,9 +9,10 @@ interface Props {
   isDropZone?: boolean;
   hasConflict?: boolean;
   onConflictTap?: () => void;
+  exception?: boolean; // younger-age exception paddler (from the next-younger band)
 }
 
-export function Seat({ seatId, athlete, showWeight, onTap, isDropZone, hasConflict, onConflictTap }: Props) {
+export function Seat({ seatId, athlete, showWeight, onTap, isDropZone, hasConflict, onConflictTap, exception }: Props) {
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: seatId });
   const { attributes, listeners, setNodeRef: setDragRef, isDragging } = useDraggable({
     id: seatId,
@@ -57,6 +58,14 @@ export function Seat({ seatId, athlete, showWeight, onTap, isDropZone, hasConfli
         </span>
       ) : (
         <span className="text-[20px] text-[var(--text-muted)] font-light leading-none">+</span>
+      )}
+      {athlete && exception && (
+        <span
+          className="absolute bottom-0.5 left-0.5 px-1 py-0.5 rounded-full bg-amber-500 text-white text-[8px] font-bold leading-none"
+          title="Younger-age exception — from the next-younger age band"
+        >
+          ↓age
+        </span>
       )}
       {athlete && hasConflict && (
         <button

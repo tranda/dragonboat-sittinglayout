@@ -148,7 +148,7 @@ export function BoatLayout({
     return type === 'left' || type === 'right';
   };
 
-  const youngerAllowance = appConfig.youngerAllowance ?? 1;
+  const youngerAllowance = appConfig.youngerAllowance ?? 0;
 
   // Younger (adjacent-band) exception paddlers currently seated in the crew.
   const countAdjacentPaddlers = (): number => {
@@ -159,6 +159,13 @@ export function BoatLayout({
       if (a && ageStatus(a, race.ageCategory, appConfig) === 'adjacent') n++;
     }
     return n;
+  };
+
+  // Is this seated athlete a younger (adjacent-band) exception paddler?
+  const isExceptionPaddler = (athleteId: number | null | undefined): boolean => {
+    if (athleteId == null) return false;
+    const a = athleteMap.get(athleteId);
+    return !!a && ageStatus(a, race.ageCategory, appConfig) === 'adjacent';
   };
 
   const isAgeIneligibleForPaddler = (athleteId: number, toSeatId: string): boolean => {
@@ -377,6 +384,7 @@ export function BoatLayout({
                 onTap={() => handleSeatTap(`left-${i}`)}
                 hasConflict={seatHasConflict(layout.left[i])}
                 onConflictTap={() => layout.left[i] != null && onShowConflict?.(layout.left[i]!)}
+                exception={isExceptionPaddler(layout.left[i])}
               />
               <div className="flex items-center justify-center bg-gray-50/80" />
               <Seat
@@ -386,6 +394,7 @@ export function BoatLayout({
                 onTap={() => handleSeatTap(`right-${i}`)}
                 hasConflict={seatHasConflict(layout.right[i])}
                 onConflictTap={() => layout.right[i] != null && onShowConflict?.(layout.right[i]!)}
+                exception={isExceptionPaddler(layout.right[i])}
               />
               <div className="flex items-center justify-center"><span className="text-[8px] text-[var(--text-secondary)] font-mono font-bold">{rightNum}</span></div>
             </div>

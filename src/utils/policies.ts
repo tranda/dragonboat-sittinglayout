@@ -18,7 +18,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       small: { minSameGender: 4, maxSameGender: 6 },      // 10-paddler: each gender 4-6
     },
   },
-  youngerAllowance: 1,
+  youngerAllowance: 0,
 };
 
 const CONFIG_KEY = 'dragonboat-config';

@@ -23,7 +23,7 @@ export function CompetitionManager({ onClose }: Props) {
   const [smMax, setSmMax] = useState('6');
   const [stdReserves, setStdReserves] = useState('4');
   const [smReserves, setSmReserves] = useState('2');
-  const [youngerAllowance, setYoungerAllowance] = useState('1');
+  const [youngerAllowance, setYoungerAllowance] = useState('0');
 
   // Team form
   const [showAddTeam, setShowAddTeam] = useState(false);
@@ -47,7 +47,7 @@ export function CompetitionManager({ onClose }: Props) {
   useEffect(() => { load(); }, [load]);
 
   // Competition handlers
-  const clearCompForm = () => { setShowAddComp(false); setEditCompId(null); setCompName(''); setCompYear(String(new Date().getFullYear())); setCompLocation(''); setStdMin('8'); setStdMax('12'); setSmMin('4'); setSmMax('6'); setStdReserves('4'); setSmReserves('2'); setYoungerAllowance('1'); };
+  const clearCompForm = () => { setShowAddComp(false); setEditCompId(null); setCompName(''); setCompYear(String(new Date().getFullYear())); setCompLocation(''); setStdMin('8'); setStdMax('12'); setSmMin('4'); setSmMax('6'); setStdReserves('4'); setSmReserves('2'); setYoungerAllowance('0'); };
 
   const handleSaveComp = async () => {
     if (!compName.trim()) return;
@@ -175,7 +175,7 @@ export function CompetitionManager({ onClose }: Props) {
                         setSmMax(String(c.gender_policy?.mixedRatio?.small?.maxSameGender ?? 6));
                         setStdReserves(String(c.reserves?.standard ?? 4));
                         setSmReserves(String(c.reserves?.small ?? 2));
-                        setYoungerAllowance(String(c.younger_allowance ?? 1));
+                        setYoungerAllowance(String(c.younger_allowance ?? 0));
                         setShowAddComp(true);
                       }}
                         className={`px-2 py-1 text-xs rounded ${c.is_locked ? 'opacity-40 cursor-not-allowed text-[var(--text-muted)]' : 'text-blue-600 hover:bg-[var(--bg-male)]'}`}>Edit</button>
