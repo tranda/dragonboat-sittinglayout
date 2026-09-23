@@ -503,7 +503,7 @@ export function App() {
                 <select
                   value={activeCompetitionId ?? ''}
                   onChange={e => handleSwitchCompetition(Number(e.target.value))}
-                  className="bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer max-w-[45%]"
+                  className={`bg-transparent text-[10px] text-[var(--text-muted)] outline-none cursor-pointer ${userTeams.length > 1 ? 'max-w-[45%]' : 'max-w-[75%]'}`}
                 >
                   {/* Only active competitions are selectable; deactivated ones are hidden entirely. */}
                   {competitions.filter(c => c.isActive).map(c => <option key={c.id} value={c.id}>{c.name} ({c.year})</option>)}
