@@ -104,4 +104,7 @@ export interface AppConfig {
   ageCategoryRules: AgeCategoryRule[];
   genderPolicy: GenderPolicy;
   reserves?: { standard: number; small: number };
+  // Max younger (adjacent-band) paddlers allowed per crew in an older age
+  // category, per organizer discretion. Default 1. 0 = none allowed.
+  youngerAllowance?: number;
 }

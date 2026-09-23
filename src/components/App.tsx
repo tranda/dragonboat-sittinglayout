@@ -21,7 +21,7 @@ import { computeAthleteConflicts } from '../utils/conflicts';
 import { exportToExcel } from '../utils/excelExport';
 import { getPdfToken } from '../utils/api';
 import { importFromExcel } from '../utils/excelImport';
-import { DEFAULT_CONFIG, isEligibleForGender, isEligibleForAgeCategory } from '../utils/policies';
+import { DEFAULT_CONFIG, isEligibleForGender, ageStatus } from '../utils/policies';
 import * as api from '../utils/api';
 import { useRealtimeSync } from '../hooks/useRealtimeSync';
 import { CrewScheduleModal } from './CrewScheduleModal';
@@ -158,6 +158,7 @@ export function App() {
           ageCategoryRules: data.config.ageCategoryRules as AppConfig['ageCategoryRules'],
           genderPolicy,
           reserves: activeComp?.reserves ?? undefined,
+          youngerAllowance: activeComp?.youngerAllowance ?? DEFAULT_CONFIG.youngerAllowance,
         });
       }
 
@@ -261,7 +262,10 @@ export function App() {
       if (seatedIds.has(a.id)) return false;
       if (!a.isRegistered) return false;
       if (!isEligibleForGender(a, selectedRace)) return false;
-      if (!isEligibleForAgeCategory(a, selectedRace.ageCategory, appConfig)) return false;
+      // Include adjacent-band younger athletes so they can fill an exception
+      // slot; only fully-ineligible ('blocked') athletes are hidden. The per-crew
+      // limit is enforced when placing into a paddler seat (BoatLayout).
+      if (ageStatus(a, selectedRace.ageCategory, appConfig) === 'blocked') return false;
       return true;
     });
     if (selectedRace.ageCategory !== 'BCP') {

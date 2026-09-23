@@ -18,6 +18,7 @@ export const DEFAULT_CONFIG: AppConfig = {
       small: { minSameGender: 4, maxSameGender: 6 },      // 10-paddler: each gender 4-6
     },
   },
+  youngerAllowance: 1,
 };
 
 const CONFIG_KEY = 'dragonboat-config';
@@ -58,21 +59,53 @@ export function getAthleteAgeCategory(athlete: Athlete, config: AppConfig): AgeC
   return 'Premier';
 }
 
-/** Check if an athlete is eligible for a race's age category */
-export function isEligibleForAgeCategory(athlete: Athlete, raceAgeCategory: AgeCategory, config: AppConfig): boolean {
-  // BCP race: only BCP-designated athletes
-  if (raceAgeCategory === 'BCP') return !!athlete.isBCP;
+/**
+ * Lower age bound of the band immediately younger than a min-age category:
+ * the next-lower minAge threshold among the rules, or 0 when the adjacent band
+ * has no minimum (e.g. Premier sits below Senior A). Returns null when the
+ * category itself has no minAge, so the younger-exception concept doesn't apply.
+ */
+function adjacentYoungerMinAge(raceAgeCategory: AgeCategory, config: AppConfig): number | null {
+  const rule = config.ageCategoryRules.find(r => r.category === raceAgeCategory);
+  if (!rule || rule.minAge === undefined) return null;
+  const lowerMins = config.ageCategoryRules
+    .map(r => r.minAge)
+    .filter((m): m is number => m !== undefined && m < rule.minAge!);
+  return lowerMins.length ? Math.max(...lowerMins) : 0;
+}
 
-  // BCP athletes can also race in other categories based on age
+export type AgeStatus = 'ok' | 'adjacent' | 'blocked';
+
+/**
+ * Classify an athlete against a race's age category:
+ *  - 'ok'       meets the requirement outright
+ *  - 'adjacent' below the minimum but within the next-younger band — an allowed
+ *               exception, subject to the per-crew `youngerAllowance` limit
+ *  - 'blocked'  ineligible (too young by 2+ bands, or over a max-age limit)
+ */
+export function ageStatus(athlete: Athlete, raceAgeCategory: AgeCategory, config: AppConfig): AgeStatus {
+  // BCP race: only BCP-designated athletes
+  if (raceAgeCategory === 'BCP') return athlete.isBCP ? 'ok' : 'blocked';
+
   const age = getAthleteAge(athlete, config.competitionYear);
-  if (age === null) return true; // unknown age = allow (no restriction)
+  if (age === null) return 'ok'; // unknown age = allow (no restriction)
 
   const rule = config.ageCategoryRules.find(r => r.category === raceAgeCategory);
-  if (!rule) return true;
+  if (!rule) return 'ok';
 
-  if (rule.minAge !== undefined && age < rule.minAge) return false;
-  if (rule.maxAge !== undefined && age > rule.maxAge) return false;
-  return true;
+  if (rule.maxAge !== undefined && age > rule.maxAge) return 'blocked';
+  if (rule.minAge !== undefined && age < rule.minAge) {
+    // Under the minimum — allowed only as an exception from the adjacent band.
+    const adjMin = adjacentYoungerMinAge(raceAgeCategory, config);
+    if (adjMin === null) return 'blocked';
+    return age >= adjMin ? 'adjacent' : 'blocked';
+  }
+  return 'ok';
+}
+
+/** Strict eligibility (meets the requirement outright, ignoring exceptions). */
+export function isEligibleForAgeCategory(athlete: Athlete, raceAgeCategory: AgeCategory, config: AppConfig): boolean {
+  return ageStatus(athlete, raceAgeCategory, config) === 'ok';
 }
 
 /** Check if an athlete's gender is allowed in a race */

@@ -226,6 +226,7 @@ export interface ApiCompetitionFull {
     };
   } | null;
   reserves?: { standard: number; small: number } | null;
+  younger_allowance?: number | null;
   teams?: { id: number; name: string }[];
 }
 
@@ -376,6 +377,7 @@ export interface ApiCompetition {
     };
   } | null;
   reserves?: { standard: number; small: number } | null;
+  youngerAllowance?: number | null;
 }
 
 export interface ApiAthlete {

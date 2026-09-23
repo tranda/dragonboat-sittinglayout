@@ -23,6 +23,7 @@ export function CompetitionManager({ onClose }: Props) {
   const [smMax, setSmMax] = useState('6');
   const [stdReserves, setStdReserves] = useState('4');
   const [smReserves, setSmReserves] = useState('2');
+  const [youngerAllowance, setYoungerAllowance] = useState('1');
 
   // Team form
   const [showAddTeam, setShowAddTeam] = useState(false);
@@ -46,7 +47,7 @@ export function CompetitionManager({ onClose }: Props) {
   useEffect(() => { load(); }, [load]);
 
   // Competition handlers
-  const clearCompForm = () => { setShowAddComp(false); setEditCompId(null); setCompName(''); setCompYear(String(new Date().getFullYear())); setCompLocation(''); setStdMin('8'); setStdMax('12'); setSmMin('4'); setSmMax('6'); setStdReserves('4'); setSmReserves('2'); };
+  const clearCompForm = () => { setShowAddComp(false); setEditCompId(null); setCompName(''); setCompYear(String(new Date().getFullYear())); setCompLocation(''); setStdMin('8'); setStdMax('12'); setSmMin('4'); setSmMax('6'); setStdReserves('4'); setSmReserves('2'); setYoungerAllowance('1'); };
 
   const handleSaveComp = async () => {
     if (!compName.trim()) return;
@@ -60,11 +61,12 @@ export function CompetitionManager({ onClose }: Props) {
       standard: parseInt(stdReserves) || 4,
       small: parseInt(smReserves) || 2,
     };
+    const younger_allowance = Math.max(0, parseInt(youngerAllowance) || 0);
     try {
       if (editCompId) {
-        await api.updateCompetition(editCompId, { name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, gender_policy: genderPolicy, reserves });
+        await api.updateCompetition(editCompId, { name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, gender_policy: genderPolicy, reserves, younger_allowance });
       } else {
-        await api.createCompetition({ name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, is_active: true, gender_policy: genderPolicy, reserves });
+        await api.createCompetition({ name: compName.trim(), year: parseInt(compYear), location: compLocation.trim() || null, is_active: true, gender_policy: genderPolicy, reserves, younger_allowance });
       }
       clearCompForm();
       await load();
@@ -173,6 +175,7 @@ export function CompetitionManager({ onClose }: Props) {
                         setSmMax(String(c.gender_policy?.mixedRatio?.small?.maxSameGender ?? 6));
                         setStdReserves(String(c.reserves?.standard ?? 4));
                         setSmReserves(String(c.reserves?.small ?? 2));
+                        setYoungerAllowance(String(c.younger_allowance ?? 1));
                         setShowAddComp(true);
                       }}
                         className={`px-2 py-1 text-xs rounded ${c.is_locked ? 'opacity-40 cursor-not-allowed text-[var(--text-muted)]' : 'text-blue-600 hover:bg-[var(--bg-male)]'}`}>Edit</button>
@@ -185,6 +188,7 @@ export function CompetitionManager({ onClose }: Props) {
                     {c.reserves && <>Reserves: 20p {c.reserves.standard}, 10p {c.reserves.small}</>}
                     {c.reserves && c.gender_policy?.mixedRatio && <> · </>}
                     {c.gender_policy?.mixedRatio && <>Mixed: 20p {c.gender_policy.mixedRatio.standard.minSameGender}–{c.gender_policy.mixedRatio.standard.maxSameGender}, 10p {c.gender_policy.mixedRatio.small.minSameGender}–{c.gender_policy.mixedRatio.small.maxSameGender} per gender</>}
+                    {c.younger_allowance != null && <> · Younger exception: {c.younger_allowance}/crew</>}
                   </div>
                   {/* Teams in this competition */}
                   <div className="mt-2">
@@ -240,6 +244,12 @@ export function CompetitionManager({ onClose }: Props) {
                     <input value={smMin} onChange={e => setSmMin(e.target.value)} type="number" placeholder="Min" className="flex-1 min-w-0 px-2 py-1 text-sm border rounded-lg" />
                     <span className="text-[var(--text-muted)]">—</span>
                     <input value={smMax} onChange={e => setSmMax(e.target.value)} type="number" placeholder="Max" className="flex-1 min-w-0 px-2 py-1 text-sm border rounded-lg" />
+                  </div>
+                  {/* Younger-age exception */}
+                  <div className="text-[10px] text-[var(--text-muted)] uppercase font-semibold mt-1">Younger exception — paddlers per crew from the next-younger band</div>
+                  <div className="flex gap-2 items-center">
+                    <input value={youngerAllowance} onChange={e => setYoungerAllowance(e.target.value)} type="number" min="0" placeholder="0" className="w-20 px-2 py-1 text-sm border rounded-lg" />
+                    <span className="text-[10px] text-[var(--text-muted)]">0 = none allowed</span>
                   </div>
                   <div className="flex gap-2">
                     <button onClick={handleSaveComp} className="flex-1 py-1.5 text-xs bg-green-600 text-white rounded-lg">{editCompId ? 'Save' : 'Add'}</button>

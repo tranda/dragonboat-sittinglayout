@@ -16,7 +16,7 @@ import { Seat } from './Seat';
 import { AthleteChip } from './AthleteChip';
 import { AthletePoolModal } from './AthletePoolModal';
 import { calcWeightStats } from '../utils/weightCalc';
-import { validateMixedRatio, isEligibleForAgeCategory } from '../utils/policies';
+import { validateMixedRatio, ageStatus } from '../utils/policies';
 import { setDragging } from '../utils/sync';
 
 interface Props {
@@ -148,11 +148,33 @@ export function BoatLayout({
     return type === 'left' || type === 'right';
   };
 
+  const youngerAllowance = appConfig.youngerAllowance ?? 1;
+
+  // Younger (adjacent-band) exception paddlers currently seated in the crew.
+  const countAdjacentPaddlers = (): number => {
+    let n = 0;
+    for (const id of [...layout.left, ...layout.right]) {
+      if (id == null) continue;
+      const a = athleteMap.get(id);
+      if (a && ageStatus(a, race.ageCategory, appConfig) === 'adjacent') n++;
+    }
+    return n;
+  };
+
   const isAgeIneligibleForPaddler = (athleteId: number, toSeatId: string): boolean => {
     if (!isPaddlerSeat(toSeatId)) return false;
     const athlete = athleteMap.get(athleteId);
     if (!athlete) return false;
-    return !isEligibleForAgeCategory(athlete, race.ageCategory, appConfig);
+    const status = ageStatus(athlete, race.ageCategory, appConfig);
+    if (status === 'ok') return false;
+    if (status === 'blocked') return true;
+    // 'adjacent' younger exception — allowed only if the crew has room. Exclude
+    // the seat being filled if it already holds another exception (a swap).
+    const existingId = getAthleteFromSeat(layout, toSeatId);
+    const existing = existingId != null ? athleteMap.get(existingId) : null;
+    const existingIsAdjacent = existing ? ageStatus(existing, race.ageCategory, appConfig) === 'adjacent' : false;
+    const seated = countAdjacentPaddlers() - (existingIsAdjacent ? 1 : 0);
+    return seated >= youngerAllowance;
   };
 
   const wouldExceedGenderMax = (athleteId: number, toSeatId: string): boolean => {
@@ -246,13 +268,16 @@ export function BoatLayout({
     if (!poolSeatId) return unassignedAthletes;
     const { type } = parseSeatId(poolSeatId);
     if (type === 'drummer' || type === 'helm') return unassignedAthletesAnyAge;
-    if (mixedRatio && isPaddlerSeat(poolSeatId)) {
-      return unassignedAthletes.filter(a => {
+    // Paddler seat: hide anyone age-ineligible (incl. exhausted younger-exception
+    // slots) and anyone that would exceed the mixed gender max.
+    return unassignedAthletes.filter(a => {
+      if (isAgeIneligibleForPaddler(a.id, poolSeatId)) return false;
+      if (mixedRatio) {
         const count = a.gender === 'F' ? mixedRatio.womenCount : mixedRatio.menCount;
-        return count < mixedRatio.maxSameGender;
-      });
-    }
-    return unassignedAthletes;
+        if (count >= mixedRatio.maxSameGender) return false;
+      }
+      return true;
+    });
   })();
 
   const activeAthlete = activeItem?.athleteId ? athleteMap.get(activeItem.athleteId) : null;
