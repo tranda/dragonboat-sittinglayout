@@ -78,6 +78,15 @@ export function DashboardPanel({ races, layouts, athleteMap, onSelectRace, curre
             .filter(a => a?.notes)
             .map(a => a!);
 
+          // Earliest scheduled start time for this crew (its first race of the day).
+          const startTime = (() => {
+            const ts = (race.schedule ?? [])
+              .map(e => new Date(e.time).getTime())
+              .filter(t => !Number.isNaN(t));
+            if (!ts.length) return null;
+            return new Date(Math.min(...ts)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+          })();
+
           return (
             <button
               key={race.id}
@@ -89,6 +98,7 @@ export function DashboardPanel({ races, layouts, athleteMap, onSelectRace, curre
               <div className="flex items-center justify-between mb-1">
                 <div className="text-sm font-semibold text-[var(--text-primary)] truncate mr-2">
                   {race.medal && <span className="mr-1" title={`${race.medal} medal`}>{MEDAL_EMOJI[race.medal]}</span>}
+                  {startTime && <span className="text-[var(--text-secondary)] tabular-nums mr-1.5">{startTime}</span>}
                   {race.name}
                 </div>
                 <span className={`text-xs font-bold flex-shrink-0 ${
