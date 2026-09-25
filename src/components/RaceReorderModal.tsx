@@ -11,6 +11,16 @@ interface Props {
   onSaved: (ids: string[]) => void;
 }
 
+// Earliest scheduled start time for a race (its first race of the day).
+function raceStartMs(race: Race): number | null {
+  const ts = (race.schedule ?? []).map(e => new Date(e.time).getTime()).filter(t => !Number.isNaN(t));
+  return ts.length ? Math.min(...ts) : null;
+}
+function raceStartLabel(race: Race): string | null {
+  const ms = raceStartMs(race);
+  return ms == null ? null : new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 function SortableRow({ race }: { race: Race }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: race.id });
   const style = {
@@ -35,7 +45,10 @@ function SortableRow({ race }: { race: Race }) {
         <div className="w-4 h-0.5 bg-current rounded" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-[var(--text-primary)] truncate">{race.name}</div>
+        <div className="text-sm font-medium text-[var(--text-primary)] truncate">
+          {(() => { const t = raceStartLabel(race); return t ? <span className="text-[var(--text-secondary)] tabular-nums mr-1.5">{t}</span> : null; })()}
+          {race.name}
+        </div>
         <div className="text-[10px] text-[var(--text-muted)]">{race.boatType === 'standard' ? 'ST' : 'SM'} · {race.distance}</div>
       </div>
     </div>
@@ -61,6 +74,16 @@ export function RaceReorderModal({ races, onClose, onSaved }: Props) {
     });
   };
 
+  const handleSortByTime = () => {
+    setItems(prev => [...prev].sort((a, b) => {
+      const ta = raceStartMs(a), tb = raceStartMs(b);
+      if (ta == null && tb == null) return 0;
+      if (ta == null) return 1;   // races without a time go last
+      if (tb == null) return -1;
+      return ta - tb;
+    }));
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -83,7 +106,15 @@ export function RaceReorderModal({ races, onClose, onSaved }: Props) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4">
-          <div className="text-[11px] text-[var(--text-secondary)] mb-2 px-1">Drag to reorder. Save when done.</div>
+          <div className="flex items-center justify-between mb-2 px-1 gap-2">
+            <span className="text-[11px] text-[var(--text-secondary)]">Drag to reorder. Save when done.</span>
+            <button
+              onClick={handleSortByTime}
+              className="text-[11px] font-semibold text-blue-600 hover:underline flex-shrink-0"
+            >
+              Sort by Time
+            </button>
+          </div>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
               <div className="space-y-2">
